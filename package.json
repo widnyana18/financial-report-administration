@@ -1,17 +1,17 @@
 {
-  "name": "admin-laporan-keuangan",
+  "name": "financial-report-administration",
   "version": "1.0.0",
-  "description": "Membangun sistem laporan keuangan realisasi bagi hasil pajak prov bali pemkab karangasem",
+  "description": "Developing a system for reporting the use of tax bagi hasil pajak for Bali province in the 2024 APBD Karangasem district's.",
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/widnyana18/financial-report-administration.git"
   },
   "author": "I Komang Widnyana",
   "license": "ISC",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "NODE_ENV=production MONGO_USER=komangwidnyana52 MONGO_PASSWORD=1bAbvSkccJ5eIjb8 MONGO_DATABASE=belanja-com node app.js",
+    "start": "node app.js",
     "start-server": "node app.js",
     "start:dev": "nodemon app.js"
   },
