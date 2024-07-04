@@ -20,7 +20,7 @@ if (env !== "test") {
 }
 
 // parse request to body-parser
-app.use(bodyparser.urlencoded({ extended: true }));
+app.use(bodyparser.json());
 
 // log requests
 // app.use(morgan('tiny'));

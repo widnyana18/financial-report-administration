@@ -6,15 +6,15 @@ const employeeSchema = new Schema(
   {
     email: {
       type: String,
-      required: true,
+      // required: true,
     },
     password: {
       type: String,
-      required: true,
+      // required: true,
     },
     phoneNumber: {
-      type: String,
-      required: true,
+      type: Number,
+      // required: true,
     },
     reportings: {
       type: Array,

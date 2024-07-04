@@ -1,5 +1,3 @@
-const { Model, FilterQuery } = require("mongoose");
-
 const Employee = require("./employee");
 
 exports.getEmployeeById = async (id) => {
@@ -21,7 +19,7 @@ exports.updateEmployee = async (filter, input) => {
   return employee;
 };
 
-exports.deleteEmployee = async (filter) => {
-  const employee = await Employee.findOneAndDelete(filter);
+exports.deleteEmployee = async (id) => {
+  const employee = await Employee.findOneAndDelete({_id: id});
   return employee;
 };
