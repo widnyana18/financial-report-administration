@@ -6,7 +6,7 @@ const router = Router();
 
 //root route employee
 router.get('/employees', employeeController.renderEmployees);
-router.get('/employees/update-employee', employeeController.renderUpdateEmployee);
+router.get('/employees/:id', employeeController.renderUpdateEmployee);
 
 //API
 router.get('/api/employees', employeeController.findEmployees);
