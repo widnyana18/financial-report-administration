@@ -2,17 +2,18 @@ const { Router } = require("express");
 
 const employeeController = require("./employee-controller");
 
-const router = Router();
+const appRouter = Router();
+const apiRouter = Router();
 
 //root route employee
-router.get('/employees', employeeController.renderEmployees);
-router.get('/employees/:id', employeeController.renderUpdateEmployee);
+appRouter.get('/', employeeController.renderEmployees);
+appRouter.get('/:id', employeeController.renderUpdateEmployee);
 
 //API
-router.get('/api/employees', employeeController.findEmployees);
-router.patch('/api/employees/:id', employeeController.updateEmployee);
-router.delete('/api/employees/:id', employeeController.deleteEmployee);
+apiRouter.get('/', employeeController.findEmployees);
+apiRouter.patch('/:id', employeeController.updateEmployee);
+apiRouter.delete('/:id', employeeController.deleteEmployee);
 
-module.exports = router;
+module.exports = {appRouter, apiRouter};
 
 

@@ -1,17 +1,21 @@
 const { Router } = require("express");
 
 const authController = require("./auth-controller");
-const router = Router();
+
+const appRouter = Router();
+const apiRouter = Router();
 
 //root route employee
-router.get('/login', authController.renderLogin);
-router.get('/signup', authController.renderSignup);
+appRouter.get('/login', authController.renderLogin);
+appRouter.get('/signup', authController.renderSignup);
+// appRouter.get('/lupa-password', authController.renderForgetPassword);
 
 //API
-router.post("/api/login", authController.postLogin);
-router.post("/api/signup", authController.postSignup);
-router.post("/api/logout", authController.postLogout);
+apiRouter.post("/login", authController.postLogin);
+apiRouter.post("/signup", authController.postSignup);
+// apiRouter.patch("/reset-password", authController.resetpassword);
+apiRouter.post("/logout", authController.postLogout);
 
-module.exports = router;
+module.exports = {appRouter, apiRouter};
 
 
