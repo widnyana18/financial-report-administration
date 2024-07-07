@@ -1,11 +1,14 @@
 const authService = require("./auth-service");
 
 exports.renderLogin = (req, res, next) => {
-  res.render("auth/login", { title: "Login" });
+  res.render("auth/login", {
+    pageTitle: "Login",
+    path: "/login",
+  });
 };
 
 exports.renderSignup = (req, res, next) => {
-  res.render("auth/signup", { title: "Signup" });
+  res.render("auth/signup", { pageTitle: "Signup", path: "/signup" });
 };
 
 exports.postLogin = async (req, res, next) => {
@@ -35,5 +38,5 @@ exports.postSignup = async (req, res, next) => {
 
 exports.postLogout = async (req, res, next) => {
   const result = await authService.logout();
-    return res.status(200).json(result);
+  return res.status(200).json(result);
 };

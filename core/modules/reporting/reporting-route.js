@@ -6,34 +6,17 @@ const appRouter = Router();
 const apiRouter = Router();
 
 //admin route Reporting website
-appRouter.get("/", (req, res, next) => {
-  console.log("");
-});
-appRouter.get("/", (req, res, next) => {
-  console.log("this is reporting views");
-});
-appRouter.get("/create-new", (req, res, next) => {
-  console.log("this is create new reporting views");
-});
-appRouter.get("/:id", (req, res, next) => {
-  console.log("this is detailing update views");
-});
-appRouter.get("/:id", (req, res, next) => {
-  console.log("This is update reporting views");
-});
+appRouter.get("/", reportingController.renderIndex);
+appRouter.get("/", reportingController.renderReportings);
+appRouter.get("/buat-laporan", reportingController.renderCreateReporting);
+appRouter.get("/:id", reportingController.renderReportingDetails);
+appRouter.get("/:id", reportingController.updateReporting);
 
 // route API
-apiRouter.get("/", (req, res, next) => {
-  console.log("Run api reporting route");
-});
-apiRouter.post("/", (req, res, next) => {
-  console.log("Run post create reporting route");
-});
-apiRouter.patch("/:id", (req, res, next) => {
-  console.log("Run patch update reporting route");
-});
-apiRouter.delete("/:id", (req, res, next) => {
-  console.log("Run delete reporting route");
-});
+apiRouter.get("/", reportingController.getAllReporting);
+apiRouter.get("/:id", reportingController.getReportingById);
+apiRouter.post("/", reportingController.createReporting);
+apiRouter.patch("/:id", reportingController.updateReporting);
+apiRouter.delete("/:id", reportingController.deleteReporting);
 
 module.exports = { appRouter, apiRouter };

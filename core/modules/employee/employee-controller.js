@@ -1,29 +1,27 @@
-const axios = require("axios");
-
 const employeeService = require("./employee-service");
 
-exports.renderEmployees = (req, res, next) => {
-  axios
-    .get("http://localhost:3000/api/employees")
-    .then((response) => {
-      res.render("layouts/employees", { employees: response.data });
-    })
-    .catch((err) => {
-      res.send(err);
-    });
+exports.renderEmployees = async (req, res, next) => {
+  const employees = await employeeService.getEmployees();
+  res.render("employees/employees", {
+    pageTitle: "Employees",
+    path: "/employees",
+    employees: employees,
+  });
 };
 
-exports.renderUpdateEmployee = (req, res, next) => {
-  axios
-    .get("http://localhost:3000/api/employees", {
-      params: { id: req.params.id },
-    })
-    .then((employee) => {
-      res.render("layouts/update-employee", { employee: employee.data });
-    })
-    .catch((err) => {
-      res.send(err);
+exports.renderUpdateEmployee = async (req, res, next) => {
+  const id = req.params.id;
+  const employee = await employeeService.getEmployeeById(id);
+
+  if (!employee) {
+    res.redirect("/employees");
+  } else {
+    res.render("employees/update-employee", {
+      pageTitle: "Update Employee",
+      path: "/employee",
+      employee: employee,
     });
+  }
 };
 
 exports.findEmployees = async (req, res, next) => {
