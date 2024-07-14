@@ -8,15 +8,22 @@ const apiRouter = Router();
 //admin route Reporting website
 appRouter.get("/", reportingController.renderIndex);
 appRouter.get("/", reportingController.renderReportings);
-appRouter.get("/buat-laporan", reportingController.renderCreateReporting);
-appRouter.get("/:id", reportingController.renderReportingDetails);
-appRouter.get("/:id", reportingController.updateReporting);
+appRouter.get("/buat-baru", reportingController.renderCreateReporting);
+appRouter.get("/:reportId", reportingController.renderReportingDetails);
+appRouter.get("/:reportId/tambah-record", reportingController.renderAddBudget);
+appRouter.get(
+  "/:reportId/edit-record/:budgetId",
+  reportingController.renderUpdateBudgetRecord
+);
 
 // route API
 apiRouter.get("/", reportingController.getAllReporting);
-apiRouter.get("/:id", reportingController.getReportingById);
 apiRouter.post("/", reportingController.createReporting);
-apiRouter.patch("/:id", reportingController.updateReporting);
-apiRouter.delete("/:id", reportingController.deleteReporting);
+apiRouter.patch("/:reportId", reportingController.updateReporting);
+apiRouter.delete("/:reportId", reportingController.deleteReporting);
+apiRouter.get("/:reportId", reportingController.getAllBudgetByReporting);
+apiRouter.post("/:reportId", reportingController.addBudget);
+apiRouter.patch("/:reportId/:budgetId", reportingController.updateBudgetRecord);
+apiRouter.delete("/:reportId/:budgetId", reportingController.deleteBudgetRecord);
 
 module.exports = { appRouter, apiRouter };
