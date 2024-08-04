@@ -6,15 +6,16 @@ const appRouter = Router();
 const apiRouter = Router();
 
 //root route opd
+appRouter.get('/admin/login', authController.renderLogin);
 appRouter.get('/login', authController.renderLogin);
 appRouter.get('/signup', authController.renderSignup);
-// appRouter.get('/lupa-password', authController.renderForgetPassword);
+appRouter.get('/ganti-password', authController.renderChangePassword);
 
 //API
-apiRouter.post("/login", authController.postLogin);
-apiRouter.post("/signup", authController.postSignup);
-// apiRouter.patch("/reset-password", authController.resetpassword);
-apiRouter.post("/logout", authController.postLogout);
+apiRouter.post("/login", authController.login);
+apiRouter.post("/signup", authController.signup);
+apiRouter.patch("/ganti-password", authController.changePassword);
+apiRouter.post("/logout", authController.logout);
 
 module.exports = {appRouter, apiRouter};
 

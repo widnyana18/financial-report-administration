@@ -1,5 +1,3 @@
-const { Model, FilterQuery } = require("mongoose");
-
 const Opd = require("../opd/opd");
 
 exports.login = async (email, password) => {
@@ -9,11 +7,12 @@ exports.login = async (email, password) => {
     throw new Error(error);
   }
 };
-exports.signup = async (email, password, phoneNumber) => {
+exports.signup = async (req) => {
   const opd = new Opd({
-    email: email,
-    password: password,
-    phoneNumber: phoneNumber,
+    fullname: req.fullname,
+    email: req.email,
+    password: req.password,    
+    institution: req.institution,
   });
 
   try {
