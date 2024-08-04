@@ -6,7 +6,7 @@ const appName = process.env.APP_NAME;
 
 exports.renderIndex = async (req, res, next) => {
   const reportings = await reportingService.getAllReporting();
-  res.render("reporting/index", {
+  res.render("index", {
     pageTitle: appName,
     path: "/",
     reportings: reportings,
@@ -14,9 +14,9 @@ exports.renderIndex = async (req, res, next) => {
 };
 
 exports.renderReportings = async (req, res, next) => {
-  const employee = req.session.user;
+  const opd = req.session.user;
   const reportings = await reportingService.getAllReporting();
-  res.render("/reporting/reporting", {
+  res.render("/reporting/reportings", {
     pageTitle: "My Laporan",
     path: "/laporan",
     reportings: reportings,
@@ -54,7 +54,7 @@ exports.renderUpdateBudgetRecord = async (req, res, next) => {
   if (!reporting) {
     res.redirect(`/laporan/${id}`);
   } else {
-    res.render("reporting/update-budget-data", {
+    res.render("reporting/edit-budget", {
       pageTitle: "Update Data Anggaran",
       path: "/laporan",
       reporting: reporting,
@@ -63,7 +63,7 @@ exports.renderUpdateBudgetRecord = async (req, res, next) => {
 };
 
 exports.getAllReporting = async (req, res, next) => {
-  // const employee = req.session.user;
+  // const opd = req.session.user;
 
   try {
     const reportings = await reportingService.getAllReporting();

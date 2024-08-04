@@ -4,9 +4,9 @@ const Schema = mongoose.Schema;
 
 const reportingSchema = new Schema(
   {
-    employeeId: {
+    opdId: {
       type: Schema.Types.ObjectId,
-      ref: "Employee",
+      ref: "Opd",
       required: true,
     },
     title: {

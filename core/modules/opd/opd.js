@@ -2,8 +2,12 @@ const mongoose = require("mongoose");
 
 const Schema = mongoose.Schema;
 
-const employeeSchema = new Schema(
+const opdSchema = new Schema(
   {
+    fullname: {
+      type: String,
+      required: true,
+    },
     email: {
       type: String,
       required: true,
@@ -12,12 +16,9 @@ const employeeSchema = new Schema(
       type: String,
       required: true,
     },
-    phoneNumber: {
-      type: Number,
+    institution: {
+      type: String,
       required: true,
-    },
-    reportings: {
-      type: Array,
     },
   },
   {
@@ -26,4 +27,4 @@ const employeeSchema = new Schema(
   }
 );
 
-module.exports = mongoose.model("Employee", employeeSchema);
+module.exports = mongoose.model("Opd", opdSchema);

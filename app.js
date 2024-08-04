@@ -3,12 +3,13 @@ const { createServer } = require("http");
 const bodyparser = require("body-parser");
 const dotenv = require("dotenv");
 
-const routes = require("./routes");
-const connectDB = require("./common/configs/database");
+const routes = require("./core/routes");
+const connectDB = require("./core/common/configs/database");
 
 const app = express();
 const server = createServer(app);
 
+// set dotenv
 dotenv.config({path :'.env.dev'});
 
 process.env.NODE_ENV = "development";
@@ -19,14 +20,17 @@ if (env !== "test") {
   connectDB();
 }
 
-// parse request to body-parser
-app.use(bodyparser.json());
-
-// log requests
-// app.use(morgan('tiny'));
-
 // set view engine
 app.set("view engine", "ejs");
+app.set("views", "./ui/views");
 
+// parse request to body-parser
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
+// set public folder
+app.use(express.static(path.join(__dirname, "ui/public")));
+
+// load routes
 routes(app);
 module.exports = server;

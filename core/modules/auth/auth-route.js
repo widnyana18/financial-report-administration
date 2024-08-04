@@ -5,7 +5,7 @@ const authController = require("./auth-controller");
 const appRouter = Router();
 const apiRouter = Router();
 
-//root route employee
+//root route opd
 appRouter.get('/login', authController.renderLogin);
 appRouter.get('/signup', authController.renderSignup);
 // appRouter.get('/lupa-password', authController.renderForgetPassword);

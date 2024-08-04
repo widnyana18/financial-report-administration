@@ -6,7 +6,7 @@ exports.getAllReporting = async () => {
   // if (user.role === "admin") {
   return await Reporting.find();
   // }
-  // return await Reporting.findOne({ employeeId: id });
+  // return await Reporting.findOne({ opdId: id });
 };
 
 exports.findBudget = async (filter) => {
@@ -20,7 +20,7 @@ exports.findBudget = async (filter) => {
 exports.createReporting = async (data) => {
   const reporting = new Reporting({
     title: data.title,
-    employeeId: data.employeeId,
+    opdId: data.opdId,
     period: data.period ?? "January - Maret",
     year: data.year ?? "2024",
   });
