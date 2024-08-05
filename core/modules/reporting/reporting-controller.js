@@ -1,62 +1,49 @@
 const { Types } = require("mongoose");
 
 const reportingService = require("./reporting-service");
+const dbhBudgetService = require("../dbh-budget/dbh-budget-service");
 
 const appName = process.env.APP_NAME;
 
 exports.renderIndex = async (req, res, next) => {
   const reportings = await reportingService.getAllReporting();
-  res.render("index", {
+  res.render("reporting/index", {
     pageTitle: appName,
     path: "/",
     reportings: reportings,
   });
 };
 
-exports.renderReportings = async (req, res, next) => {
-  const opd = req.session.user;
-  const reportings = await reportingService.getAllReporting();
-  res.render("/reporting/reportings", {
-    pageTitle: "My Laporan",
-    path: "/laporan",
-    reportings: reportings,
-  });
-};
-
 exports.renderReportingDetails = async (req, res, next) => {
   const reportId = req.params.reportId;
-  const reporting = await reportingService.findBudget({reportingId: reportId});
+  const reporting = await reportingService.getReportingById(reportId);
+  const dbhBudget = await dbhBudgetService.getAllBudgetByReporting(reportId);
+
   res.render("reporting/reporting-details", {
-    pageTitle: "Data Anggaran",
-    path: "/laporan",
+    pageTitle: req.body.title,
+    path: "/admin",
     reporting: reporting,
+    dbhBudget: dbhBudget,
   });
 };
 
 exports.renderCreateReporting = (req, res, next) => {
   res.render("reporting/create-reporting", {
     pageTitle: "Buat Laporan Baru",
-    path: "/laporan",
+    path: "/admin",
   });
 };
 
-exports.renderAddBudget = (req, res, next) => {
-  res.render("reporting/add-budget", {
-    pageTitle: "Tambah Data Anggaran",
-    path: "/laporan",
-  });
-};
-
-exports.renderUpdateBudgetRecord = async (req, res, next) => {
+exports.renderUpdateReporting = async (req, res, next) => {
   const reportId = req.params.reportId;
-  const reporting = await reportingService.findBudget({reportingId: reportId});
+  const reporting = await reportingService.getReportingById(reportId);
 
   if (!reporting) {
-    res.redirect(`/laporan/${id}`);
+    res.redirect(`/admin/${reportId}`);
   } else {
-    res.render("reporting/edit-budget", {
+    res.render("reporting/create-reporting", {
       pageTitle: "Update Data Anggaran",
-      path: "/laporan",
+      path: "/admin",
       reporting: reporting,
     });
   }
@@ -64,30 +51,22 @@ exports.renderUpdateBudgetRecord = async (req, res, next) => {
 
 exports.getAllReporting = async (req, res, next) => {
   // const opd = req.session.user;
-
-  try {
-    const reportings = await reportingService.getAllReporting();
-    return res.status(200).json(reportings);
-  } catch (error) {
-    return next(error);
-  }
+  const reportings = await reportingService.getAllReporting();
+  return res.status(200).json(reportings);
 };
 
-exports.getAllBudgetByReporting = async (req, res, next) => {
+exports.getReporting = async (req, res, next) => {
+  // const opd = req.session.user;
   const reportId = req.params.reportId;
-  try {
-    const budgetData = await reportingService.findBudget({reportingId: reportId});
-    return res.status(200).json(budgetData);
-  } catch (error) {
-    return next(error);
-  }
+  const reporting = await reportingService.getReportingById(reportId);
+  return res.status(200).json(reporting);
 };
 
 exports.createReporting = async (req, res, next) => {
   const data = req.body;
   try {
     const reporting = await reportingService.createReporting(data);
-    // res.redirect("/laporan");
+    // res.redirect("/admin");
     return res.status(200).json(reporting);
   } catch (error) {
     return next(error);
@@ -99,7 +78,9 @@ exports.updateReporting = async (req, res, next) => {
   const data = req.body;
 
   try {
-    const reporting = await reportingService.findBudget({ reportingId: reportId });
+    const reporting = await reportingService.findBudget({
+      reportingId: reportId,
+    });
     if (!reporting) {
       res.status(404).json({ message: "Reporting not found" });
     }
@@ -125,9 +106,9 @@ exports.deleteReporting = async (req, res, next) => {
 };
 
 exports.addBudget = async (req, res, next) => {
-  const reportingId = new Types.ObjectId(req.params.reportId);    
+  const reportingId = new Types.ObjectId(req.params.reportId);
   console.log("REEEEQQQ BOOODY: " + req.body[0]);
-  
+
   try {
     const budgetData = await reportingService.addBudget(reportingId, req.body);
     return res.status(200).json(budgetData);
@@ -145,10 +126,7 @@ exports.updateBudgetRecord = async (req, res, next) => {
     if (!budgetRecord) {
       res.status(404).json({ message: "Reporting not found" });
     }
-    const updatedBudget = await reportingService.updateBudget(
-      budgetId,
-      data
-    );
+    const updatedBudget = await reportingService.updateBudget(budgetId, data);
     return res.status(200).json(updatedBudget);
   } catch (error) {
     return next(error);

@@ -3,12 +3,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const reportingSchema = new Schema(
-  {
-    opdId: {
-      type: Schema.Types.ObjectId,
-      ref: "Opd",
-      required: true,
-    },
+  {        
     title: {
       type: String,
       required: true,
@@ -25,9 +20,34 @@ const reportingSchema = new Schema(
       type: String,
       default: "menunggu",
     },
+    totalDbhBudget: {
+      type: Number,
+      default: 0,
+    },
+    totalDbhRealization: {
+      type: Number,
+      default: 0,
+    },
+    dbhRecieved: {
+      pkb: {
+        type: Number,
+      },
+      bbnkb: {
+        type: Number,
+      },
+      pbbkb: {
+        type: Number,
+      },
+      pap: {
+        type: Number,
+      },
+      pajakRokok: {
+        type: Number,
+      },
+    },
     fileExcelUrl: {
-      type: String      
-    },    
+      type: String,
+    },
   },
   {
     timestamps: true,

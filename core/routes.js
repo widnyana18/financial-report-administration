@@ -5,12 +5,12 @@ const reportingRoute = require("./modules/reporting/reporting-route");
 function routes(app) {
   // app endpoint  
   app.use(authRoute.appRouter);
-  app.use('/karyawan', opdRoute.appRouter);
-  app.use('/laporan', reportingRoute.appRouter);
+  app.use('/opd', opdRoute.appRouter);
+  app.use('/admin', reportingRoute.appRouter);
 
   // api endpoint
   app.use('/api', authRoute.apiRouter);
-  app.use('/api/karyawan', opdRoute.apiRouter);
+  app.use('/api/opd', opdRoute.apiRouter);
   app.use('/api/laporan', reportingRoute.apiRouter);
 }
 
