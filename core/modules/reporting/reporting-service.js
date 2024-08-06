@@ -1,6 +1,4 @@
 const Reporting = require("./models/reporting");
-const Budget = require("./models/budget");
-const { generatedId } = require("../../common/utils/id_gen");
 
 exports.getAllReporting = async () => {
   // if (user.role === "admin") {
@@ -9,9 +7,9 @@ exports.getAllReporting = async () => {
   // return await Reporting.findOne({ opdId: id });
 };
 
-exports.getReportingById = async (id) => {
+exports.findReporting = async (filter) => {
   try {
-    return await Opd.findById(id);
+    return await Opd.findById(filter);
   } catch (error) {
     throw new Error(error);
   }

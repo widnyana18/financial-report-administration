@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const Schema = mongoose.Schema;
 
-const budgetSchema = new Schema(
+const dbhBudgetSchema = new Schema(
   {
     _id: {
       type: String,
@@ -33,20 +33,14 @@ const budgetSchema = new Schema(
     pagu: {
       type: Number,
       default: 0,
-    },    
-    dbh: [
-      {
-        dbhType: {
-          type: String,
-        },
-        dbhAnggaran: {
-          type: Number,
-        },
-        dbhRealisasi: {
-          type: Number,
-        },
-      },
-    ],
+    },
+    dbh: {
+      pkb: [Number],
+      bbnkb: [Number],
+      pbbkb: [Number],
+      pap: [Number],
+      pajakRokok: [Number],
+    },
     description: {
       type: String,
     },
@@ -58,4 +52,4 @@ const budgetSchema = new Schema(
   }
 );
 
-module.exports = mongoose.model("Budget", budgetSchema, "budgets", true);
+module.exports = mongoose.model("DbhBudget", dbhBudgetSchema);

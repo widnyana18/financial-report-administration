@@ -15,8 +15,11 @@ exports.signup = async (req) => {
     institution: req.institution,
   });
 
+  const reportId = await reportingService.findReporting({period: req.period});
+  
   try {
-    return await opd.save();
+     await opd.save();
+     return reportId;
   } catch (error) {
     throw new Error(error);
   }

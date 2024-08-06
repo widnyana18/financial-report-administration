@@ -1,119 +1,124 @@
+const DbhBudget = require("./model/dbh-budget");
+const { generatedId } = require("../../common/utils/id_gen");
+const reportingService = require("../reporting/reporting-service");
+
 exports.findBudget = async (filter) => {
-    try {
-      return await Budget.find(filter);
-    } catch (error) {
-      throw new Error(error);
-    }
-  };
+  try {
+    return await DbhBudget.find(filter);
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+exports.addBudget = async (reportingId, opdId, data) => {
   
-  exports.addBudget = async (reportingId, data) => {
-    try {
-      const budgetData = await createBudgetId(reportingId, data);
-      console.log("BUDGET DATA : " + budgetData[0]);
-      return await Budget.insertMany(budgetData);
-    } catch (error) {
-      throw new Error(error);
-    }
-  };
-  
-  const createBudgetId = async (reportingId, data) => {
-    let budgetId;
-    const budgetData = [];
-  
-    const lembaga = await Budget.findOne({
-      parameter: "Lembaga",
-    }).sort({ createdAt: -1 });
-    const program = await Budget.findOne({
-      parameter: "Program",
-    }).sort({ createdAt: -1 });
-    const kegiatan = await Budget.findOne({
-      parameter: "Kegiatan",
-    }).sort({ createdAt: -1 });
-    const subKegiatan = await Budget.findOne({
-      parameter: "Sub Kegiatan",
-    }).sort({ createdAt: -1 });
-  
-    let institutionId = lembaga.id ?? "LM01";
-    let programId = program.id ?? `${institutionId}PG01`;
-    let activityId = kegiatan.id ?? `${programId}KG01`;
-    let subActivityId = subKegiatan.id ?? `${activityId}SK001`;
-  
-    for (const item of data) {
-      switch (item.parameter) {
-        case "Lembaga":
-          budgetId = generatedId(institutionId);
-          institutionId = budgetId;
-          programId = `${institutionId}PG01`;
-          activityId = `${programId}KG01`;
-          subActivityId = `${activityId}SK001`;
-          break;
-        case "Program":
-          budgetId = generatedId(programId);
-          programId = budgetId;
-          activityId = `${programId}KG01`;
-          subActivityId = `${activityId}SK001`;
-          break;
-        case "Kegiatan":
-          budgetId = generatedId(activityId);
-          activityId = budgetId;
-          subActivityId = `${activityId}SK001`;
-          break;
-        default:
-          budgetId = generatedId(subActivityId);
-          subActivityId = budgetId;
-          break;
-      }
-  
-      console.log("CHECK BUDGET ID: " + budgetId);
-      console.log("CHECK BUDGET ROW: " + item);
-  
-      budgetData.push({
-        id: budgetId,
-        reportingId: reportingId,
-        ...item,
-      });
-    }
-    console.log("CHECK BUDGET DATA: " + budgetData[1]);
-  
-    return budgetData;
-  };
-  
-  exports.calculateBudget = async (budgetId) => {
-    try {
-      Budget.createIndexes({ id: "input" });
-      const subTotalLembaga = await Budget.find({
-        $input: { $search: budgetId },
+  const budgetId = await createBudgetId(reportingId, data);
+  const dbhBudget = new DbhBudget({
+    _id: budgetId,
+    reportingId: reportingId,
+    opdId: opdId,
+    noRek: data.noRek,
+    parameter: data.parameter,
+    name: data.name,
+    pagu: data.pagu,
+    dbh: data.dbh,
+  });
+
+  try {
+    return await dbhBudget.save();
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+const createBudgetId = async (data) => {
+  let budgetId;
+
+  const budget = await DbhBudget.findOne({
+    parameter: data.parameter,
+    _id: `/${data.parentId}/`,
+  });
+
+  switch (data.parameter) {
+    case "Lembaga":
+      const lembaga = await DbhBudget.findOne({
         parameter: "Lembaga",
-      });
-      const newBudget = await subTotalLembaga.map((item) => {
-        const paguInduk = item.reduce((total, obj) => total + obj.paguInduk, 0);
-        const paguPerubahan = item.reduce(
-          (total, obj) => total + obj.paguPerubahan,
-          0
-        );
-        return Budget.findOneAndUpdate(
-          { id: budgetId },
-          { paguInduk, paguPerubahan },
-          {
-            new: true,
-          }
-        );
-      });
-    } catch (error) {
-      throw new Error(error);
+      }).sort({ createdAt: -1 });
+
+      budgetId = generatedId(lembaga._id) ?? "LM01";
+      break;
+    case "Program":
+      budgetId = generatedId(budget._id) ?? `${data.parentId}PG01`;
+      break;
+    case "Kegiatan":
+      budgetId = generatedId(budget._id) ?? `${data.parentId}KG01`;
+      break;
+    default:
+      budgetId = generatedId(budget._id) ?? `${data.parentId}SK001`;
+      break;
+  }
+  return budgetId;
+};
+
+exports.calculateBudget = async (reportId) => {
+  try {
+    const institutionBudgetList = await DbhBudget.find({
+      parameter: "Lembaga"
+    });
+
+    let pagu = 0;
+    let pkbBudget = 0;
+    let pkbRealization = 0;
+    let bbnkbBudget = 0;
+    let bbnkbRealization = 0;
+    let pbbkbBudget = 0;
+    let pbbkbRealization = 0;
+    let papBudget = 0;
+    let papRealization = 0;
+    let pajakRokokBudget = 0;
+    let pajakRokokRealization = 0;
+
+    for (let item of institutionBudgetList) {
+      pagu += item.pagu;
+      pkbBudget += item.dbh.pkb[0];
+      pkbRealization += item.dbh.pkb[1];
+      bbnkbBudget += item.dbh.bbnkb[0];
+      bbnkbRealization += item.dbh.bbnkb[1];
+      pbbkbBudget += item.dbh.pbbkb[0];
+      pbbkbRealization += item.dbh.pbbkb[1];
+      papBudget += item.dbh.pap[0];
+      papRealization += item.dbh.pap[1];
+      pajakRokokBudget += item.dbh.pajakRokok[0];
+      pajakRokokRealization += item.dbh.pajakRokok[1];
     }
-  };
-  
-  exports.updateBudget = async (budgetId, input) => {
-    try {
-      return await Budget.findOneAndUpdate({ id: budgetId }, input, {
-        new: true,
-      });
-    } catch (error) {
-      throw new Error(error);
-    }
-  };
-  
-  exports.deleteBudget = async (id) => {
-    return await Budget.deleteOne({ id: id });
-  };
+
+    const totalInstitutionDbh = {
+      pagu: pagu,
+      pkb: [pkbBudget, pkbRealization],
+      bbnkb: [bbnkbBudget, bbnkbRealization],
+      pbbkb: [pbbkbBudget, pbbkbRealization],
+      pap: [papBudget, papRealization],
+      pajakRokok: [pajakRokokBudget, pajakRokokRealization],
+    };
+
+    return await reportingService.updateReporting(reportId, {
+      totalInstitutionDbh: totalInstitutionDbh,
+    });
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+exports.updateBudget = async (budgetId, input) => {
+  try {
+    return await DbhBudget.findOneAndUpdate({ _id: budgetId }, input, {
+      new: true,
+    });
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+exports.deleteBudget = async (id) => {
+  return await DbhBudget.deleteOne({ _id: id });
+};

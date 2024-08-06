@@ -1,8 +1,10 @@
+const { Types } = require("mongoose");
+
 const opdService = require("./opd-service");
 
-exports.renderUpdateOpd = async (req, res, next) => {
-  const id = req.params.id;
-  const opd = await opdService.getOpdById(id);
+exports.renderUpdateOpd = async (req, res, next) => {  
+  const opdId = new Types.ObjectId(req.params.opdId);
+  const opd = await opdService.getOpdById(opdId);
 
   if (!opd) {
     res.redirect("/login");
@@ -25,16 +27,16 @@ exports.getOpd = async (req, res, next) => {
 };
 
 exports.updateOpd = async (req, res, next) => {
-  const id = req.params.id;
+  const opdId = new Types.ObjectId(req.params.opdId);
   const data = req.body;
 
   try {
-    const opd = await opdService.getOpdById(id);
+    const opd = await opdService.getOpdById(opdId);
     if (!opd) {
       res.status(404).json({ message: "Opd not found" });
     }
     const updatedOpd = await opdService.updateOpd(
-      { _id: id },
+      { _id: opdId },
       data
     );
     return res.status(200).json(updatedOpd);
@@ -44,10 +46,10 @@ exports.updateOpd = async (req, res, next) => {
 };
 
 exports.deleteOpd = async (req, res, next) => {
-  const id = req.params.id;
+  const opdId = new Types.ObjectId(req.params.opdId);
 
   try {
-    const deletedOpd = await opdService.deleteOpd(id);
+    const deletedOpd = await opdService.deleteOpd(opdId);
     return res.status(200).json(deletedOpd);
   } catch (error) {
     return next(error);
