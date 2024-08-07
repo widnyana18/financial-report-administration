@@ -1,25 +1,18 @@
 const { Router } = require("express");
 
-const reportingController = require("./reporting-controller");
+const dbhBudgetController = require("./dbh-budget-controller");
 
 const appRouter = Router();
 const apiRouter = Router();
 
 //admin route Reporting website
-appRouter.get("/", reportingController.renderIndex);
-appRouter.get("/", reportingController.renderReportings);
-appRouter.get("/buat-baru", reportingController.renderCreateReporting);
-appRouter.get("/:reportId", reportingController.renderReportingDetails);
-appRouter.get("/:reportId/tambah-record", reportingController.renderAddBudget);
-appRouter.get(
-  "/:reportId/edit-record/:budgetId",
-  reportingController.renderUpdateBudgetRecord
-);
+appRouter.get("/data-dbh", dbhBudgetController.renderDataDbhOpd);
 
 // route API
-apiRouter.get("/:reportId", reportingController.getAllBudgetByReporting);
-apiRouter.post("/:reportId", reportingController.addBudget);
-apiRouter.patch("/:reportId/:budgetId", reportingController.updateBudgetRecord);
-apiRouter.delete("/:reportId/:budgetId", reportingController.deleteBudgetRecord);
+apiRouter.get("/:reportId", dbhBudgetController.findDbhBudgetAdmin);
+apiRouter.get("/:opdId", dbhBudgetController.findDbhBudgetOpd);
+apiRouter.post("/", dbhBudgetController.addBudget);
+apiRouter.patch("/:budgetId", dbhBudgetController.updateBudgetRecord);
+apiRouter.delete("/:budgetId", dbhBudgetController.deleteBudgetRecord);
 
 module.exports = { appRouter, apiRouter };

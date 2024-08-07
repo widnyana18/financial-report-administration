@@ -4,7 +4,7 @@ const opdService = require("../opd/opd-service");
 exports.renderLogin = (req, res, next) => {
   res.render("auth/login", {
     pageTitle: "Login",
-    path: req.originalUrl,
+    path: req.baseUrl,
   });
 };
 

@@ -2,14 +2,14 @@ const { Types } = require("mongoose");
 
 const dbhBudgetService = require("./dbh-budget-service");
 
-
 exports.renderDataDbhOpd = async (req, res, next) => {
   const opdId = req.opd._id;
   const dataDbhOpd = await dbhBudgetService.findBudget({ opdId: opdId });
-  if (req.query['edit'] === true) {
-    const dbhId = req.body.dbhId;
-    const selectedDbh = await dbhBudgetService.findBudget({ _id: dbhId });
 
+  const dbhId = req.body.dbhId;
+  const selectedDbh = await dbhBudgetService.findBudget({ _id: dbhId });
+
+  if (req.query.edit === true) {
     res.render("dbh-budget/data-dbh", {
       pageTitle: req.opd.institution,
       path: "/",
@@ -39,7 +39,7 @@ exports.findDbhBudgetAdmin = async (req, res, next) => {
 
 exports.addBudget = async (req, res, next) => {
   const opdId = req.opd._id;
-  const reportingId = new Types.ObjectId(req.params.reportId);  
+  const reportingId = new Types.ObjectId(req.body.reportId);  
   
   try {
     const budgetData = await dbhBudgetService.addBudget(reportingId, opdId, req.body);
@@ -50,14 +50,15 @@ exports.addBudget = async (req, res, next) => {
 };
 
 exports.updateBudgetRecord = async (req, res, next) => {  
+  const budgetId = req.params.budgetId;
   const data = req.body;
 
   try {
-    const budgetRecord = await dbhBudgetService.findBudget({ id: data.budgetId });
+    const budgetRecord = await dbhBudgetService.findBudget({ id: budgetId });
     if (!budgetRecord) {
       res.status(404).json({ message: "Reporting not found" });
     }
-    const updatedBudget = await dbhBudgetService.updateBudget(data.budgetId, data);
+    const updatedBudget = await dbhBudgetService.updateBudget(budgetId, data);
     return res.status(200).json(updatedBudget);
   } catch (error) {
     return next(error);
@@ -65,7 +66,7 @@ exports.updateBudgetRecord = async (req, res, next) => {
 };
 
 exports.deleteBudgetRecord = async (req, res, next) => {
-  const budgetId = req.body.budgetId;
+  const budgetId = req.params.budgetId;
 
   try {
     const deletedBudget = await dbhBudgetService.deleteBudget(budgetId);
