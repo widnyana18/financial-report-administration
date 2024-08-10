@@ -1,4 +1,9 @@
-exports.generatedId = (id) => {
+exports.generatedId = (budget) => {
+  if (!budget) {
+    return null;
+  }
+  
+  const id = budget._id;
   const regex = /\d+$/;
   const match = id.match(regex);
   const lastNumber = match[0];

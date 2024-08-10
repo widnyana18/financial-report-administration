@@ -8,7 +8,7 @@ exports.getOpdById = async (id) => {
   }
 };
 
-exports.getOpd = async () => {
+exports.getAllOpd = async () => {
   return await Opd.find();
 };
 

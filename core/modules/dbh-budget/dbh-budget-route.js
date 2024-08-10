@@ -9,7 +9,8 @@ const apiRouter = Router();
 appRouter.get("/data-dbh", dbhBudgetController.renderDataDbhOpd);
 
 // route API
-apiRouter.get("/:reportId", dbhBudgetController.findDbhBudgetAdmin);
+apiRouter.get("/", dbhBudgetController.findAll);
+apiRouter.get("/admin/:reportId", dbhBudgetController.findDbhBudgetAdmin);
 apiRouter.get("/:opdId", dbhBudgetController.findDbhBudgetOpd);
 apiRouter.post("/", dbhBudgetController.addBudget);
 apiRouter.patch("/:budgetId", dbhBudgetController.updateBudgetRecord);

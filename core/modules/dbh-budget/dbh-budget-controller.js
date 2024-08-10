@@ -1,6 +1,6 @@
-const { Types } = require("mongoose");
-
 const dbhBudgetService = require("./dbh-budget-service");
+
+const { Types } = require("mongoose");
 
 exports.renderDataDbhOpd = async (req, res, next) => {
   const opdId = req.opd._id;
@@ -25,24 +25,28 @@ exports.renderDataDbhOpd = async (req, res, next) => {
   }
 };
 
+exports.findAll = async (req, res, next) => {      
+  const dbhBudget = await dbhBudgetService.findBudget();
+  return res.status(200).json(dbhBudget);
+};
+
 exports.findDbhBudgetOpd = async (req, res, next) => {    
-  const opdId = req.opd._id;  
+  // const opdId = req.opd._id;
+  const opdId = new Types.ObjectId(req.params.opdId);
   const dbhBudget = await dbhBudgetService.findBudget({opdId: opdId});
   return res.status(200).json(dbhBudget);
 };
 
 exports.findDbhBudgetAdmin = async (req, res, next) => {      
   const reportingId = new Types.ObjectId(req.params.reportId);
-  const dbhBudget = await dbhBudgetService.findBudget({reportId: reportingId});
+  const dbhBudget = await dbhBudgetService.findBudget({reportingId: reportingId});
   return res.status(200).json(dbhBudget);
 };
 
-exports.addBudget = async (req, res, next) => {
-  const opdId = req.opd._id;
-  const reportingId = new Types.ObjectId(req.body.reportId);  
-  
+exports.addBudget = async (req, res, next) => {  
+  // const opdId = req.opd._id;  
   try {
-    const budgetData = await dbhBudgetService.addBudget(reportingId, opdId, req.body);
+    const budgetData = await dbhBudgetService.addBudget(req.body);
     return res.status(200).json(budgetData);
   } catch (error) {
     return next(error);

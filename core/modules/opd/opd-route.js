@@ -9,7 +9,8 @@ const apiRouter = Router();
 appRouter.get('/:id', opdController.renderUpdateOpd);
 
 //API
-apiRouter.get('/', opdController.getOpd);
+apiRouter.get('/', opdController.getAllOpd);
+apiRouter.get('/:id', opdController.getOpd);
 apiRouter.patch('/:id', opdController.updateOpd);
 apiRouter.delete('/:id', opdController.deleteOpd);
 

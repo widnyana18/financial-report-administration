@@ -20,7 +20,7 @@ const reportingSchema = new Schema(
       type: String,
       default: "menunggu",
     },
-    totalinstitutionDbh: {
+    totalInstitutionDbh: {
       pagu: {
         type: Number,
         default: 0,
@@ -66,6 +66,7 @@ const reportingSchema = new Schema(
     },
   },
   {
+    strict: true,
     timestamps: true,
     versionKey: false,
   }

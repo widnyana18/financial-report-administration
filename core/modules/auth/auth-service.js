@@ -1,25 +1,24 @@
 const Opd = require("../opd/opd");
 
-exports.login = async (email, password) => {
+exports.login = async (username, password) => {
   try {
-    return await Opd.findOne({ email: email, password: password });
+    return await Opd.findOne({ username: username, password: password });
   } catch (error) {
     throw new Error(error);
   }
 };
+
 exports.signup = async (req) => {
   const opd = new Opd({
-    fullname: req.fullname,
-    email: req.email,
-    password: req.password,    
+    opdName: req.opdName,
+    username: req.username,
+    password: req.password,   
+    phone: req.phone, 
     institution: req.institution,
   });
-
-  const reportId = await reportingService.findReporting({period: req.period});
   
   try {
-     await opd.save();
-     return reportId;
+     return await opd.save();
   } catch (error) {
     throw new Error(error);
   }

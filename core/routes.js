@@ -11,10 +11,10 @@ function routes(app) {
   app.use(dbhBudgetRoute.appRouter);
 
   // api endpoint
-  app.use('/api', authRoute.apiRouter);
+  app.use('/api/auth', authRoute.apiRouter);
   app.use('/api/opd', opdRoute.apiRouter);
   app.use('/api/laporan', reportingRoute.apiRouter);
-  app.use('/api/bdh', dbhBudgetRoute.apiRouter);
+  app.use('/api/dbh', dbhBudgetRoute.apiRouter);
 }
 
 module.exports = routes;

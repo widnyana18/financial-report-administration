@@ -9,11 +9,11 @@ const apiRouter = Router();
 appRouter.get("/", reportingController.renderIndex);
 appRouter.get("/:reportId", reportingController.renderReportingDetails);
 appRouter.get("/buat-laporan", reportingController.renderCreateReporting);
-appRouter.get("/edit-laporan", reportingController.renderEditReporting);
+appRouter.get("/edit-laporan", reportingController.renderUpdateReporting);
 
 // route API
 apiRouter.get("/", reportingController.getAllReporting);
-apiRouter.get("/", reportingController.getReporting);
+apiRouter.get("/:reportId", reportingController.getReporting);
 apiRouter.post("/", reportingController.createReporting);
 apiRouter.patch("/:reportId", reportingController.updateReporting);
 apiRouter.delete("/:reportId", reportingController.deleteReporting);

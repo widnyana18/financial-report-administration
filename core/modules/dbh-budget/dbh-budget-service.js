@@ -2,6 +2,8 @@ const DbhBudget = require("./model/dbh-budget");
 const { generatedId } = require("../../common/utils/id_gen");
 const reportingService = require("../reporting/reporting-service");
 
+const { Types } = require("mongoose");
+
 exports.findBudget = async (filter) => {
   try {
     return await DbhBudget.find(filter);
@@ -10,17 +12,23 @@ exports.findBudget = async (filter) => {
   }
 };
 
-exports.addBudget = async (reportingId, opdId, data) => {
-  const budgetId = await createBudgetId(reportingId, data);
+exports.addBudget = async (data) => {
+  const reporting = await reportingService.findReporting({
+    triwulan: data.triwulan,
+    year: data.year,
+  });
+  // const opdId = new Types.ObjectId(data.opdId);
+  const budgetId = await createBudgetId(data);
   const dbhBudget = new DbhBudget({
     _id: budgetId,
-    reportingId: reportingId,
-    opdId: opdId,
+    reportingId: reporting._id,
+    opdId: data.opdId,
     noRek: data.noRek,
     parameter: data.parameter,
     name: data.name,
     pagu: data.pagu,
     dbh: data.dbh,
+    description: data.description,
   });
 
   try {
@@ -33,27 +41,26 @@ exports.addBudget = async (reportingId, opdId, data) => {
 const createBudgetId = async (data) => {
   let budgetId;
 
-  const budget = await DbhBudget.findOne({
+  const latestBudget = await DbhBudget.findOne({
     parameter: data.parameter,
-    _id: `/${data.parentId}/`,
+    _id: `/${data.parentId}/i`,
   });
 
   switch (data.parameter) {
     case "Lembaga":
-      const lembaga = await DbhBudget.findOne({
+      const latestLembaga = await DbhBudget.findOne({
         parameter: "Lembaga",
       }).sort({ createdAt: -1 });
-
-      budgetId = generatedId(lembaga._id) ?? "LM01";
+      budgetId = generatedId(latestLembaga) ?? 'LM01';
       break;
     case "Program":
-      budgetId = generatedId(budget._id) ?? `${data.parentId}PG01`;
+      budgetId = generatedId(latestBudget) ?? `${data.parentId}PG01`;
       break;
     case "Kegiatan":
-      budgetId = generatedId(budget._id) ?? `${data.parentId}KG01`;
+      budgetId = generatedId(latestBudget) ?? `${data.parentId}KG01`;
       break;
     default:
-      budgetId = generatedId(budget._id) ?? `${data.parentId}SK001`;
+      budgetId = generatedId(latestBudget) ?? `${data.parentId}SK001`;
       break;
   }
   return budgetId;
@@ -62,7 +69,7 @@ const createBudgetId = async (data) => {
 exports.calculateBudget = async (reportId) => {
   try {
     const institutionBudgetList = await DbhBudget.find({
-      parameter: "Lembaga"
+      parameter: "Lembaga",
     });
 
     let pagu = 0;

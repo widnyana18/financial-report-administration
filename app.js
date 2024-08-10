@@ -2,6 +2,7 @@ const express = require("express");
 const { createServer } = require("http");
 const bodyparser = require("body-parser");
 const dotenv = require("dotenv");
+const path = require("path");
 
 const routes = require("./core/routes");
 const connectDB = require("./core/common/configs/database");

@@ -16,8 +16,10 @@ exports.renderIndex = async (req, res, next) => {
 
 exports.renderReportingDetails = async (req, res, next) => {
   const reportingId = new Types.ObjectId(req.params.reportId);
-  const reporting = await reportingService.findReporting({_id: reportingId});
-  const dbhBudget = await dbhBudgetService.getAllBudgetByReporting(reportingId);
+  const reporting = await reportingService.findReporting({ _id: reportingId });
+  const dbhBudget = await dbhBudgetService.findBudget({
+    reportingId: reportingId,
+  });
 
   res.render("reporting/reporting-details", {
     pageTitle: req.body.title,
@@ -36,7 +38,7 @@ exports.renderCreateReporting = (req, res, next) => {
 
 exports.renderUpdateReporting = async (req, res, next) => {
   const reportingId = new Types.ObjectId(req.params.reportId);
-  const reporting = await reportingService.findReporting({_id: reportingId});
+  const reporting = await reportingService.findReporting({ _id: reportingId });
 
   if (!reporting) {
     res.redirect(`/admin/${reportingId}`);
@@ -58,7 +60,9 @@ exports.getAllReporting = async (req, res, next) => {
 exports.getReporting = async (req, res, next) => {
   // const opd = req.session.user;
   const reportingId = new Types.ObjectId(req.params.reportId);
-  const reporting = await reportingService.findReporting({_id: reportingId});
+  await dbhBudgetService.calculateBudget(reportingId);
+
+  const reporting = await reportingService.findReporting({ _id: reportingId });
   return res.status(200).json(reporting);
 };
 
@@ -78,8 +82,8 @@ exports.updateReporting = async (req, res, next) => {
   const data = req.body;
 
   try {
-    const reporting = await reportingService.findBudget({
-      reportingId: reportingId,
+    const reporting = await reportingService.findReporting({
+      _id: reportingId,
     });
     if (!reporting) {
       res.status(404).json({ message: "Reporting not found" });
@@ -98,7 +102,9 @@ exports.deleteReporting = async (req, res, next) => {
   const reportingId = new Types.ObjectId(req.params.reportId);
 
   try {
-    const deletedReporting = await reportingService.deleteReporting(reportingId);
+    const deletedReporting = await reportingService.deleteReporting(
+      reportingId
+    );
     return res.status(200).json(deletedReporting);
   } catch (error) {
     return next(error);

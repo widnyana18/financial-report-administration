@@ -20,11 +20,11 @@ exports.renderChangePassword = (req, res, next) => {
 };
 
 exports.login = async (req, res, next) => {
-  const email = req.body.email;
+  const username = req.body.username;
   const password = req.body.password;
 
   try {
-    const result = await authService.login(email, password);
+    const result = await authService.login(username, password);
     return res.status(200).json(result);
   } catch (error) {
     return next(error);
@@ -33,7 +33,7 @@ exports.login = async (req, res, next) => {
 
 exports.signup = async (req, res, next) => {
   try {
-    const result = await authService.signup(req);
+    const result = await authService.signup(req.body);
     return res.status(200).json(result);
   } catch (error) {
     return next(error);
@@ -41,11 +41,14 @@ exports.signup = async (req, res, next) => {
 };
 
 exports.changePassword = async (req, res, next) => {
-  const email = req.body.email;
+  const username = req.body.username;
   const password = req.body.password;
 
   try {
-    const result = await opdService.updateOpd({email:email}, password);
+    const result = await opdService.updateOpd(
+      { username: username },
+      { password: password }
+    );
     return res.status(200).json(result);
   } catch (error) {
     return next(error);
