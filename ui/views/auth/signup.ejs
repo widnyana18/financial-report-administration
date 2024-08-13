@@ -1,0 +1,39 @@
+<%- include('../partials/head.ejs') %>
+</head>
+<body>
+    <main>
+        <div class="container my-5">
+            <div class="row align-items-center justify-content-center">
+                <div class="col-sm-4 mx-auto">            
+                    <p class="h2 mb-5 text-center">Buat Akun Baru</p>                    
+                    <form action="/api/auth/signup" method="POST" class="needs-validation"  novalidate>
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" name="username" id="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" name="password" id="password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="opd-name" class="form-label">Nama OPD</label>
+                            <input type="text" class="form-control" name="opdName" id="opd-name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="phone-number" class="form-label">Nomor HP</label>
+                            <input type="text" class="form-control" name="phone" id="phone-number" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="institution" class="form-label">Lembaga</label>
+                            <input type="text" class="form-control" name="institution" id="institution" required>
+                        </div>
+                        <div class="w-100 text-center">
+                            <button type="submit" class="w-100 btn btn-primary mb-3">DAFTAR AKUN</button>
+                            <p><a href="/login" class="link-underline-primary">Balik Login</a></p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+<%- include('../partials/end.ejs') %>

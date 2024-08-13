@@ -2,7 +2,7 @@ const Opd = require("./opd");
 
 exports.getOpdById = async (id) => {
   try {
-    return await Opd.findById(id);
+    return await Opd.findOne({_id: id});
   } catch (error) {
     throw new Error(error);
   }

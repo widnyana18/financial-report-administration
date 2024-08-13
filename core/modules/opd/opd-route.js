@@ -11,7 +11,7 @@ appRouter.get('/:id', opdController.renderUpdateOpd);
 //API
 apiRouter.get('/', opdController.getAllOpd);
 apiRouter.get('/:id', opdController.getOpd);
-apiRouter.patch('/:id', opdController.updateOpd);
+apiRouter.post('/:id', opdController.updateOpd);
 apiRouter.delete('/:id', opdController.deleteOpd);
 
 module.exports = {appRouter, apiRouter};

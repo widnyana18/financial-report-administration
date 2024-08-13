@@ -13,7 +13,7 @@ apiRouter.get("/", dbhBudgetController.findAll);
 apiRouter.get("/admin/:reportId", dbhBudgetController.findDbhBudgetAdmin);
 apiRouter.get("/:opdId", dbhBudgetController.findDbhBudgetOpd);
 apiRouter.post("/", dbhBudgetController.addBudget);
-apiRouter.patch("/:budgetId", dbhBudgetController.updateBudgetRecord);
+apiRouter.post("/:budgetId", dbhBudgetController.updateBudgetRecord);
 apiRouter.delete("/:budgetId", dbhBudgetController.deleteBudgetRecord);
 
 module.exports = { appRouter, apiRouter };

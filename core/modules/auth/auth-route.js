@@ -14,7 +14,7 @@ appRouter.get('/ganti-password', authController.renderChangePassword);
 //API
 apiRouter.post("/login", authController.login);
 apiRouter.post("/signup", authController.signup);
-apiRouter.patch("/ganti-password", authController.changePassword);
+apiRouter.post("/ganti-password", authController.changePassword);
 apiRouter.post("/logout", authController.logout);
 
 module.exports = {appRouter, apiRouter};

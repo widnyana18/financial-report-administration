@@ -15,7 +15,7 @@ appRouter.get("/edit-laporan", reportingController.renderUpdateReporting);
 apiRouter.get("/", reportingController.getAllReporting);
 apiRouter.get("/:reportId", reportingController.getReporting);
 apiRouter.post("/", reportingController.createReporting);
-apiRouter.patch("/:reportId", reportingController.updateReporting);
+apiRouter.post("/:reportId", reportingController.updateReporting);
 apiRouter.delete("/:reportId", reportingController.deleteReporting);
 
 module.exports = { appRouter, apiRouter };

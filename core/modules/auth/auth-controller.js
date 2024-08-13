@@ -13,7 +13,7 @@ exports.renderSignup = (req, res, next) => {
 };
 
 exports.renderChangePassword = (req, res, next) => {
-  res.render("auth/change-password", {
+  res.render("auth/ganti-password", {
     pageTitle: "Ganti Password",
     path: "/ganti-password",
   });
@@ -24,8 +24,12 @@ exports.login = async (req, res, next) => {
   const password = req.body.password;
 
   try {
-    const result = await authService.login(username, password);
-    return res.status(200).json(result);
+    const user = await authService.login(username, password);
+    
+    if (user) {
+      res.redirect("/data-dbh");
+    }
+    // return res.status(200).json(result);
   } catch (error) {
     return next(error);
   }
@@ -34,22 +38,28 @@ exports.login = async (req, res, next) => {
 exports.signup = async (req, res, next) => {
   try {
     const result = await authService.signup(req.body);
-    return res.status(200).json(result);
+    if (result) {
+      res.redirect("/login");
+    }
+    // return res.status(200).json(result);
   } catch (error) {
     return next(error);
   }
 };
 
 exports.changePassword = async (req, res, next) => {
-  const username = req.body.username;
+  const phone = req.body.phone;
   const password = req.body.password;
 
   try {
     const result = await opdService.updateOpd(
-      { username: username },
+      { phone: phone },
       { password: password }
     );
-    return res.status(200).json(result);
+    if (result) {
+      res.redirect("/login");
+    }
+    // return res.status(200).json(result);
   } catch (error) {
     return next(error);
   }
