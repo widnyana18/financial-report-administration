@@ -1,4 +1,4 @@
-const Opd = require("./opd");
+const Opd = require("./models/opd");
 
 exports.getOpdById = async (id) => {
   try {

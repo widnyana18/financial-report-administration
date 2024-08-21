@@ -1,4 +1,4 @@
-const DbhBudget = require("./model/dbh-budget");
+const DbhBudget = require("./models/dbh-budget");
 const { generatedId } = require("../../common/utils/id_gen");
 const reportingService = require("../reporting/reporting-service");
 
@@ -12,11 +12,12 @@ exports.findBudget = async (filter) => {
   }
 };
 
-exports.addBudget = async (data) => {
+exports.addDbhBudget = async (data) => {
   const reporting = await reportingService.findReporting({
-    triwulan: data.triwulan,
+    period: data.period,
     year: data.year,
   });
+
   // const opdId = new Types.ObjectId(data.opdId);
   const budgetId = await createBudgetId(data);
   const dbhBudget = new DbhBudget({
@@ -28,7 +29,6 @@ exports.addBudget = async (data) => {
     name: data.name,
     pagu: data.pagu,
     dbh: data.dbh,
-    description: data.description,
   });
 
   try {
@@ -51,7 +51,7 @@ const createBudgetId = async (data) => {
       const latestLembaga = await DbhBudget.findOne({
         parameter: "Lembaga",
       }).sort({ createdAt: -1 });
-      budgetId = generatedId(latestLembaga) ?? 'LM01';
+      budgetId = generatedId(latestLembaga) ?? "LM01";
       break;
     case "Program":
       budgetId = generatedId(latestBudget) ?? `${data.parentId}PG01`;

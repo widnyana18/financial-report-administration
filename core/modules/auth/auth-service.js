@@ -1,4 +1,4 @@
-const Opd = require("../opd/opd");
+const Opd = require("../opd/models/opd");
 
 exports.login = async (username, password) => {
   try {
