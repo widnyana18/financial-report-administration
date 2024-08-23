@@ -1,6 +1,6 @@
 {
   "name": "financial-report-administration",
-  "version": "0.6.0",
+  "version": "0.6.2",
   "description": "Developing a system for reporting the use of tax bagi hasil pajak for Bali province in the 2024 APBD Karangasem district's.",
   "main": "index.js",
   "repository": {

@@ -34,15 +34,17 @@ exports.renderDataDbhOpd = async (req, res, next) => {
   });
 
   if (selectedReporting !== null) {
-    dataDbhOpd = await dbhBudgetService.findBudget({
+    const result = await dbhBudgetService.findBudget({
       opdId: opdId,
       reportingId: selectedReporting._id ?? "",
     });
+
+    dataDbhOpd = JSON.stringify(result);
   }
 
   console.log("SELEECTT REPORTING : " + selectedReporting);
 
-  console.log("KEREEN : " + dataDbhOpd);
+  console.log("KEREEN : " + dataDbhOpd + "TYPE:" + typeof dataDbhOpd);
   console.log(dbhBudgetService);
 
   if (query.edit === true && dbhId) {

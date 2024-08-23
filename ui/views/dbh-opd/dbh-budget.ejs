@@ -61,6 +61,9 @@
                                     </ul>
                                 </div>
                             </div>
+                            <input type="hidden" name="dataDbh" id="data-dbh" value="<%= dbhBudget.dataDbhOpd %>">        
+                            <div id="parent-parameter">
+                            </div>
                             <div class="mb-3">
                                 <label for="name" class="form-label">Judul<span class="text-danger"> *</span></label>
                                 <input type="text" class="form-control" name="name" id="name" required>
@@ -156,13 +159,12 @@
                 </form>
             </div>
         </div>
-        <% if(dbhBudget.dataDbhOpd.length > 0) { %>                        
-            <%- include('../partials/data-table.ejs') %>
-        <% } else { %>
+      
             <div class="h-100 w-100">
                 <h1 class="display-4">Data Belum Ditambahkan</h1>
             </div>
-        <% } %>
+      
     </main>
 
+    <script src="/js/dbh.js"></script>
 <%- include('../partials/end.ejs') %>
