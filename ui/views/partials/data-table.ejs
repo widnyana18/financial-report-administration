@@ -48,42 +48,51 @@
       </tr>
     </thead>
     <tbody class="table-light table-group-divider align-middle">
-      <% for(let dbhData of dbhBudget.dataDbhOpd) { %>
-        <tr>
-          <th scope="row"><%= dbh.noRek %></th>
-          <td><%= dbhData.name %></td>
-          <td><%= dbhData.pagu %></td>
-          <td><%= dbhData.dbh.pkb[0] ?? - %></td>
-          <td><%= dbhData.dbh.pkb[1] ?? - %></td>
-          <td><%= dbhData.dbh.bbnkb[0] ?? - %></td>
-          <td><%= dbhData.dbh.bbnkb[1] ?? - %></td>
-          <td><%= dbhData.dbh.pbbkb[0] ?? - %></td>
-          <td><%= dbhData.dbh.pbbkb[1] ?? - %></td>
-          <td><%= dbhData.dbh.pap[0] ?? - %></td>
-          <td><%= dbhData.dbh.pap[1] ?? - %></td>
-          <td><%= dbhData.dbh.pajakRokok[0] ?? - %></td>
-          <td><%= dbhData.dbh.pajakRokok[1] ?? - %></td>
-          <td><i class="bi bi-pencil"></i></td>
-          <td><i class="bi bi-trash3"></i></td>
-        </tr>
+      <% for(let data of dbhBudget.dataDbhOpd) { %> 
+        <% if(data.parameter === "Lembaga") { %>
+          <tr>
+            <th scope="row"><%= data.noRek %></th>
+            <th colspan="14" class="px-3 text-start"><%= data.name.toUpperCase() %></th>
+          </tr>
+        <% } else { %>
+          <tr>
+            <th scope="row"><%= data.noRek %></th>
+            <td class="px-3 text-start"><%= data.name %></td>
+            <td><%= data.pagu %></td>
+            <td><%= data.dbh.pkb[0] %></td>
+            <td><%= data.dbh.pkb[1] %></td>
+            <td><%= data.dbh.bbnkb[0] %></td>
+            <td><%= data.dbh.bbnkb[1] %></td>
+            <td><%= data.dbh.pbbkb[0] %></td>
+            <td><%= data.dbh.pbbkb[1] %></td>
+            <td><%= data.dbh.pap[0] %></td>
+            <td><%= data.dbh.pap[1] %></td>
+            <td><%= data.dbh.pajakRokok[0] %></td>
+            <td><%= data.dbh.pajakRokok[1] %></td> 
+            <td><i class="bi bi-pencil"></i></td>
+            <td><i class="bi bi-trash3"></i></td>
+          </tr>
+        <% } %>
       <% } %>
     </tbody>
     <tfoot>
-      <% for(let dbhData of dbhBudget.dataDbhOpd) { %>
-        <% if(dbhData.parameter === "Lembaga") { %>
-          <th colspan="2" scope="row">Sub Total</th>
-          <td><%= dbhData.pagu %></td>
-          <td><%= dbhData.dbh.pkb[0] ?? - %></td>
-          <td><%= dbhData.dbh.pkb[1] ?? - %></td>
-          <td><%= dbhData.dbh.bbnkb[0] ?? - %></td>
-          <td><%= dbhData.dbh.bbnkb[1] ?? - %></td>
-          <td><%= dbhData.dbh.pbbkb[0] ?? - %></td>
-          <td><%= dbhData.dbh.pbbkb[1] ?? - %></td>
-          <td><%= dbhData.dbh.pap[0] ?? - %></td>
-          <td><%= dbhData.dbh.pap[1] ?? - %></td>
-          <td><%= dbhData.dbh.pajakRokok[0] ?? - %></td>
-          <td><%= dbhData.dbh.pajakRokok[1] ?? - %></td>
-        <% } %>
+      <% for(let data of dbhBudget.dataDbhOpd) { %> 
+        <% if(data.parameter === "Lembaga") { %>
+          <td></td>
+          <th scope="row">Sub Total</th>
+          <td><%= data.pagu %></td>
+          <td><%= data.dbh.pkb[0] %></td>
+          <td><%= data.dbh.pkb[1] %></td>
+          <td><%= data.dbh.bbnkb[0] %></td>
+          <td><%= data.dbh.bbnkb[1] %></td>
+          <td><%= data.dbh.pbbkb[0] %></td>
+          <td><%= data.dbh.pbbkb[1] %></td>
+          <td><%= data.dbh.pap[0] %></td>
+          <td><%= data.dbh.pap[1] %></td>
+          <td><%= data.dbh.pajakRokok[0] %></td>
+          <td><%= data.dbh.pajakRokok[1] %></td>
+          <td colspan="2"></td>
+        <% } %> 
       <% } %>
     </tfoot>
   </table>

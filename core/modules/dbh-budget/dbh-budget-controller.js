@@ -12,80 +12,68 @@ exports.renderDataDbhOpd = async (req, res, next) => {
   let years = [];
   const query = req.query;
 
-  const opd = await opdService.getOpdById(opdId);
-  const reportings = await reportingService.getAllReporting();
+  try {
+    const opd = await opdService.getOpdById(opdId);
+    const reportings = await reportingService.getAllReporting();
 
-  reportings.forEach((item, index) => {
-    const isPeriodAdded = periods.includes(item.period);
-    const isYearAdded = years.includes(item.year);
+    reportings.forEach((item, index) => {
+      const isPeriodAdded = periods.includes(item.period);
+      const isYearAdded = years.includes(item.year);
 
-    if (!isPeriodAdded) {
-      periods.push(item.period);
+      if (!isPeriodAdded) {
+        periods.push(item.period);
+      }
+
+      if (!isYearAdded) {
+        years.push(item.year);
+      }
+    });
+
+    const selectedReporting = await reportingService.findReporting({
+      period: query.triwulan,
+      year: Number(query.tahun),
+    });
+
+    if (selectedReporting !== null) {      
+      await dbhBudgetService.calculateBudget({
+        opdId: opdId,
+        reportingId: selectedReporting._id,
+        parameter: "Program",
+      });
+
+      dataDbhOpd = await dbhBudgetService.findBudget({
+        opdId: opdId,
+        reportingId: selectedReporting._id,
+      });
     }
 
-    if (!isYearAdded) {
-      years.push(item.year);
+    console.log("SELEECTT REPORTING : " + selectedReporting);
+
+    console.log("KEREEN : " + dataDbhOpd + "TYPE:" + typeof dataDbhOpd);
+    console.log(dbhBudgetService);
+
+    if (query.edit === true && dbhId) {
+      const selectedDbh = await dbhBudgetService.findBudget({ _id: dbhId });
+
+      res.render("dbh-opd/dbh-budget", {
+        pageTitle: "Update Data DBH OPD",
+        path: "/",
+        opd: opd,
+        filter: { period: query.triwulan, year: query.tahun },
+        selectedDbh: selectedDbh,
+        dbhBudget: { reportingData: { periods, years }, dataDbhOpd },
+      });
+    } else {
+      res.render("dbh-opd/dbh-budget", {
+        pageTitle: "Data Dbh Opd",
+        path: "/",
+        opd: opd,
+        filter: { period: query.triwulan, year: query.tahun },
+        dbhBudget: { reportingData: { periods, years }, dataDbhOpd },
+      });
     }
-  });
-
-  const selectedReporting = await reportingService.findReporting({
-    period: query.triwulan,
-    year: Number(query.tahun),
-  });
-
-  if (selectedReporting !== null) {
-    const result = await dbhBudgetService.findBudget({
-      opdId: opdId,
-      reportingId: selectedReporting._id ?? "",
-    });
-
-    dataDbhOpd = JSON.stringify(result);
-  }
-
-  console.log("SELEECTT REPORTING : " + selectedReporting);
-
-  console.log("KEREEN : " + dataDbhOpd + "TYPE:" + typeof dataDbhOpd);
-  console.log(dbhBudgetService);
-
-  if (query.edit === true && dbhId) {
-    const selectedDbh = await dbhBudgetService.findBudget({ _id: dbhId });
-
-    res.render("dbh-opd/dbh-budget", {
-      pageTitle: "Update Data DBH OPD",
-      path: "/",
-      opd: opd,
-      filter: { period: query.triwulan, year: query.tahun },
-      selectedDbh: selectedDbh,
-      dbhBudget: { reportingData: { periods, years }, dataDbhOpd },
-    });
-  } else {
-    res.render("dbh-opd/dbh-budget", {
-      pageTitle: "Data Dbh Opd",
-      path: "/",
-      opd: opd,
-      filter: { period: query.triwulan, year: query.tahun },
-      dbhBudget: { reportingData: { periods, years }, dataDbhOpd },
-    });
-  }
+  } catch (error) {}
 };
-
-// exports.filterDbhBudget = async (req, res, next) => {
-//   let dataDbhOpd = [];
-//   const data = req.body;
-//   const selectedReporting = await reportingService.findReporting({
-//     period: data.period,
-//     year: data.year,
-//   });
-
-//   if (selectedReporting !== null) {
-//     dataDbhOpd = await dbhBudgetService.findBudget({
-//       opdId: opdId,
-//       reportingId: selectedReporting._id,
-//     });
-//   }
-
-//   return res.status(200).json(dataDbhOpd);
-// };
 
 exports.findAll = async (req, res, next) => {
   const dbhBudget = await dbhBudgetService.findBudget();

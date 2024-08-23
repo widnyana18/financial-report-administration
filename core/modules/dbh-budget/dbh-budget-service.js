@@ -66,11 +66,9 @@ const createBudgetId = async (data) => {
   return budgetId;
 };
 
-exports.calculateBudget = async (reportId) => {
+exports.calculateBudget = async (filter) => {
   try {
-    const institutionBudgetList = await DbhBudget.find({
-      parameter: "Lembaga",
-    });
+    const selectedBudgetList = await DbhBudget.find(filter);
 
     let pagu = 0;
     let pkbBudget = 0;
@@ -84,7 +82,7 @@ exports.calculateBudget = async (reportId) => {
     let pajakRokokBudget = 0;
     let pajakRokokRealization = 0;
 
-    for (let item of institutionBudgetList) {
+    for (let item of selectedBudgetList) {
       pagu += item.pagu;
       pkbBudget += item.dbh.pkb[0];
       pkbRealization += item.dbh.pkb[1];
@@ -98,7 +96,7 @@ exports.calculateBudget = async (reportId) => {
       pajakRokokRealization += item.dbh.pajakRokok[1];
     }
 
-    const totalInstitutionDbh = {
+    const totalDbh = {
       pagu: pagu,
       pkb: [pkbBudget, pkbRealization],
       bbnkb: [bbnkbBudget, bbnkbRealization],
@@ -107,9 +105,23 @@ exports.calculateBudget = async (reportId) => {
       pajakRokok: [pajakRokokBudget, pajakRokokRealization],
     };
 
-    return await reportingService.updateReporting(reportId, {
-      totalInstitutionDbh: totalInstitutionDbh,
-    });
+    if (filter.parameter == "Program") {
+      return await DbhBudget.findOneAndUpdate(
+        {
+          opdId: filter.opdId,
+          reportingId: filter.reportingId,
+          parameter: "Lembaga",
+        },
+        totalDbh,
+        {
+          new: true,
+        }
+      );
+    } else {
+      return await reportingService.updateReporting(filter.reportingId, {
+        totalInstitutionDbh: totalDbh,
+      });
+    }
   } catch (error) {
     throw new Error(error);
   }
