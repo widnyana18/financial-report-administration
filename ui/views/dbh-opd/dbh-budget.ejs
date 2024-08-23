@@ -43,7 +43,7 @@
             </div>
             <div class="border p-3">
                 <p class="h5 mb-5 text-center">Formulir Input Data Realisasi DBH</p>
-                <form action="/api/dbh" method="POST" class="needs-validation" novalidate>
+                <form action="/api/dbh" method="POST" id="dbh-budget-form" class="needs-validation" novalidate>
                     <div class="row d-flex row-cols-3">
                         <div class="col-4 flex-grow-1 me-2">
                             <div class="mb-3">
@@ -74,7 +74,7 @@
                             </div>
                             <div class="mb-3">
                                 <label for="pagu" class="form-label">Pagu Anggaran (DPA) <span class="text-danger"> *</span></label>                                
-                                <input type="number" class="form-control" name="pagu" id="no-rek" required>
+                                <input value="0" type="number" class="form-control" name="pagu" id="no-rek" required>
                             </div>
                         </div>
                         <div class="col-4 flex-grow-1 mx-2">
@@ -85,11 +85,11 @@
                                     <div class="d-flex">
                                         <div class="mb-3 me-3">
                                             <label for="pkb-budget" class="form-label">Anggaran</label>
-                                            <input type="number" class="form-control" name="pkbBudget" id="pkb-budget">
+                                            <input value="0" type="number" class="form-control" name="pkbBudget" id="pkb-budget">
                                         </div>
                                         <div class="mb-3">
                                             <label for="pkb-realization" class="form-label">Realisasi</label>
-                                            <input type="number" class="form-control" name="pkbRealization" id="pkb-realization">
+                                            <input value="0" type="number" class="form-control" name="pkbRealization" id="pkb-realization">
                                         </div>
                                     </div>
                                 </div>
@@ -98,11 +98,11 @@
                                     <div class="d-flex">
                                         <div class="mb-3 me-3">
                                             <label for="bbnkb-budget" class="form-label">Anggaran</label>
-                                            <input type="number" class="form-control" name="bbnkbBudget" id="bbnkb-budget">
+                                            <input value="0" type="number" class="form-control" name="bbnkbBudget" id="bbnkb-budget">
                                         </div>
                                         <div class="mb-3">
                                             <label for="bbnkb-realization" class="form-label">Realisasi</label>
-                                            <input type="number" class="form-control" name="bbnkbRealization" id="bbnkb-realization">
+                                            <input value="0" type="number" class="form-control" name="bbnkbRealization" id="bbnkb-realization">
                                         </div>
                                     </div>
                                 </div>
@@ -113,11 +113,11 @@
                                     <div class="d-flex">
                                         <div class="mb-3 me-3">
                                             <label for="pbbkb-budget" class="form-label">Anggaran</label>
-                                            <input type="number" class="form-control" name="pbbkbBudget" id="pbbkb-budget">
+                                            <input value="0" type="number" class="form-control" name="pbbkbBudget" id="pbbkb-budget">
                                         </div>
                                         <div class="mb-3">
                                             <label for="pbbkb-realization" class="form-label">Realisasi</label>
-                                            <input type="number" class="form-control" name="pbbkbRealization" id="pbbkb-realization">
+                                            <input value="0" type="number" class="form-control" name="pbbkbRealization" id="pbbkb-realization">
                                         </div>
                                     </div>
                                 </div>
@@ -126,11 +126,11 @@
                                     <div class="d-flex">
                                         <div class="mb-3 me-3">
                                             <label for="pap-budget" class="form-label">Anggaran</label>
-                                            <input type="number" class="form-control" name="papBudget" id="pap-budget">
+                                            <input value="0" type="number" class="form-control" name="papBudget" id="pap-budget">
                                         </div>
                                         <div class="mb-3">
                                             <label for="pap-realization" class="form-label">Realisasi</label>
-                                            <input type="number" class="form-control" name="papRealization" id="pap-realization">
+                                            <input value="0" type="number" class="form-control" name="papRealization" id="pap-realization">
                                         </div>
                                     </div>
                                 </div>
@@ -140,11 +140,11 @@
                                 <div class="d-flex">
                                     <div class="mb-3 me-3">
                                         <label for="pajak-rokok-budget" class="form-label">Anggaran</label>
-                                        <input type="number" class="form-control" name="pajakRokokBudget" id="pajak-rokok-budget">
+                                        <input value="0" type="number" class="form-control" name="pajakRokokBudget" id="pajak-rokok-budget">
                                     </div>
                                     <div class="mb-3">
                                         <label for="pajak-rokok-realization" class="form-label">Realisasi</label>
-                                        <input type="number" class="form-control" name="pajakRokokRealization" id="pajak-rokok-realization">
+                                        <input value="0" type="number" class="form-control" name="pajakRokokRealization" id="pajak-rokok-realization">
                                     </div>
                                 </div>
                             </div>
@@ -153,7 +153,7 @@
                     <div class="d-flex ms-2 justify-content-end">   
                         <input type="hidden" value="<%= filter.period %>" name="period" required>
                         <input type="hidden" value="<%= filter.year %>" name="year" required>                 
-                        <button type="submit" class="btn btn-danger mb-3 mx-2" style="width: 15%;">CLEAR</button>                                                                                                    
+                        <button type="button" id="clear-btn" class="btn btn-danger mb-3 mx-2" style="width: 15%;">CLEAR</button>                                                                                                    
                         <button type="submit" class="btn btn-primary mb-3 mx-2" style="width: 15%;">TAMBAH</button>                            
                     </div>
                 </form>

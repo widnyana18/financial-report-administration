@@ -52,7 +52,7 @@ $(document).ready(function () {
           </div>`;
 
       $("#parent-parameter").append($dropdownWidget);
-      
+
       $("#parent-parameter > .dropdown ul li a#parameter-type-item").click(
         function (e) {
           const $parameterType = $(this).text();
@@ -67,5 +67,14 @@ $(document).ready(function () {
 
   $("button a#filter-btn").click(function () {
     $(this).attr("href", `/?triwulan=${$period}&tahun=${$year}&edit=false`);
+  });
+
+  $("button#clear-btn").click(function () {
+    $(".dropdown ul li a#parameter-list").removeClass("active");
+    $("#parameter-btn").text("Pilih Parameter");
+    $(".dropdown input#parameter").val("");
+    $("#parent-parameter").html("");
+    $("#dbh-budget-form").find("input").val("");
+    $("#dbh-budget-form").find("input[type='number']").val("0");
   });
 });
