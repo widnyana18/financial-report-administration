@@ -12,34 +12,50 @@ exports.findBudget = async (filter) => {
   }
 };
 
-exports.addDbhBudget = async (data) => {
+exports.addDbhBudget = async (req, data) => {
   const reporting = await reportingService.findReporting({
-    period: data.period,
-    year: data.year,
+    period: req.triwulan,
+    year: req.tahun,
   });
 
   // const opdId = new Types.ObjectId(data.opdId);
-  const budgetId = await createBudgetId(data);
+  const dbhId = await createBudgetId(data);
   const dbhBudget = new DbhBudget({
-    _id: budgetId,
+    _id: dbhId,
     reportingId: reporting._id,
     opdId: data.opdId,
     noRek: data.noRek,
     parameter: data.parameter,
     name: data.name,
     pagu: data.pagu,
-    dbh: data.dbh,
+    dbh: {
+      pkb: [data.pkbBudget, data.pkbRealization],
+      bbnkb: [data.bbnkbBudget, data.bbnkbRealization],
+      pbbkb: [data.pbbkbBudget, data.pbbkbRealization],
+      pap: [data.papBudget, data.papRealization],
+      pajakRokok: [data.pajakRokokBudget, data.pajakRokokRealization],
+    },
   });
 
   try {
-    return await dbhBudget.save();
+    const dbhAdded = await dbhBudget.save();
+
+    if (dbhAdded && data.parameter === "Program") {
+      await dbhBudgetService.calculateBudget({
+        opdId: opdId,
+        reportingId: reporting._id,
+        parameter: data.parameter,
+      });
+    }
+
+    return dbhAdded;
   } catch (error) {
     throw new Error(error);
   }
 };
 
 const createBudgetId = async (data) => {
-  let budgetId;
+  let dbhId;
 
   const latestBudget = await DbhBudget.findOne({
     parameter: data.parameter,
@@ -51,19 +67,19 @@ const createBudgetId = async (data) => {
       const latestLembaga = await DbhBudget.findOne({
         parameter: "Lembaga",
       }).sort({ createdAt: -1 });
-      budgetId = generatedId(latestLembaga) ?? "LM01";
+      dbhId = generatedId(latestLembaga) ?? "LM01";
       break;
     case "Program":
-      budgetId = generatedId(latestBudget) ?? `${data.parentId}PG01`;
+      dbhId = generatedId(latestBudget) ?? `${data.parentId}PG01`;
       break;
     case "Kegiatan":
-      budgetId = generatedId(latestBudget) ?? `${data.parentId}KG01`;
+      dbhId = generatedId(latestBudget) ?? `${data.parentId}KG01`;
       break;
     default:
-      budgetId = generatedId(latestBudget) ?? `${data.parentId}SK001`;
+      dbhId = generatedId(latestBudget) ?? `${data.parentId}SK001`;
       break;
   }
-  return budgetId;
+  return dbhId;
 };
 
 exports.calculateBudget = async (filter) => {
@@ -127,16 +143,64 @@ exports.calculateBudget = async (filter) => {
   }
 };
 
-exports.updateBudget = async (budgetId, input) => {
+exports.updateBudget = async (req, input) => {
+  const opdId = new Types.ObjectId("66b4959610753739b55d62e9");
+
   try {
-    return await DbhBudget.findOneAndUpdate({ _id: budgetId }, input, {
-      new: true,
+    const reporting = await reportingService.findReporting({
+      period: req.query.triwulan,
+      year: req.query.tahun,
     });
+
+    const dbhUpdated = await DbhBudget.findOneAndUpdate(
+      { _id: req.params.dbhId },
+      {
+        ...input,
+        dbh: {
+          pkb: [input.pkbBudget ?? 0, input.pkbRealization ?? 0],
+          bbnkb: [input.bbnkbBudget ?? 0, input.bbnkbRealization ?? 0],
+          pbbkb: [input.pbbkbBudget ?? 0, input.pbbkbRealization ?? 0],
+          pap: [input.papBudget ?? 0, input.papRealization ?? 0],
+          pajakRokok: [input.pajakRokokBudget ?? 0, input.pajakRokokRealization ?? 0],
+        },
+      },
+      {
+        new: true,
+      }
+    );
+
+    if (dbhUpdated && input.parameter === "Program") {
+      await dbhBudgetService.calculateBudget({
+        opdId: opdId,
+        reportingId: reporting._id,
+        parameter: data.parameter,
+      });
+    }
+    return dbhUpdated;
   } catch (error) {
     throw new Error(error);
   }
 };
 
-exports.deleteBudget = async (id) => {
-  return await DbhBudget.deleteOne({ _id: id });
+exports.deleteBudget = async (req) => {
+  const opdId = new Types.ObjectId("66b4959610753739b55d62e9");
+
+  try {
+    const reporting = await reportingService.findReporting({
+      period: req.triwulan,
+      year: req.tahun,
+    });
+    const dbh = await DbhBudget.findById(req.dbhId);
+    const dbhDeleted = await DbhBudget.deleteOne({ _id: req.params.dbhId });
+
+    if (dbhDeleted && dbh.parameter === "Program") {
+      await dbhBudgetService.calculateBudget({
+        opdId: opdId,
+        reportingId: reporting._id,
+        parameter: dbh.parameter,
+      });
+    }
+
+    return dbhDeleted;
+  } catch (error) {}
 };

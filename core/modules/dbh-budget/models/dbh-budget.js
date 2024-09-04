@@ -35,11 +35,11 @@ const dbhBudgetSchema = new Schema(
       default: 0,
     },
     dbh: {
-      pkb: [Number],
-      bbnkb: [Number],
-      pbbkb: [Number],
-      pap: [Number],
-      pajakRokok: [Number],
+      pkb: [{ type: Number, default: 0 }],
+      bbnkb: [{ type: Number, default: 0 }],
+      pbbkb: [{ type: Number, default: 0 }],
+      pap: [{ type: Number, default: 0 }],
+      pajakRokok: [{ type: Number, default: 0 }],
     },
     description: {
       type: String,

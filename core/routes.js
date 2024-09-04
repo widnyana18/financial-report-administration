@@ -6,7 +6,7 @@ const dbhBudgetRoute = require("./modules/dbh-budget/dbh-budget-route");
 function routes(app) {
   // app endpoint  
   app.use(authRoute.appRouter);
-  app.use(opdRoute.appRouter);
+  app.use('profile', opdRoute.appRouter);
   app.use('/admin', reportingRoute.appRouter);
   app.use(dbhBudgetRoute.appRouter);
 

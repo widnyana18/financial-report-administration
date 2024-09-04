@@ -34,33 +34,27 @@ exports.renderDataDbhOpd = async (req, res, next) => {
       year: Number(query.tahun),
     });
 
-    if (selectedReporting !== null) {      
-      await dbhBudgetService.calculateBudget({
-        opdId: opdId,
-        reportingId: selectedReporting._id,
-        parameter: "Program",
-      });
-
+    if (selectedReporting !== null) {
       dataDbhOpd = await dbhBudgetService.findBudget({
         opdId: opdId,
         reportingId: selectedReporting._id,
       });
     }
 
-    console.log("SELEECTT REPORTING : " + selectedReporting);
+    console.log("SELEECTT REPORTING : " + selectedReporting.period);
 
-    console.log("KEREEN : " + dataDbhOpd + "TYPE:" + typeof dataDbhOpd);
-    console.log(dbhBudgetService);
+    // console.log("KEREEN : " + dataDbhOpd + "TYPE:" + typeof dataDbhOpd);
+    console.log("EDITTT :" + query.edit);
 
-    if (query.edit === true && dbhId) {
-      const selectedDbh = await dbhBudgetService.findBudget({ _id: dbhId });
+    if (query.edit && dbhId) {      
+      const selectedDbh = await dbhBudgetService.findBudget({ _id: dbhId });      
 
       res.render("dbh-opd/dbh-budget", {
         pageTitle: "Update Data DBH OPD",
         path: "/",
         opd: opd,
         filter: { period: query.triwulan, year: query.tahun },
-        selectedDbh: selectedDbh,
+        selectedDbh: selectedDbh[0],
         dbhBudget: { reportingData: { periods, years }, dataDbhOpd },
       });
     } else {
@@ -68,6 +62,7 @@ exports.renderDataDbhOpd = async (req, res, next) => {
         pageTitle: "Data Dbh Opd",
         path: "/",
         opd: opd,
+        selectedDbh: null,
         filter: { period: query.triwulan, year: query.tahun },
         dbhBudget: { reportingData: { periods, years }, dataDbhOpd },
       });
@@ -81,77 +76,87 @@ exports.findAll = async (req, res, next) => {
 };
 
 exports.findDbhBudgetOpd = async (req, res, next) => {
-  // const opdId = req.opd._id;
-  const opdId = new Types.ObjectId(req.params.opdId);
-  const dbhBudget = await dbhBudgetService.findBudget({ opdId: opdId });
-  return res.status(200).json(dbhBudget);
+  // const opdId = new Types.ObjectId(req.params.opdId);
+  const opdId = new Types.ObjectId("66b4959610753739b55d62e9");
+  const query = req.query;
+  let dataDbhOpd = [];
+
+  try {
+    const selectedReporting = await reportingService.findReporting({
+      period: query.triwulan,
+      year: Number(query.tahun),
+    });
+
+    if (selectedReporting !== null) {
+      await dbhBudgetService.calculateBudget({
+        opdId: opdId,
+        reportingId: selectedReporting._id,
+        parameter: "Program",
+      });
+
+      dataDbhOpd = await dbhBudgetService.findBudget({
+        opdId: opdId,
+        reportingId: selectedReporting._id,
+      });
+    }
+
+    return res.status(200).json(dataDbhOpd);
+  } catch (error) {}
 };
 
 exports.findDbhBudgetAdmin = async (req, res, next) => {
   const reportingId = new Types.ObjectId(req.params.reportId);
-  const dbhBudget = await dbhBudgetService.findBudget({
-    reportingId: reportingId,
-  });
-  return res.status(200).json(dbhBudget);
+
+  try {
+    await dbhBudgetService.calculateBudget({
+      reportingId: reportingId,
+      parameter: "Lembaga",
+    });
+
+    const dbhBudget = await dbhBudgetService.findBudget({
+      reportingId: reportingId,
+    });
+
+    return res.status(200).json(dbhBudget);
+  } catch (error) {}
 };
 
 exports.postAddBudget = async (req, res, next) => {
   const opdId = new Types.ObjectId("66b4959610753739b55d62e9");
   // const opdId = req.opd._id;
-  const data = req.body;
-  const reqData = {
-    parentId: data.parentId,
-    period: data.period,
-    year: data.year,
-    opdId: opdId,
-    noRek: data.noRek,
-    parameter: data.parameter,
-    name: data.name,
-    pagu: data.pagu,
-    dbh: {
-      pkb: [data.pkbBudget, data.pkbRealization],
-      bbnkb: [data.bbnkbBudget, data.bbnkbRealization],
-      pbbkb: [data.pbbkbBudget, data.pbbkbRealization],
-      pap: [data.papBudget, data.papRealization],
-      pajakRokok: [data.pajakRokokBudget, data.pajakRokokRealization],
-    },
-  };
-
-  console.log("FILTER : " + data.period, data.year, req.body);
+  const data = { opdId, ...req.body };
 
   try {
-    const budgetData = await dbhBudgetService.addDbhBudget(reqData);
+    const budgetData = await dbhBudgetService.addDbhBudget(req.query, data);
     console.log("BUDGET GESS: " + budgetData);
-    if (budgetData) {
-      res.redirect(`/?triwulan=${data.period}&tahun=${data.year}&edit=false`);
-    }
-    // return res.status(200).json(budgetData);
+
+    // res.redirect(`/?triwulan=${data.period}&tahun=${data.year}&edit=false`);
+    return res.status(200).json(budgetData);
   } catch (error) {
     return next(error);
   }
 };
 
 exports.updateBudgetRecord = async (req, res, next) => {
-  const budgetId = req.params.budgetId;
   const data = req.body;
 
   try {
-    const budgetRecord = await dbhBudgetService.findBudget({ id: budgetId });
+    const budgetRecord = await dbhBudgetService.findBudget({ id: req.params.dbhId });
     if (!budgetRecord) {
       res.status(404).json({ message: "Reporting not found" });
     }
-    const updatedBudget = await dbhBudgetService.updateBudget(budgetId, data);
-    return res.status(200).json(updatedBudget);
+    const updatedBudget = await dbhBudgetService.updateBudget(req, data);
+
+    // return res.status(200).json(updatedBudget);
+    res.redirect(`/?triwulan=${data.period}&tahun=${data.year}&edit=false`);
   } catch (error) {
     return next(error);
   }
 };
 
 exports.deleteBudgetRecord = async (req, res, next) => {
-  const budgetId = req.params.budgetId;
-
   try {
-    const deletedBudget = await dbhBudgetService.deleteBudget(budgetId);
+    const deletedBudget = await dbhBudgetService.deleteBudget(req);
     return res.status(200).json(deletedBudget);
   } catch (error) {
     return next(error);

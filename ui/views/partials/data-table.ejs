@@ -49,13 +49,8 @@
     </thead>
     <tbody class="table-light table-group-divider align-middle">
       <% for(let data of dbhBudget.dataDbhOpd) { %> 
-        <% if(data.parameter === "Lembaga") { %>
-          <tr>
-            <th scope="row"><%= data.noRek %></th>
-            <th colspan="14" class="px-3 text-start"><%= data.name.toUpperCase() %></th>
-          </tr>
-        <% } else { %>
-          <tr>
+        <% if(data.parameter !== "Lembaga") { %>            
+          <tr id="<%= data._id %>">
             <th scope="row"><%= data.noRek %></th>
             <td class="px-3 text-start"><%= data.name %></td>
             <td><%= data.pagu %></td>
@@ -69,8 +64,8 @@
             <td><%= data.dbh.pap[1] %></td>
             <td><%= data.dbh.pajakRokok[0] %></td>
             <td><%= data.dbh.pajakRokok[1] %></td> 
-            <td><i class="bi bi-pencil"></i></td>
-            <td><i class="bi bi-trash3"></i></td>
+            <td id="edit-btn"><i class="bi bi-pencil"></i></td>
+            <td id="delete-btn"><i class="bi bi-trash3"></i></td>
           </tr>
         <% } %>
       <% } %>
