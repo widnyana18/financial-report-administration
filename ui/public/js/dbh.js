@@ -75,10 +75,6 @@ $(".dropdown-menu .parameter-item").click(function () {
   showParentParameter(this, parameter);
 });
 
-$("button a#filter-btn").click(function () {
-  $(this).attr("href", `/?triwulan=${$period}&tahun=${$year}&edit=false`);
-});
-
 $("button#clear-btn").click(function () {
   clearAllInputForm();
 });
@@ -95,74 +91,8 @@ const clearAllInputForm = () => {
   $("#dbh-budget-form").find("input").removeAttr("required");
 };
 
-// const tr = `<tr id=#${data._id}>
-//             <th scope="row">${data.noRek}</th>
-//             <td class="px-3 text-start">${data.name}</td>
-//             <td>${data.pagu}</td>
-//             <td>${data.dbh.pkb[0]}</td>
-//             <td>${data.dbh.pkb[1]}</td>
-//             <td>${data.dbh.bbnkb[0]}</td>
-//             <td>${data.dbh.bbnkb[1]}</td>
-//             <td>${data.dbh.pbbkb[0]}</td>
-//             <td>${data.dbh.pbbkb[1]}</td>
-//             <td>${data.dbh.pap[0]}</td>
-//             <td>${data.dbh.pap[1]}</td>
-//             <td>${data.dbh.pajakRokok[0]}</td>
-//             <td>${data.dbh.pajakRokok[1]}</td>
-//             <td id="edit-btn"><i class="bi bi-pencil"></i></td>
-//             <td id="delete-btn"><i class="bi bi-trash3"></i></td>
-//           </tr>`;
-
-$("form#dbh-budget-form").submit(function (event) {
-  // Prevent default form submission
-  // if (this.checkValidity()) {
-  $.ajax({
-    url: $(this).attr("action"),
-    type: "POST",
-    data: $(this).serialize(),
-    success: (data) => {
-      console.log("DATA : " + data);
-      if (data) {
-        const tr = `<th scope="row">${data.noRek}</th>
-              <td class="px-3 text-start">${data.name}</td>
-              <td>${data.pagu}</td>
-              <td>${data.dbh.pkb[0]}</td>
-              <td>${data.dbh.pkb[1]}</td>
-              <td>${data.dbh.bbnkb[0]}</td>
-              <td>${data.dbh.bbnkb[1]}</td>
-              <td>${data.dbh.pbbkb[0]}</td>
-              <td>${data.dbh.pbbkb[1]}</td>
-              <td>${data.dbh.pap[0]}</td>
-              <td>${data.dbh.pap[1]}</td>
-              <td>${data.dbh.pajakRokok[0]}</td>
-              <td>${data.dbh.pajakRokok[1]}</td> 
-              <td id="edit-btn"><i class="bi bi-pencil"></i></td>
-              <td id="delete-btn"><i class="bi bi-trash3"></i></td>`;
-
-        $(`tbody tr#${data._id}`).empty().append(tr);
-      } else {
-        console.error("Failed to add product:", data.message);
-      }
-    },
-    error: (error) => {
-      console.error("Error:", error);
-    },
-  });
-
-  const baseUrl = window.location.origin;
-  const urlParams = new URLSearchParams(window.location.search);
-  urlParams.set("edit", "false");
-  const newUrl = `${baseUrl}?${urlParams.toString()}`;
-  window.history.pushState({ path: newUrl }, "", newUrl);
-
-  // $(this).RemoveProp("novalidate");
-  // clearAllInputForm();
-  $(".dropdown button#parameter-btn").prop("disabled", false);
-  $(".dropdown button#parameter-type-btn").prop("disabled", false);
-  $("#submit-form-btn").text("TAMBAH");
-  // } else {
-  //   alert("Form is invalid. Please correct the errors and try again.");
-  // }
+$("button a#filter-btn").click(function () {
+  $(this).attr("href", `/?triwulan=${$period}&tahun=${$year}&edit=false`);
 });
 
 $("td#edit-btn").click(function () {
@@ -206,20 +136,20 @@ $("td#edit-btn").click(function () {
 $("td#delete-btn").click(function () {
   const dbhId = $(this).parent().attr("id");
 
-  $.ajax({
-    url: `api/dbh/delete/${dbhId}`,
-    type: "DELETE",
-    data: $(this).serialize(),
-    success: (result) => {
-      console.log("RESULTs : " + result);
-      if (result) {
-        $(`tbody tr#${dbhId}`).empty();
-      } else {
-        console.error("Failed to delete product:", data.message);
-      }
+  console.log("DBH ID : " + dbhId);
+
+  fetch("/api/dbh/delete/" + dbhId, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
     },
-    error: (error) => {
-      console.error("Error:", error);
-    },
-  });
+    body: JSON.stringify({
+      id: dbhId,
+    }),
+  })
+    .then(function (response) {
+      return $(`tbody tr#${dbhId}`).empty();
+    })
+    .then((data) => console.log(data))
+    .catch((error) => console.error(error));
 });

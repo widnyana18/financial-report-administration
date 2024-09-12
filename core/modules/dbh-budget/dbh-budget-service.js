@@ -12,14 +12,15 @@ exports.findBudget = async (filter) => {
   }
 };
 
-exports.addDbhBudget = async (req, data) => {
+exports.addDbhBudget = async (data) => {
   const reporting = await reportingService.findReporting({
-    period: req.triwulan,
-    year: req.tahun,
+    period: data.period,
+    year: data.year,
   });
 
   // const opdId = new Types.ObjectId(data.opdId);
   const dbhId = await createBudgetId(data);
+  console.log("REPORTING ID :" + reporting);
   const dbhBudget = new DbhBudget({
     _id: dbhId,
     reportingId: reporting._id,
@@ -36,16 +37,19 @@ exports.addDbhBudget = async (req, data) => {
       pajakRokok: [data.pajakRokokBudget, data.pajakRokokRealization],
     },
   });
+  console.log("DBH BUDGET : " + dbhBudget);
 
   try {
     const dbhAdded = await dbhBudget.save();
-
+    console.log("DBH ADDED : " + dbhAdded);
     if (dbhAdded && data.parameter === "Program") {
-      await dbhBudgetService.calculateBudget({
+      const calculate = await this.calculateBudget({
         opdId: opdId,
         reportingId: reporting._id,
         parameter: data.parameter,
       });
+
+      console.log("CALCULATE : " + calculate);
     }
 
     return dbhAdded;
@@ -58,15 +62,14 @@ const createBudgetId = async (data) => {
   let dbhId;
 
   const latestBudget = await DbhBudget.findOne({
-    parameter: data.parameter,
-    _id: `/${data.parentId}/i`,
-  });
+    parameter: data.parameter
+  }).sort({ createdAt: -1 });
+
+  console.log("parentId", data.parentId);
+  console.log("latestBudget", latestBudget);
 
   switch (data.parameter) {
     case "Lembaga":
-      const latestLembaga = await DbhBudget.findOne({
-        parameter: "Lembaga",
-      }).sort({ createdAt: -1 });
       dbhId = generatedId(latestLembaga) ?? "LM01";
       break;
     case "Program":
@@ -79,6 +82,7 @@ const createBudgetId = async (data) => {
       dbhId = generatedId(latestBudget) ?? `${data.parentId}SK001`;
       break;
   }
+  console.log("DBH ID", dbhId);
   return dbhId;
 };
 
@@ -146,10 +150,11 @@ exports.calculateBudget = async (filter) => {
 exports.updateBudget = async (req, input) => {
   const opdId = new Types.ObjectId("66b4959610753739b55d62e9");
 
+  console.log('DBH ID : ' + req.params.dbhId);
   try {
     const reporting = await reportingService.findReporting({
-      period: req.query.triwulan,
-      year: req.query.tahun,
+      period: input.period,
+      year: input.year,
     });
 
     const dbhUpdated = await DbhBudget.findOneAndUpdate(
@@ -161,7 +166,10 @@ exports.updateBudget = async (req, input) => {
           bbnkb: [input.bbnkbBudget ?? 0, input.bbnkbRealization ?? 0],
           pbbkb: [input.pbbkbBudget ?? 0, input.pbbkbRealization ?? 0],
           pap: [input.papBudget ?? 0, input.papRealization ?? 0],
-          pajakRokok: [input.pajakRokokBudget ?? 0, input.pajakRokokRealization ?? 0],
+          pajakRokok: [
+            input.pajakRokokBudget ?? 0,
+            input.pajakRokokRealization ?? 0,
+          ],
         },
       },
       {
@@ -170,10 +178,10 @@ exports.updateBudget = async (req, input) => {
     );
 
     if (dbhUpdated && input.parameter === "Program") {
-      await dbhBudgetService.calculateBudget({
+      await this.calculateBudget({
         opdId: opdId,
         reportingId: reporting._id,
-        parameter: data.parameter,
+        parameter: input.parameter,
       });
     }
     return dbhUpdated;
@@ -194,7 +202,7 @@ exports.deleteBudget = async (req) => {
     const dbhDeleted = await DbhBudget.deleteOne({ _id: req.params.dbhId });
 
     if (dbhDeleted && dbh.parameter === "Program") {
-      await dbhBudgetService.calculateBudget({
+      await this.calculateBudget({
         opdId: opdId,
         reportingId: reporting._id,
         parameter: dbh.parameter,

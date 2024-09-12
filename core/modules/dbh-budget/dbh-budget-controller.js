@@ -35,6 +35,12 @@ exports.renderDataDbhOpd = async (req, res, next) => {
     });
 
     if (selectedReporting !== null) {
+      await dbhBudgetService.calculateBudget({
+        opdId: opdId,
+        reportingId: selectedReporting._id,
+        parameter: "Program",
+      });
+
       dataDbhOpd = await dbhBudgetService.findBudget({
         opdId: opdId,
         reportingId: selectedReporting._id,
@@ -46,12 +52,12 @@ exports.renderDataDbhOpd = async (req, res, next) => {
     // console.log("KEREEN : " + dataDbhOpd + "TYPE:" + typeof dataDbhOpd);
     console.log("EDITTT :" + query.edit);
 
-    if (query.edit && dbhId) {      
-      const selectedDbh = await dbhBudgetService.findBudget({ _id: dbhId });      
+    if (query.edit && dbhId) {
+      const selectedDbh = await dbhBudgetService.findBudget({ _id: dbhId });
 
       res.render("dbh-opd/dbh-budget", {
         pageTitle: "Update Data DBH OPD",
-        path: "/",
+        apiUrl: "api/dbh/add",
         opd: opd,
         filter: { period: query.triwulan, year: query.tahun },
         selectedDbh: selectedDbh[0],
@@ -60,7 +66,7 @@ exports.renderDataDbhOpd = async (req, res, next) => {
     } else {
       res.render("dbh-opd/dbh-budget", {
         pageTitle: "Data Dbh Opd",
-        path: "/",
+        apiUrl: `api/dbh/edit/${dbhId}`,
         opd: opd,
         selectedDbh: null,
         filter: { period: query.triwulan, year: query.tahun },
@@ -127,11 +133,11 @@ exports.postAddBudget = async (req, res, next) => {
   const data = { opdId, ...req.body };
 
   try {
-    const budgetData = await dbhBudgetService.addDbhBudget(req.query, data);
-    console.log("BUDGET GESS: " + budgetData);
-
-    // res.redirect(`/?triwulan=${data.period}&tahun=${data.year}&edit=false`);
-    return res.status(200).json(budgetData);
+    // console.log("TRIWULAN | TAHUN: " + data.period);
+    const budgetData = await dbhBudgetService.addDbhBudget(data);
+console.log("BUDGET DATA : " + budgetData);
+    res.redirect(`/?triwulan=${data.period}&tahun=${data.year}&edit=false`);
+    // return res.status(200).json(budgetData);
   } catch (error) {
     return next(error);
   }
@@ -141,11 +147,13 @@ exports.updateBudgetRecord = async (req, res, next) => {
   const data = req.body;
 
   try {
-    const budgetRecord = await dbhBudgetService.findBudget({ id: req.params.dbhId });
+    const budgetRecord = await dbhBudgetService.findBudget({
+      _id: req.params.dbhId,
+    });
     if (!budgetRecord) {
       res.status(404).json({ message: "Reporting not found" });
     }
-    const updatedBudget = await dbhBudgetService.updateBudget(req, data);
+    await dbhBudgetService.updateBudget(req, data);
 
     // return res.status(200).json(updatedBudget);
     res.redirect(`/?triwulan=${data.period}&tahun=${data.year}&edit=false`);
