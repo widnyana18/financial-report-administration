@@ -3,13 +3,13 @@ const { Types } = require("mongoose");
 const opdService = require("./opd-service");
 
 exports.renderUpdateOpd = async (req, res, next) => {
-  const opdId = new Types.ObjectId(req.params.id);
+  const opdId = new Types.ObjectId("66b4959610753739b55d62e9");
   const opd = await opdService.getOpdById(opdId);
 
   if (!opd) {
     res.redirect("/login");
   } else {
-    res.render("opd/create-opd", {
+    res.render("dbh-opd/update-profile", {
       pageTitle: "Update Opd",
       path: "/opd",
       opd: opd,
@@ -41,8 +41,9 @@ exports.updateOpd = async (req, res, next) => {
     if (!opd) {
       res.status(404).json({ message: "Opd not found" });
     }
-    const updatedOpd = await opdService.updateOpd({ _id: opdId }, data);
-    return res.status(200).json(updatedOpd);
+    await opdService.updateOpd({ _id: opdId }, data);
+
+    res.redirect("/?triwulan=Triwulan%20II&tahun=2024&edit=false");
   } catch (error) {
     return next(error);
   }
