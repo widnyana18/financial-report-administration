@@ -1,15 +1,36 @@
 const Reporting = require("./models/reporting");
+const dbhBudgetService = require("./../dbh-budget/dbh-budget-service");
 
-exports.getAllReporting = async (filter) => {
+exports.getAllReporting = async () => {
   // if (user.role === "admin") {
-  return await Reporting.find(filter);
+    return await Reporting.find();         
   // }
   // return await Reporting.findOne({ opdId: id });
 };
 
 exports.findReporting = async (filter) => {
-  try {
-    return await Reporting.findOne(filter);
+  let reportStatus;
+  
+  try {  
+    const reportingData = await Reporting.find(filter);
+    
+    for(let item of reportingData) {      
+      const dbh = await dbhBudgetService.findBudget({
+        reportingId: item._id,
+        parameter: "Lembaga",
+      });
+  
+      if(dbh.length == item.totalOpd){
+        reportStatus = "Sudah Selesai";
+      }
+  
+      await Reporting.updateOne(
+        { _id: item._id },
+        { totalDbhOpdAdded: dbh.length, status: reportStatus }
+      )        
+    }
+
+    return reportingData;
   } catch (error) {
     throw new Error(error);
   }
@@ -26,8 +47,7 @@ exports.createReporting = async (data) => {
     status: data.status,
     opdId: data.opdId,
     totalDbhBudget: data.totalDbhBudget,
-    totalDbhRealization: data.totalDbhRealization,
-    
+    totalDbhRealization: data.totalDbhRealization,    
   });
 
   try {

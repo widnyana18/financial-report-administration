@@ -6,7 +6,7 @@ const appRouter = Router();
 const apiRouter = Router();
 
 //root route opd
-appRouter.get('/:id', opdController.renderUpdateOpd);
+appRouter.get('/profile/:id', opdController.renderUpdateOpd);
 
 //API
 apiRouter.get('/', opdController.getAllOpd);

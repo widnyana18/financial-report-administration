@@ -18,7 +18,15 @@ const reportingSchema = new Schema(
     },
     status: {
       type: String,
-      default: "menunggu",
+      default: "Belum Selesai",
+    },
+    totalDbhOpdAdded: {
+      type: Number,
+      default: 0,
+    },
+    totalOpd: {
+      type: Number,
+      required: true,
     },
     totalInstitutionDbh: {
       pagu: {
@@ -30,6 +38,10 @@ const reportingSchema = new Schema(
       pbbkb: [Number],
       pap: [Number],
       pajakRokok: [Number],
+    },
+    totalDbhRecieved: {
+      type: Number,
+      default: 0,
     },
     totalDbhBudget: {
       type: Number,

@@ -1,1 +1,62 @@
-!
+<%- include('../partials/head.ejs') %>
+</head>
+<body>
+    <main class="container-fluid m-5">       
+        <h1 class="display-6 my-5 fw-semibold align-self-center">SISTEM APLIKASI PERTANGGUNGJAWABAN-DBH PROVINSI (SIAP-DP)</h1>              
+        <div class="d-flex my-4">
+            <button type="button" id="crete-reporting-btn" class="me-4 btn btn-primary py-2 px-4"><a>BUAT LAPORAN BARU</a></button> 
+            <div class="dropdown" >
+                <button id="year-dropdown-btn" class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"></button>
+                <ul class="dropdown-menu">
+                    <% for(year of years) { %>
+                        <li><a id="year-dropdown-item" class="dropdown-item"><%= year %></a></li> 
+                    <% } %>                             
+                </ul>
+            </div>                                                                 
+        </div>               
+        <div class="my-4">
+            <% for(reporting of reportingList) { %>
+                <div class="d-flex shadow-sm px-5 py-2 mb-2 bg-body-light align-items-center justify-content-between rounded">
+                    <div class="d-flex align-items-center">
+                        <p class="me-4"><%= reporting.title %></p>
+                        <p class="me-4">Data Terisi : <%= reporting.totalDbhOpdAdded %>/<%= reporting.totalOpd %></p>
+                        <span class="badge <%= reporting.status == 'Sudah Selesai' ? 'text-bg-success' : 'text-bg-danger' %>"><%= reporting.status %></span>
+                    </div>
+                    <p><a href="#">Masuk <i class="ms-1 bi bi-box-arrow-in-up-right"></i></a></p>
+                </div>                                
+            <% } %> 
+        </div>
+        <div class="mt-5 w-50">
+            <p class="h6">Pagu yang sudah di transfer (Diterima) dari Provinsi untuk DBH Provinsi TA <%= reportingList[0].year %></p>
+            <% for(reporting of reportingList) { %>
+                <div class="my-4">
+                    <p class="h5">1. Penerimaan DBH <%= reporting.period %></p>                                                   
+                    <div class="d-flex align-items-center justify-content-between">
+                        <p>- Bagi Hasil Pajak Kendaraan Bermotor (PKB)</p>
+                        <p class="h6"><%= reporting.dbhRecieved.pkb %></p>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <p>- Bagi Hasil Bea Balik Nama Kendaraan Bermotor (BBNKB)</p>
+                        <p class="h6"><%= reporting.dbhRecieved.bbnkb %></p>                        
+                    </div>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <p>- Bagi Hasil Pajak Bahan Bakar Kendaraan Bermotor (PBBKB)</p>
+                        <p class="h6"><%= reporting.dbhRecieved.pbbkb %></p>                        
+                    </div>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <p>- Bagi Hasil Pajak Air Tanah Permukaan</p>                                        
+                        <p class="h6"><%= reporting.dbhRecieved.pajakRokok %></p>                        
+                    </div>
+                    <hr class="border border-tertiary border-1 opacity-50">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <p>JUMLAH</p>                                        
+                        <p class="h6"><%= reporting.totalDbhRecieved %></p>                        
+                    </div>  
+                </div>                    
+            <% } %>                    
+        </div>           
+    </main>    
+
+    <script src="/js/admin.js"></script>
+
+<%- include('../partials/end.ejs') %>

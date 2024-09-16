@@ -6,12 +6,29 @@ const dbhBudgetService = require("../dbh-budget/dbh-budget-service");
 const appName = process.env.APP_NAME;
 
 exports.renderIndex = async (req, res, next) => {
-  const reportings = await reportingService.getAllReporting();
-  res.render("reporting/index", {
-    pageTitle: appName,
-    path: "/",
-    reportings: reportings,
-  });
+  const years = [];
+
+  try {
+    const allReporting = await reportingService.getAllReporting();
+
+    const reportingByYear = await reportingService.findReporting({
+      year: Number(req.query.tahun),
+    });
+
+    allReporting.forEach((item, index) => {
+      const isYearAdded = years.includes(item.year);
+
+      if (!isYearAdded) {
+        years.push(item.year);
+      }
+    });
+
+    res.render("admin/reportings", {
+      pageTitle: appName,
+      years: years,
+      reportingList: reportingByYear,
+    });
+  } catch (error) {}
 };
 
 exports.renderReportingDetails = async (req, res, next) => {
