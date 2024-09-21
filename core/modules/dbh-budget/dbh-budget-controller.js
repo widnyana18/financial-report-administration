@@ -14,7 +14,7 @@ exports.renderDataDbhOpd = async (req, res, next) => {
 
   try {
     const opd = await opdService.getOpdById(opdId);
-    const reportings = await reportingService.getAllReporting();
+    const reportings = await reportingService.findManyReporting();
 
     reportings.forEach((item, index) => {
       const isPeriodAdded = periods.includes(item.period);
@@ -29,7 +29,7 @@ exports.renderDataDbhOpd = async (req, res, next) => {
       }
     });
 
-    const selectedReporting = await reportingService.findReporting({
+    const selectedReporting = await reportingService.findOneReporting({
       period: query.triwulan,
       year: Number(query.tahun),
     });
@@ -57,20 +57,24 @@ exports.renderDataDbhOpd = async (req, res, next) => {
 
       res.render("dbh-opd/dbh-budget", {
         pageTitle: "Update Data DBH OPD",
+        userRole: "opd",
         apiUrl: "api/dbh/add",
         opd: opd,
-        filter: { period: query.triwulan, year: query.tahun },
+        selectedFilter: { period: query.triwulan, year: query.tahun },
+        filters: { periods, years },
+        dbhBudgets: dataDbhOpd,
         selectedDbh: selectedDbh[0],
-        dbhBudget: { reportingData: { periods, years }, dataDbhOpd },
       });
     } else {
       res.render("dbh-opd/dbh-budget", {
         pageTitle: "Data Dbh Opd",
+        userRole: "opd",
         apiUrl: `api/dbh/edit/${dbhId}`,
         opd: opd,
         selectedDbh: null,
-        filter: { period: query.triwulan, year: query.tahun },
-        dbhBudget: { reportingData: { periods, years }, dataDbhOpd },
+        selectedFilter: { period: query.triwulan, year: query.tahun },
+        filters: { periods, years },
+        dbhBudgets: dataDbhOpd,
       });
     }
   } catch (error) {}
@@ -88,7 +92,7 @@ exports.findDbhBudgetOpd = async (req, res, next) => {
   let dataDbhOpd = [];
 
   try {
-    const selectedReporting = await reportingService.findReporting({
+    const selectedReporting = await reportingService.findOneReporting({
       period: query.triwulan,
       year: Number(query.tahun),
     });
@@ -135,7 +139,7 @@ exports.postAddBudget = async (req, res, next) => {
   try {
     // console.log("TRIWULAN | TAHUN: " + data.period);
     const budgetData = await dbhBudgetService.addDbhBudget(data);
-console.log("BUDGET DATA : " + budgetData);
+    console.log("BUDGET DATA : " + budgetData);
     res.redirect(`/?triwulan=${data.period}&tahun=${data.year}&edit=false`);
     // return res.status(200).json(budgetData);
   } catch (error) {

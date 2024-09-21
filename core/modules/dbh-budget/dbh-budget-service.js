@@ -13,7 +13,7 @@ exports.findBudget = async (filter) => {
 };
 
 exports.addDbhBudget = async (data) => {
-  const reporting = await reportingService.findReporting({
+  const reporting = await reportingService.findOneReporting({
     period: data.period,
     year: data.year,
   });
@@ -152,7 +152,7 @@ exports.updateBudget = async (req, input) => {
 
   console.log('DBH ID : ' + req.params.dbhId);
   try {
-    const reporting = await reportingService.findReporting({
+    const reporting = await reportingService.findOneReporting({
       period: input.period,
       year: input.year,
     });
@@ -194,7 +194,7 @@ exports.deleteBudget = async (req) => {
   const opdId = new Types.ObjectId("66b4959610753739b55d62e9");
 
   try {
-    const reporting = await reportingService.findReporting({
+    const reporting = await reportingService.findOneReporting({
       period: req.triwulan,
       year: req.tahun,
     });

@@ -34,7 +34,7 @@ const reportingSchema = new Schema(
         default: 0,
       },
       pkb: [Number],
-      bbnkb: [Number],
+      bbnkb: [Number], 
       pbbkb: [Number],
       pap: [Number],
       pajakRokok: [Number],

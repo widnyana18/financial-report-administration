@@ -7,9 +7,9 @@ const apiRouter = Router();
 
 //admin route Reporting website
 appRouter.get("/", reportingController.renderIndex);
-appRouter.get("/:reportId", reportingController.renderReportingDetails);
 appRouter.get("/buat-laporan", reportingController.renderCreateReporting);
-appRouter.get("/edit-laporan", reportingController.renderUpdateReporting);
+appRouter.get("/:reportId", reportingController.renderReportingDetails);
+appRouter.get("/edit/:reportingId", reportingController.renderUpdateReporting);
 
 // route API
 apiRouter.get("/", reportingController.getAllReporting);

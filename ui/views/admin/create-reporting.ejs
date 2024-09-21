@@ -1,101 +1,59 @@
 <%- include('../partials/head.ejs') %>
 </head>
 <body>
-    <main class="mx-3">
-        <div class="container-fluid my-5">            
-            <p class="h5 mb-5 text-center">Formulir Input Data Realisasi DBH</p>            
-            <form action="api/dbh/add" method="POST" id="dbh-budget-form" class="needs-validation" novalidate>
-                <div class="mb-3">
-                    <label for="name" class="form-label">Judul<span class="text-danger"> *</span></label>
-                    <input value="<%= selectedDbh?.name ?? '' %>" type="text" class="form-control" name="name" id="name" required>
+    <main class="mx-auto my-5 w-50">                   
+        <p class="h5 mb-5 text-center"><%= pageTitle %></p>            
+        <form action="<%= apiRoute %>" method="POST" id="dbh-budget-form" class="needs-validation" novalidate>
+            <div class="mb-3">
+                <label for="title" class="form-label">Judul<span class="text-danger"> *</span></label>
+                <input value="<%= selectedReporting?.title %>" type="text" class="form-control" name="title" id="title" required>
+            </div>
+            <div class="mb-3">
+                <label for="period" class="form-label">Triwulan<span class="text-danger"> *</span></label>
+                <input value="<%= selectedReporting?.period %>" type="text" class="form-control" name="period" id="period" required>
+            </div>
+            <div class="mb-3">
+                <label for="year" class="form-label">Tahun <span class="text-danger"> *</span></label>                                
+                <input value="<%= selectedReporting?.year %>" type="number" class="form-control" name="year" id="year" required>
+            </div>
+            <div class="mb-3">
+                <label for="totalOpd" class="form-label">Jumlah Lembaga <span class="text-danger"> *</span></label>                                
+                <input value="<%= selectedReporting?.totalOpd %>" type="number" class="form-control" name="totalOpd" id="totalOpd" required>
+            </div>
+            <div class="border row rounded p-2">
+                <p class="h6 text-primary mb-3">Jumlah Penerimaan DBH</p>
+                <div class="col me-3">                      
+                    <div class="my-2">
+                        <label for="pkb" class="form-label">PKB<span class="text-danger"> *</span></label>
+                        <input value="<%= selectedReporting?.dbhRecieved.pkb %>" type="number" class="form-control" name="pkb" id="pkb" required>
+                    </div>                                                        
+                    <div class="my-2">
+                        <label for="pbbkb" class="form-label">PBBKB<span class="text-danger"> *</span></label>
+                        <input value="<%= selectedReporting?.dbhRecieved.pbbkb %>" type="number" class="form-control" name="pbbkb" id="pbbkb" required>
+                    </div>                                                        
+                    <div class="my-2">
+                        <label for="pajakRokok" class="form-label">Pajak Rokok<span class="text-danger"> *</span></label>
+                        <input value="<%= selectedReporting?.dbhRecieved.pajakRokok %>" type="number" class="form-control" name="pajakRokok" id="pajakRokok" required>
+                    </div>                                                        
                 </div>
-                <div class="mb-3">
-                    <label for="no-rek" class="form-label">No. Rek <span class="text-danger"> *</span></label>
-                    <input value="<%= selectedDbh?.noRek ?? '' %>" type="text" class="form-control" name="noRek" id="no-rek" required>
+                <div class="col-3">
+                    <div class="my-2">
+                        <label for="bbnkb" class="form-label">BBNKB<span class="text-danger"> *</span></label>
+                        <input value="<%= selectedReporting?.dbhRecieved.bbnkb %>" type="number" class="form-control" name="bbnkb" id="bbnkb" required>
+                    </div> 
+                    <div class="my-2">
+                        <label for="pap" class="form-label">PAP<span class="text-danger"> *</span></label>
+                        <input value="<%= selectedReporting?.dbhRecieved.pap %>" type="number" class="form-control" name="pap" id="pap" required>
+                    </div> 
                 </div>
-                <div class="mb-3">
-                    <label for="pagu" class="form-label">Pagu Anggaran (DPA) <span class="text-danger"> *</span></label>                                
-                    <input value="<%= selectedDbh?.pagu ?? 0 %>" type="number" class="form-control" name="pagu" id="pagu" required>
-                </div>
-                <div class="row d-flex row-cols-3">
-                    <div class="col-4 flex-grow-1 mx-2">
-                        <p class="h6 text-primary mb-3">Dana Bagi Hasil</p>
-                        <div class="d-flex mb-3">
-                            <div class="me-4">
-                                <p class="h6 mb-2">PKB</p>
-                                <div class="d-flex">
-                                    <div class="mb-3 me-3">
-                                        <label for="pkb-budget" class="form-label">Anggaran</label>
-                                        <input value="<%= selectedDbh?.dbh.pkb[0] ?? 0 %>" type="number" class="form-control" name="pkbBudget" id="pkb-budget">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="pkb-realization" class="form-label">Realisasi</label>
-                                        <input value="<%= selectedDbh?.dbh.pkb[1] ?? 0 %>" type="number" class="form-control" name="pkbRealization" id="pkb-realization">
-                                    </div>
-                                </div>
-                            </div>
-                            <div>
-                                <p class="h6 mb-2">BBNKB</p>
-                                <div class="d-flex">
-                                    <div class="mb-3 me-3">
-                                        <label for="bbnkb-budget" class="form-label">Anggaran</label>
-                                        <input value="<%= selectedDbh?.dbh.bbnkb[0] ?? 0 %>" type="number" class="form-control" name="bbnkbBudget" id="bbnkb-budget">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="bbnkb-realization" class="form-label">Realisasi</label>
-                                        <input value="<%= selectedDbh?.dbh.bbnkb[1] ?? 0 %>" type="number" class="form-control" name="bbnkbRealization" id="bbnkb-realization">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="d-flex mb-3">
-                            <div class="me-4">
-                                <p class="h6 mb-2">PBBKB</p>
-                                <div class="d-flex">
-                                    <div class="mb-3 me-3">
-                                        <label for="pbbkb-budget" class="form-label">Anggaran</label>
-                                        <input value="<%= selectedDbh?.dbh.pbbkb[0] ?? 0 %>" type="number" class="form-control" name="pbbkbBudget" id="pbbkb-budget">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="pbbkb-realization" class="form-label">Realisasi</label>
-                                        <input value="<%= selectedDbh?.dbh.pbbkb[1] ?? 0 %>" type="number" class="form-control" name="pbbkbRealization" id="pbbkb-realization">
-                                    </div>
-                                </div>
-                            </div>
-                            <div>
-                                <p class="h6 mb-2">PAP</p>
-                                <div class="d-flex">
-                                    <div class="mb-3 me-3">
-                                        <label for="pap-budget" class="form-label">Anggaran</label>
-                                        <input value="<%= selectedDbh?.dbh.pap[0] ?? 0 %>" type="number" class="form-control" name="papBudget" id="pap-budget">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="pap-realization" class="form-label">Realisasi</label>
-                                        <input value="<%= selectedDbh?.dbh.pap[1] ?? 0 %>" type="number" class="form-control" name="papRealization" id="pap-realization">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <p class="h6 mb-2">Pajak Rokok</p>
-                            <div class="d-flex">
-                                <div class="mb-3 me-3">
-                                    <label for="pajak-rokok-budget" class="form-label">Anggaran</label>
-                                    <input value="<%= selectedDbh?.dbh.pajakRokok[0] ?? 0 %>" type="number" class="form-control" name="pajakRokokBudget" id="pajak-rokok-budget">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="pajak-rokok-realization" class="form-label">Realisasi</label>
-                                    <input value="<%= selectedDbh?.dbh.pajakRokok[1] ?? 0 %>" type="number" class="form-control" name="pajakRokokRealization" id="pajak-rokok-realization">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="d-flex ms-2 justify-content-end">                                                    
-                    <button type="submit" id="submit-form-btn" class="btn btn-primary mb-3 mx-2" style="width: 15%;">TAMBAH</button>                            
-                </div>
-            </form>                      
-        </div>   
+            </div>
+            <div class="d-flex ms-2 mt-3  justify-content-end">                                                    
+                <button type="button" id="clear-btn" class="btn btn-secondary mb-3 mx-2" style="width: 18%;">CLEAR</button>                            
+                <button type="submit" id="submit-form-btn" class="btn btn-primary mb-3 mx-2" style="width: 18%;">SIMPAN DATA</button>                            
+            </div>
+        </form>                               
     </main>    
+
+    <script src="js/admin.js"></script>
 
 <%- include('../partials/end.ejs') %>

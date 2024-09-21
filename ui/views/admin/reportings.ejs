@@ -4,7 +4,7 @@
     <main class="container-fluid m-5">       
         <h1 class="display-6 my-5 fw-semibold align-self-center">SISTEM APLIKASI PERTANGGUNGJAWABAN-DBH PROVINSI (SIAP-DP)</h1>              
         <div class="d-flex my-4">
-            <button type="button" id="crete-reporting-btn" class="me-4 btn btn-primary py-2 px-4"><a>BUAT LAPORAN BARU</a></button> 
+            <button type="button" id="crete-reporting-btn" class="me-4 btn btn-primary py-2 px-4"><a class="text-white" href="/admin/buat-laporan">BUAT LAPORAN BARU</a></button> 
             <div class="dropdown" >
                 <button id="year-dropdown-btn" class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"></button>
                 <ul class="dropdown-menu">
@@ -22,7 +22,7 @@
                         <p class="me-4">Data Terisi : <%= reporting.totalDbhOpdAdded %>/<%= reporting.totalOpd %></p>
                         <span class="badge <%= reporting.status == 'Sudah Selesai' ? 'text-bg-success' : 'text-bg-danger' %>"><%= reporting.status %></span>
                     </div>
-                    <p><a href="#">Masuk <i class="ms-1 bi bi-box-arrow-in-up-right"></i></a></p>
+                    <p><a href="/admin/<%= reporting._id %>">Masuk <i class="ms-1 bi bi-box-arrow-in-up-right"></i></a></p>
                 </div>                                
             <% } %> 
         </div>

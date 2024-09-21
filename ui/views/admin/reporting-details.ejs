@@ -1,0 +1,31 @@
+<%- include('../partials/head.ejs') %>
+</head>
+<body>
+    <main class="container-fluid my-5 mx-3">        
+        <div class="row justify-content-between">                
+            <div class="col-5 d-flex flex-row p-2 w-50">
+                <img src="images/logo.png" class="rounded d-block w-75 h-75" alt="logo">
+                <h1 class="display-6 mt-3 mx-4 mb-5 fw-semibold align-self-center">SISTEM APLIKASI PERTANGGUNGJAWABAN-DBH PROVINSI (SIAP-DP)</h1>  
+            </div>
+            <div class="col-5 p-2 w-5">
+                <p class="h6 my-2">Triwulan <span class="px-5">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : <%= reporting.period %></span></p>
+                <p class="h6 my-2">Tahun Anggaran <span class="px-3"> : <%= reporting.year %></span></p>
+                <p class="h6 my-2">Jumlah Lembaga <span class="px-3"> : <%= reporting.totalDbhOpdAdded %>/<%= reporting.totalOpd %></span></p>
+                <p class="h6 my-2">Status Laporan <span class="px-4 <%= reporting.status == 'Sudah Selesai' ? 'text-success' : 'text-danger' %>">&nbsp; : <%= reporting.status %></span></p>
+                <div class="d-flex my-4">     
+                    <button type="button" class="btn btn-danger me-3">DOWNLOAD PDF</button>                  
+                    <button type="button" class="btn btn-success">DOWNLOAD EXCEL</button>                                        
+                </div>                    
+            </div>
+        </div>         
+        <% if(dbhBudgets.length > 0) { %>
+            <%- include('../partials/data-table.ejs') %>
+        <% } else { %> 
+            <div class="h-100 w-100 justify-content-center align-items-center text-center">
+                <h1 class="display-4">Data Belum Ditambahkan</h1>
+            </div>
+        <% } %>
+    </main>           
+
+    <script src="/js/admin.js"></script>
+<%- include('../partials/end.ejs') %>

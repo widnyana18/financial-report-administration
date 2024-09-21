@@ -9,9 +9,8 @@ exports.renderIndex = async (req, res, next) => {
   const years = [];
 
   try {
-    const allReporting = await reportingService.getAllReporting();
-
-    const reportingByYear = await reportingService.findReporting({
+    const allReporting = await reportingService.findManyReporting();
+    const reportingByYear = await reportingService.findManyReporting({
       year: Number(req.query.tahun),
     });
 
@@ -19,7 +18,7 @@ exports.renderIndex = async (req, res, next) => {
       const isYearAdded = years.includes(item.year);
 
       if (!isYearAdded) {
-        years.push(item.year);
+        years.push-(item.year);
       }
     });
 
@@ -33,44 +32,46 @@ exports.renderIndex = async (req, res, next) => {
 
 exports.renderReportingDetails = async (req, res, next) => {
   const reportingId = new Types.ObjectId(req.params.reportId);
-  const reporting = await reportingService.findReporting({ _id: reportingId });
+  console.log("REPORTING ID : " + reportingId);
+  const reporting = await reportingService.findOneReporting({ _id: reportingId });
   const dbhBudget = await dbhBudgetService.findBudget({
     reportingId: reportingId,
   });
 
-  res.render("reporting/reporting-details", {
-    pageTitle: req.body.title,
-    path: "/admin",
+  res.render("admin/reporting-details", {
+    pageTitle: reporting.title,    
     reporting: reporting,
-    dbhBudget: dbhBudget,
+    dbhBudgets: dbhBudget,
+    userRole: 'admin'
   });
 };
 
 exports.renderCreateReporting = (req, res, next) => {
-  res.render("reporting/create-reporting", {
+  res.render("admin/create-reporting", {
     pageTitle: "Buat Laporan Baru",
-    path: "/admin",
+    apiRoute: "/api/laporan/add",
+    selectedReporting: null,
   });
 };
 
 exports.renderUpdateReporting = async (req, res, next) => {
-  const reportingId = new Types.ObjectId(req.params.reportId);
-  const reporting = await reportingService.findReporting({ _id: reportingId });
+  const reportingId = new Types.ObjectId(req.params.reportingId);
+  const reporting = await reportingService.findOneReporting({ _id: reportingId });
 
   if (!reporting) {
     res.redirect(`/admin/${reportingId}`);
   } else {
-    res.render("reporting/create-reporting", {
+    res.render("admin/create-reporting", {
       pageTitle: "Update Data Anggaran",
-      path: "/admin",
-      reporting: reporting,
+      apiRoute: "/api/laporan/edit/" + reportingId,
+      selectedReporting: reporting,
     });
   }
 };
 
 exports.getAllReporting = async (req, res, next) => {
   // const opd = req.session.user;
-  const reportings = await reportingService.getAllReporting();
+  const reportings = await reportingService.findManyReporting();
   return res.status(200).json(reportings);
 };
 
@@ -79,16 +80,16 @@ exports.getReporting = async (req, res, next) => {
   const reportingId = new Types.ObjectId(req.params.reportId);
   await dbhBudgetService.calculateBudget(reportingId);
 
-  const reporting = await reportingService.findReporting({ _id: reportingId });
+  const reporting = await reportingService.findOneReporting({ _id: reportingId });
   return res.status(200).json(reporting);
 };
 
 exports.createReporting = async (req, res, next) => {
   const data = req.body;
+
   try {
-    const reporting = await reportingService.createReporting(data);
-    // res.redirect("/admin");
-    return res.status(200).json(reporting);
+    await reportingService.createReporting(data);
+    res.redirect("/admin?tahun=" + data.year);    
   } catch (error) {
     return next(error);
   }
@@ -99,17 +100,11 @@ exports.updateReporting = async (req, res, next) => {
   const data = req.body;
 
   try {
-    const reporting = await reportingService.findReporting({
-      _id: reportingId,
-    });
-    if (!reporting) {
-      res.status(404).json({ message: "Reporting not found" });
-    }
-    const updatedReporting = await reportingService.updateReporting(
+    await reportingService.updateReporting(
       reportingId,
       data
     );
-    return res.status(200).json(updatedReporting);
+    res.redirect("/admin?tahun=" + data.year);
   } catch (error) {
     return next(error);
   }

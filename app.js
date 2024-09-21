@@ -31,6 +31,7 @@ app.use(bodyParser.json());
 
 // set public folder
 app.use(express.static(path.join(__dirname, "ui/public")));
+app.use("/admin", express.static(path.join(__dirname, "ui/public")));
 
 // load routes
 routes(app);
