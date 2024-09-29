@@ -31,7 +31,7 @@ exports.renderIndex = async (req, res, next) => {
 };
 
 exports.renderReportingDetails = async (req, res, next) => {
-  const reportingId = new Types.ObjectId(req.params.reportId);
+  const reportingId = req.params.reportId;
   console.log("REPORTING ID : " + reportingId);
   const reporting = await reportingService.findOneReporting({ _id: reportingId });
   const dbhBudget = await dbhBudgetService.findBudget({
@@ -55,7 +55,7 @@ exports.renderCreateReporting = (req, res, next) => {
 };
 
 exports.renderUpdateReporting = async (req, res, next) => {
-  const reportingId = new Types.ObjectId(req.params.reportingId);
+  const reportingId = req.params.reportingId;
   const reporting = await reportingService.findOneReporting({ _id: reportingId });
 
   if (!reporting) {
@@ -77,7 +77,7 @@ exports.getAllReporting = async (req, res, next) => {
 
 exports.getReporting = async (req, res, next) => {
   // const opd = req.session.user;
-  const reportingId = new Types.ObjectId(req.params.reportId);
+  const reportingId = req.params.reportId;
   await dbhBudgetService.calculateBudget(reportingId);
 
   const reporting = await reportingService.findOneReporting({ _id: reportingId });
@@ -96,7 +96,7 @@ exports.createReporting = async (req, res, next) => {
 };
 
 exports.updateReporting = async (req, res, next) => {
-  const reportingId = new Types.ObjectId(req.params.reportId);
+  const reportingId = req.params.reportId;
   const data = req.body;
 
   try {
@@ -111,7 +111,7 @@ exports.updateReporting = async (req, res, next) => {
 };
 
 exports.deleteReporting = async (req, res, next) => {
-  const reportingId = new Types.ObjectId(req.params.reportId);
+  const reportingId = req.params.reportId;
 
   try {
     const deletedReporting = await reportingService.deleteReporting(

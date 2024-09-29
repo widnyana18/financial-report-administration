@@ -12,6 +12,7 @@ appRouter.get('/signup', authController.renderSignup);
 appRouter.get('/ganti-password', authController.renderChangePassword);
 
 //API
+apiRouter.post("/admin-login", authController.adminLogin);
 apiRouter.post("/login", authController.login);
 apiRouter.post("/signup", authController.signup);
 apiRouter.post("/ganti-password", authController.changePassword);

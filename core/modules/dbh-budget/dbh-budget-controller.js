@@ -2,10 +2,7 @@ const reportingService = require("../reporting/reporting-service");
 const opdService = require("../opd/opd-service");
 const dbhBudgetService = require("./dbh-budget-service");
 
-const { Types } = require("mongoose");
-
-exports.renderDataDbhOpd = async (req, res, next) => {
-  const opdId = new Types.ObjectId("66b4959610753739b55d62e9");
+exports.renderDataDbhOpd = async (req, res, next) => {  
   const dbhId = req.params.dbhId;
   let dataDbhOpd = [];
   let periods = [];
@@ -13,7 +10,7 @@ exports.renderDataDbhOpd = async (req, res, next) => {
   const query = req.query;
 
   try {
-    const opd = await opdService.getOpdById(opdId);
+    const opd = await opdService.getOpdById(req.user._id);
     const reportings = await reportingService.findManyReporting();
 
     reportings.forEach((item, index) => {
@@ -36,13 +33,13 @@ exports.renderDataDbhOpd = async (req, res, next) => {
 
     if (selectedReporting !== null) {
       await dbhBudgetService.calculateBudget({
-        opdId: opdId,
+        opdId: req.user._id,
         reportingId: selectedReporting._id,
         parameter: "Program",
       });
 
       dataDbhOpd = await dbhBudgetService.findBudget({
-        opdId: opdId,
+        opdId: req.user._id,
         reportingId: selectedReporting._id,
       });
     }
@@ -85,9 +82,7 @@ exports.findAll = async (req, res, next) => {
   return res.status(200).json(dbhBudget);
 };
 
-exports.findDbhBudgetOpd = async (req, res, next) => {
-  // const opdId = new Types.ObjectId(req.params.opdId);
-  const opdId = new Types.ObjectId("66b4959610753739b55d62e9");
+exports.findDbhBudgetOpd = async (req, res, next) => {  
   const query = req.query;
   let dataDbhOpd = [];
 
@@ -99,13 +94,13 @@ exports.findDbhBudgetOpd = async (req, res, next) => {
 
     if (selectedReporting !== null) {
       await dbhBudgetService.calculateBudget({
-        opdId: opdId,
+        opdId: req.user._id,
         reportingId: selectedReporting._id,
         parameter: "Program",
       });
 
       dataDbhOpd = await dbhBudgetService.findBudget({
-        opdId: opdId,
+        opdId: req.user._id,
         reportingId: selectedReporting._id,
       });
     }
@@ -115,7 +110,7 @@ exports.findDbhBudgetOpd = async (req, res, next) => {
 };
 
 exports.findDbhBudgetAdmin = async (req, res, next) => {
-  const reportingId = new Types.ObjectId(req.params.reportId);
+  const reportingId = params.reportId;
 
   try {
     await dbhBudgetService.calculateBudget({
@@ -131,10 +126,8 @@ exports.findDbhBudgetAdmin = async (req, res, next) => {
   } catch (error) {}
 };
 
-exports.postAddBudget = async (req, res, next) => {
-  const opdId = new Types.ObjectId("66b4959610753739b55d62e9");
-  // const opdId = req.opd._id;
-  const data = { opdId, ...req.body };
+exports.postAddBudget = async (req, res, next) => {  
+  const data = {opdId: req.user._id, ...req.body };
 
   try {
     // console.log("TRIWULAN | TAHUN: " + data.period);

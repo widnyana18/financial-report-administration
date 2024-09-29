@@ -1,8 +1,8 @@
 const Opd = require("../opd/models/opd");
 
-exports.login = async (username, password) => {
+exports.login = async (filter) => {
   try {
-    return await Opd.findOne({ username: username, password: password });
+    return await Opd.findOne(filter);
   } catch (error) {
     throw new Error(error);
   }
@@ -23,5 +23,3 @@ exports.signup = async (req) => {
     throw new Error(error);
   }
 };
-
-exports.logout = async () => {};

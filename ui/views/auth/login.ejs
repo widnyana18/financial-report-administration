@@ -9,7 +9,7 @@
                     <h1 class="display-6 mt-3 mb-5 text-center fw-semibold">SISTEM APLIKASI PERTANGGUNGJAWABAN-DBH PROVINSI (SIAP-DP)</h1>
                     <p class="h2 mb-3 text-center">Login</p>
                     
-                    <form action="/api/auth/login" method="POST" class="needs-validation" novalidate>
+                    <form action="/api/auth<%= path.includes('/admin') ? '/admin-login' : '/login' %>" method="POST" class="needs-validation" novalidate>
                         <div class="mb-3">
                             <label for="username" class="form-label">Username</label>
                             <input type="text" class="form-control" name="username" id="username" required>
@@ -18,12 +18,12 @@
                             <label for="password" class="form-label">Password</label>
                             <input type="password" class="form-control" name="password" id="password" required>
                         </div>
-                        <div class="w-100 text-right">
-                            <p><a href="/ganti-password" class="link-underline-warning text-warning">Lupa Password?</a></p>
-                        </div>
                         <div class="w-100 text-center">
-                            <button type="submit" class="w-100 btn btn-primary mb-3">MASUK</button>
-                            <p>Belum punya akun? <a href="/signup" class="link-underline-primary">Buat Akun Baru Disini</a></p>
+                            <button type="submit" class="w-100 btn btn-primary my-2">MASUK</button>
+                            <% if(!path.includes('/admin')) { %>
+                                <p class="my-2">Belum punya akun? <a href="/signup" class="link-underline-primary">Buat Akun Baru Disini</a></p>
+                                <p class="my-2"><a href="/ganti-password" class="link-underline-warning text-warning">Lupa Password?</a></p>
+                            <% } %>
                         </div>
                     </form>
                 </div>

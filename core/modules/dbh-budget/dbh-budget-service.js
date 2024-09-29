@@ -18,7 +18,6 @@ exports.addDbhBudget = async (data) => {
     year: data.year,
   });
 
-  // const opdId = new Types.ObjectId(data.opdId);
   const dbhId = await createBudgetId(data);
   console.log("REPORTING ID :" + reporting);
   const dbhBudget = new DbhBudget({
@@ -148,7 +147,7 @@ exports.calculateBudget = async (filter) => {
 };
 
 exports.updateBudget = async (req, input) => {
-  const opdId = new Types.ObjectId("66b4959610753739b55d62e9");
+  const opdId = req.user._id;
 
   console.log('DBH ID : ' + req.params.dbhId);
   try {
@@ -191,7 +190,7 @@ exports.updateBudget = async (req, input) => {
 };
 
 exports.deleteBudget = async (req) => {
-  const opdId = new Types.ObjectId("66b4959610753739b55d62e9");
+  const opdId = req.user._id;
 
   try {
     const reporting = await reportingService.findOneReporting({

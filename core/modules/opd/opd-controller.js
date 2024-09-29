@@ -3,7 +3,7 @@ const { Types } = require("mongoose");
 const opdService = require("./opd-service");
 
 exports.renderUpdateOpd = async (req, res, next) => {
-  const opdId = new Types.ObjectId("66b4959610753739b55d62e9");
+  const opdId = req.user._id;
   const opd = await opdService.getOpdById(opdId);
 
   if (!opd) {
@@ -23,7 +23,7 @@ exports.getAllOpd = async (req, res, next) => {
 };
 
 exports.getOpd = async (req, res, next) => {
-  const opdId = new Types.ObjectId(req.params.id);
+  const opdId = req.params.id;
   try {
     const opd = await opdService.getOpdById(opdId);
     return res.status(200).json(opd);
@@ -33,7 +33,7 @@ exports.getOpd = async (req, res, next) => {
 };
 
 exports.updateOpd = async (req, res, next) => {
-  const opdId = new Types.ObjectId(req.params.id);
+  const opdId = req.params.id;
   const data = req.body;
 
   try {
@@ -50,7 +50,7 @@ exports.updateOpd = async (req, res, next) => {
 };
 
 exports.deleteOpd = async (req, res, next) => {
-  const opdId = new Types.ObjectId(req.params.id);
+  const opdId = req.params.id;
 
   try {
     const deletedOpd = await opdService.deleteOpd(opdId);

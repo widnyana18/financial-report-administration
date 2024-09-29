@@ -2,7 +2,10 @@
 </head>
 <body>
     <main class="container-fluid m-5">       
-        <h1 class="display-6 my-5 fw-semibold align-self-center">SISTEM APLIKASI PERTANGGUNGJAWABAN-DBH PROVINSI (SIAP-DP)</h1>              
+        <h1 class="display-6 my-5 fw-semibold align-self-center">SISTEM APLIKASI PERTANGGUNGJAWABAN-DBH PROVINSI (SIAP-DP)</h1>       
+        <form action="/api/auth/logout" method="post">       
+            <button type="submit" id="logout-btn" class="me-4 btn btn-secondary py-2 px-4"><a class="text-white">LOGOUT</a></button>                   
+        </form>
         <div class="d-flex my-4">
             <button type="button" id="crete-reporting-btn" class="me-4 btn btn-primary py-2 px-4"><a class="text-white" href="/admin/buat-laporan">BUAT LAPORAN BARU</a></button> 
             <div class="dropdown" >
