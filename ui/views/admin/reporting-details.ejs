@@ -13,8 +13,10 @@
                 <p class="h6 my-2">Jumlah Lembaga <span class="px-3"> : <%= reporting.totalDbhOpdAdded %>/<%= reporting.totalOpd %></span></p>
                 <p class="h6 my-2">Status Laporan <span class="px-4 <%= reporting.status == 'Sudah Selesai' ? 'text-success' : 'text-danger' %>">&nbsp; : <%= reporting.status %></span></p>
                 <div class="d-flex my-4">     
-                    <button type="button" class="btn btn-danger me-3">DOWNLOAD PDF</button>                  
-                    <button type="button" class="btn btn-success">DOWNLOAD EXCEL</button>                                        
+                    <button type="button" class="btn btn-danger me-3">DOWNLOAD PDF</button>    
+                    <!-- <form action="/api/laporan/<%= reporting._id %>/excel" method="post">                           -->
+                        <button type="submit" class="btn btn-success"><a href="/admin/<%= reporting._id %>/download-excel">DOWNLOAD EXCEL</a></button>                                        
+                    <!-- </form>               -->
                 </div>                    
             </div>
         </div>         

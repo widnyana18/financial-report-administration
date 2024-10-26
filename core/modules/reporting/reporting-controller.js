@@ -1,7 +1,6 @@
-const { Types } = require("mongoose");
-
 const reportingService = require("./reporting-service");
 const dbhBudgetService = require("../dbh-budget/dbh-budget-service");
+const fs = require("fs");
 
 const appName = process.env.APP_NAME;
 
@@ -18,7 +17,7 @@ exports.renderIndex = async (req, res, next) => {
       const isYearAdded = years.includes(item.year);
 
       if (!isYearAdded) {
-        years.push-(item.year);
+        years.push - item.year;
       }
     });
 
@@ -33,16 +32,18 @@ exports.renderIndex = async (req, res, next) => {
 exports.renderReportingDetails = async (req, res, next) => {
   const reportingId = req.params.reportId;
   console.log("REPORTING ID : " + reportingId);
-  const reporting = await reportingService.findOneReporting({ _id: reportingId });
+  const reporting = await reportingService.findOneReporting({
+    _id: reportingId,
+  });
   const dbhBudget = await dbhBudgetService.findBudget({
     reportingId: reportingId,
   });
 
   res.render("admin/reporting-details", {
-    pageTitle: reporting.title,    
+    pageTitle: reporting.title,
     reporting: reporting,
     dbhBudgets: dbhBudget,
-    userRole: 'admin'
+    userRole: "admin",
   });
 };
 
@@ -56,7 +57,9 @@ exports.renderCreateReporting = (req, res, next) => {
 
 exports.renderUpdateReporting = async (req, res, next) => {
   const reportingId = req.params.reportingId;
-  const reporting = await reportingService.findOneReporting({ _id: reportingId });
+  const reporting = await reportingService.findOneReporting({
+    _id: reportingId,
+  });
 
   if (!reporting) {
     res.redirect(`/admin/${reportingId}`);
@@ -80,7 +83,9 @@ exports.getReporting = async (req, res, next) => {
   const reportingId = req.params.reportId;
   await dbhBudgetService.calculateBudget(reportingId);
 
-  const reporting = await reportingService.findOneReporting({ _id: reportingId });
+  const reporting = await reportingService.findOneReporting({
+    _id: reportingId,
+  });
   return res.status(200).json(reporting);
 };
 
@@ -89,7 +94,7 @@ exports.createReporting = async (req, res, next) => {
 
   try {
     await reportingService.createReporting(data);
-    res.redirect("/admin?tahun=" + data.year);    
+    res.redirect("/admin?tahun=" + data.year);
   } catch (error) {
     return next(error);
   }
@@ -100,10 +105,7 @@ exports.updateReporting = async (req, res, next) => {
   const data = req.body;
 
   try {
-    await reportingService.updateReporting(
-      reportingId,
-      data
-    );
+    await reportingService.updateReporting(reportingId, data);
     res.redirect("/admin?tahun=" + data.year);
   } catch (error) {
     return next(error);
@@ -118,6 +120,16 @@ exports.deleteReporting = async (req, res, next) => {
       reportingId
     );
     return res.status(200).json(deletedReporting);
+  } catch (error) {
+    return next(error);
+  }
+};
+
+exports.exportToExcel = async (req, res, next) => {
+  const reportId = req.params.reportId;
+
+  try {
+    return await reportingService.generateExcel(res, reportId);
   } catch (error) {
     return next(error);
   }

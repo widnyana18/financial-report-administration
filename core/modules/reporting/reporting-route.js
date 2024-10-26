@@ -7,17 +7,23 @@ const appRouter = Router();
 const apiRouter = Router();
 
 //admin route Reporting website
-appRouter.get("/admin", isAuth, reportingController.renderIndex);
+appRouter.get("/", isAuth, reportingController.renderIndex);
 appRouter.get(
-  "/admin/buat-laporan",
+  "/buat-laporan",
   isAuth,
   reportingController.renderCreateReporting
 );
-appRouter.get("admin/:reportId", isAuth, reportingController.renderReportingDetails);
+appRouter.get("/:reportId", isAuth, reportingController.renderReportingDetails);
 appRouter.get(
-  "/admin/edit/:reportingId",
+  "/edit/:reportingId",
   isAuth,
   reportingController.renderUpdateReporting
+);
+
+appRouter.get(
+  "/:reportId/download-excel",
+  isAuth,
+  reportingController.exportToExcel
 );
 
 // route API
@@ -26,7 +32,7 @@ apiRouter.get("/:reportId", reportingController.getReporting);
 apiRouter.post("/add", isAuth, reportingController.createReporting);
 apiRouter.post("/edit/:reportId", isAuth, reportingController.updateReporting);
 apiRouter.delete(
-  "delete/:reportId",
+  "/delete/:reportId",
   isAuth,
   reportingController.deleteReporting
 );
