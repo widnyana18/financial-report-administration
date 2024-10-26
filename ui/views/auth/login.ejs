@@ -9,7 +9,7 @@
                     <h1 class="display-6 mt-3 mb-5 text-center fw-semibold">SISTEM APLIKASI PERTANGGUNGJAWABAN-DBH PROVINSI (SIAP-DP)</h1>
                     <p class="h2 mb-3 text-center">Login</p>
                     
-                    <form action="/api/auth<%= path.includes('/admin') ? '/admin-login' : '/login' %>" method="POST" class="needs-validation" novalidate>
+                    <form action="/api/auth/<%= path.includes('/admin') ? 'admin-login' : 'login' %>" method="POST" class="needs-validation" novalidate>
                         <div class="mb-3">
                             <label for="username" class="form-label">Username</label>
                             <input type="text" class="form-control" name="username" id="username" required>
