@@ -60,9 +60,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use((req, res, next) => {
-  // throw new Error('Sync Dummy');
-  console.log("SESSION YA : " + req.session.isLoggedIn);
+app.use((req, res, next) => {    
   if (!req.session.user) {
     return next();
   }
