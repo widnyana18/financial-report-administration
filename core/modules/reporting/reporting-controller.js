@@ -4,15 +4,13 @@ const reportingService = require("./reporting-service");
 const dbhBudgetService = require("../dbh-budget/dbh-budget-service");
 const dbhBudget = require("../dbh-budget/models/dbh-budget");
 
-const appName = process.env.APP_NAME;
-
 exports.renderIndex = async (req, res, next) => {
   const years = [];
 
   try {
     const allReporting = await reportingService.findManyReporting();
     const reportingByYear = await reportingService.findManyReporting({
-      year: Number(req.query.tahun),
+      year: Number(req.query.tahun ?? 0),
     });
 
     allReporting.forEach((item, index) => {
@@ -24,7 +22,7 @@ exports.renderIndex = async (req, res, next) => {
     });
 
     res.render("admin/reportings", {
-      pageTitle: appName,
+      pageTitle: 'Portal Admin',
       years: years,
       reportingList: reportingByYear,
     });

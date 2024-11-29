@@ -43,7 +43,7 @@ exports.adminLogin = async (req, res, next) => {
       req.session.userRole = "ADMIN";
       req.session.user = user;
 
-      res.redirect(`/admin?tahun=${currentYear}`);
+      res.redirect('/admin');
       return req.session.save();
     } else {
       // return res.status(400).json({ message: "Wrong Password" });
