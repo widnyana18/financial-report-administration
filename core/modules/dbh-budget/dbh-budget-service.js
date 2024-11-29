@@ -1,8 +1,39 @@
 const DbhBudget = require("./models/dbh-budget");
 const { generatedId } = require("../../common/utils/id_gen");
 const reportingService = require("../reporting/reporting-service");
+const {Types} = require('mongoose');
 
-const { Types } = require("mongoose");
+exports.groupDbhByOpd = async (reportId) => {
+  // Aggregation pipeline to group and sort data by opdId
+  const objReportId = new Types.ObjectId(reportId);
+  
+  return await DbhBudget.aggregate([
+    {
+      // Step 1: Optional - Filter by id if needed (you can remove this if not needed)
+      $match: { reportingId:  objReportId },
+    },
+    {
+      // Step 2: Sort the documents by opdId and other fields if needed (e.g., createdAt)
+      $sort: { opdId: 1, createdAt: 1 }, // Sort by opdId and createdAt field within each group
+    },
+    {
+      // Step 3: Group the documents by opdId
+      $group: {
+        _id: "$opdId", // Group by opdId
+        data: { $push: "$$ROOT" }, // Push all documents in that group to a 'data' array
+        totalDbhOpd: {
+          $addToSet: {
+            $cond: {
+              if: { $eq: ["$parameter", "Lembaga"] },
+              then: "$$ROOT",
+              else: null,
+            },
+          },
+        },
+      },
+    },
+  ]);
+};
 
 exports.findBudget = async (filter) => {
   try {
@@ -19,7 +50,9 @@ exports.addDbhBudget = async (data) => {
   });
 
   const dbhId = await createBudgetId(data);
+
   console.log("REPORTING ID :" + reporting);
+
   const dbhBudget = new DbhBudget({
     _id: dbhId,
     reportingId: reporting._id,
@@ -36,12 +69,20 @@ exports.addDbhBudget = async (data) => {
       pajakRokok: [data.pajakRokokBudget, data.pajakRokokRealization],
     },
   });
+
   console.log("DBH BUDGET : " + dbhBudget);
 
   try {
     const dbhAdded = await dbhBudget.save();
+
+    if (data.parameter === "Lembaga") {
+      await reportingService.updateReporting(reporting._id, {
+        totalDbhOpdAdded: totalDbhOpdAdded + 1,
+      });
+    }
+
     console.log("DBH ADDED : " + dbhAdded);
-    if (dbhAdded && data.parameter === "Program") {
+    if (dbhAdded) {
       const calculate = await this.calculateBudget({
         opdId: opdId,
         reportingId: reporting._id,
@@ -61,7 +102,7 @@ const createBudgetId = async (data) => {
   let dbhId;
 
   const latestBudget = await DbhBudget.findOne({
-    parameter: data.parameter
+    parameter: data.parameter,
   }).sort({ createdAt: -1 });
 
   console.log("parentId", data.parentId);
@@ -88,7 +129,7 @@ const createBudgetId = async (data) => {
 exports.calculateBudget = async (filter) => {
   try {
     const selectedBudgetList = await DbhBudget.find(filter);
-
+    
     let pagu = 0;
     let pkbBudget = 0;
     let pkbRealization = 0;
@@ -122,7 +163,7 @@ exports.calculateBudget = async (filter) => {
       pbbkb: [pbbkbBudget, pbbkbRealization],
       pap: [papBudget, papRealization],
       pajakRokok: [pajakRokokBudget, pajakRokokRealization],
-    };
+    };    
 
     if (filter.parameter == "Program") {
       return await DbhBudget.findOneAndUpdate(
@@ -136,8 +177,13 @@ exports.calculateBudget = async (filter) => {
           new: true,
         }
       );
-    } else {
+    } else {      
+      const sumDbhBudget = totalDbh.pkb[0] + totalDbh.bbnkb[0] + totalDbh.pbbkb[0] + totalDbh.pap[0] + totalDbh.pajakRokok[0];
+      const sumDbhRealization = totalDbh.pkb[1] + totalDbh.bbnkb[1] + totalDbh.pbbkb[1] + totalDbh.pap[1] + totalDbh.pajakRokok[1];
+
       return await reportingService.updateReporting(filter.reportingId, {
+        totalDbhBudget: sumDbhBudget,
+        totalDbhRealization: sumDbhRealization,
         totalInstitutionDbh: totalDbh,
       });
     }
@@ -149,7 +195,7 @@ exports.calculateBudget = async (filter) => {
 exports.updateBudget = async (req, input) => {
   const opdId = req.user._id;
 
-  console.log('DBH ID : ' + req.params.dbhId);
+  console.log("DBH ID : " + req.params.dbhId);
   try {
     const reporting = await reportingService.findOneReporting({
       period: input.period,
@@ -176,7 +222,7 @@ exports.updateBudget = async (req, input) => {
       }
     );
 
-    if (dbhUpdated && input.parameter === "Program") {
+    if (dbhUpdated) {
       await this.calculateBudget({
         opdId: opdId,
         reportingId: reporting._id,
@@ -200,7 +246,7 @@ exports.deleteBudget = async (req) => {
     const dbh = await DbhBudget.findById(req.dbhId);
     const dbhDeleted = await DbhBudget.deleteOne({ _id: req.params.dbhId });
 
-    if (dbhDeleted && dbh.parameter === "Program") {
+    if (dbhDeleted) {
       await this.calculateBudget({
         opdId: opdId,
         reportingId: reporting._id,

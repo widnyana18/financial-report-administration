@@ -31,32 +31,32 @@
         </div>
         <div class="mt-5 w-50">
             <p class="h6">Pagu yang sudah di transfer (Diterima) dari Provinsi untuk DBH Provinsi TA <%= reportingList[0].year %></p>
-            <% for(reporting of reportingList) { %>
+            <% for(let i=0; i<reportingList.length; i++) { %>
                 <div class="my-4">
-                    <p class="h5">1. Penerimaan DBH <%= reporting.period %></p>                                                   
+                    <p class="h5"><%= i+1 %>. Penerimaan DBH <%= reportingList[i].period %></p>                                                   
                     <div class="d-flex align-items-center justify-content-between">
                         <p>- Bagi Hasil Pajak Kendaraan Bermotor (PKB)</p>
-                        <p class="h6"><%= reporting.dbhRecieved.pkb %></p>
+                        <p class="h6"><%= reportingList[i].dbhRecieved.pkb %></p>
                     </div>
                     <div class="d-flex align-items-center justify-content-between">
                         <p>- Bagi Hasil Bea Balik Nama Kendaraan Bermotor (BBNKB)</p>
-                        <p class="h6"><%= reporting.dbhRecieved.bbnkb %></p>                        
+                        <p class="h6"><%= reportingList[i].dbhRecieved.bbnkb %></p>                        
                     </div>
                     <div class="d-flex align-items-center justify-content-between">
                         <p>- Bagi Hasil Pajak Bahan Bakar Kendaraan Bermotor (PBBKB)</p>
-                        <p class="h6"><%= reporting.dbhRecieved.pbbkb %></p>                        
+                        <p class="h6"><%= reportingList[i].dbhRecieved.pbbkb %></p>                        
                     </div>
                     <div class="d-flex align-items-center justify-content-between">
                         <p>- Bagi Hasil Pajak Air Tanah Permukaan</p>                                        
-                        <p class="h6"><%= reporting.dbhRecieved.pajakRokok %></p>                        
-                    </div>
-                    <hr class="border border-tertiary border-1 opacity-50">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <p>JUMLAH</p>                                        
-                        <p class="h6"><%= reporting.totalDbhRecieved %></p>                        
-                    </div>  
+                        <p class="h6"><%= reportingList[i].dbhRecieved.pajakRokok %></p>                        
+                    </div>                      
                 </div>                    
-            <% } %>                    
+            <% } %>       
+            <hr class="border border-tertiary border-1 opacity-50">
+            <div class="d-flex align-items-center justify-content-between">
+                <p>JUMLAH</p>                                        
+                <p class="h6"><%= reporting.totalDbhRecieved %></p>                        
+            </div>             
         </div>           
     </main>    
 
