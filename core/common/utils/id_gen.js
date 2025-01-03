@@ -1,4 +1,32 @@
-exports.generatedId = (budget) => {
+exports.createBudgetId = async (data) => {
+  let dbhId;
+
+  const latestBudget = await DbhRealization.findOne({
+    parameter: data.parameter,
+  }).sort({ createdAt: -1 });
+
+  console.log("parentId", data.parentId);
+  console.log("latestBudget", latestBudget);
+
+  switch (data.parameter) {
+    case "Lembaga":
+      dbhId = generatedId(latestLembaga) ?? "LM01";
+      break;
+    case "Program":
+      dbhId = generatedId(latestBudget) ?? `${data.parentId}.PG01`;
+      break;
+    case "Kegiatan":
+      dbhId = generatedId(latestBudget) ?? `${data.parentId}.KG01`;
+      break;
+    default:
+      dbhId = generatedId(latestBudget) ?? `${data.parentId}.SK01`;
+      break;
+  }
+  console.log("DBH ID", dbhId);
+  return dbhId;
+};
+
+generatedId = (budget) => {
   if (!budget) {
     return null;
   }

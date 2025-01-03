@@ -1,8 +1,7 @@
 const excelJS = require("exceljs");
 
 const reportingService = require("./reporting-service");
-const dbhBudgetService = require("../dbh-budget/dbh-budget-service");
-const dbhBudget = require("../dbh-budget/models/dbh-budget");
+const dbhRealizationService = require("../dbh-realization/dbh-realization-service");
 
 exports.renderIndex = async (req, res, next) => {
   const years = [];
@@ -22,7 +21,7 @@ exports.renderIndex = async (req, res, next) => {
     });
 
     res.render("admin/reportings", {
-      pageTitle: 'Portal Admin',
+      pageTitle: "Portal Admin",
       years: years,
       reportingList: reportingByYear,
     });
@@ -30,17 +29,25 @@ exports.renderIndex = async (req, res, next) => {
 };
 
 exports.renderReportingDetails = async (req, res, next) => {
-  const reportingId = req.params.reportId;  
+  const reportingId = req.params.reportId;
+  const dbhOpdCompletedArray = await reportingService.findInstitution({
+    reportingId,
+    isCompleted: true,
+  });
   const reporting = await reportingService.findOneReporting({
     _id: reportingId,
-  });  
+  });
+  const opdIdArray = dbhOpdCompletedArray.map((dbhOpd) => dbhOpd.opdId);
 
-  const getDbhByOpd = await dbhBudgetService.groupDbhByOpd(reportingId);      
+  const getDbhByOpd = await dbhRealizationService.groupDbhByOpd({
+    reportingId,
+    opds: opdIdArray,
+  });
 
-  getDbhByOpd.forEach(dbh => {    
+  getDbhByOpd.forEach((dbh) => {
     console.log("GET DBH BY OPD : " + JSON.stringify(dbh.totalDbhOpd));
   });
-  
+
   res.render("admin/reporting-details", {
     pageTitle: reporting.title,
     reporting: reporting,
@@ -59,17 +66,23 @@ exports.renderCreateReporting = (req, res, next) => {
 
 exports.renderUpdateReporting = async (req, res, next) => {
   const reportingId = req.params.reportingId;
-  const reporting = await reportingService.findOneReporting({
+  const selectedReporting = await reportingService.findOneReporting({
     _id: reportingId,
   });
+  const selectedInstitution = await reportingService.findInstitution({
+    reportingId: reportingId,
+  });
 
-  if (!reporting) {
+  if (!selectedReporting) {
     res.redirect(`/admin/${reportingId}`);
   } else {
     res.render("admin/create-reporting", {
       pageTitle: "Update Data Anggaran",
       apiRoute: "/api/laporan/edit/" + reportingId,
-      selectedReporting: reporting,
+      selectedReporting: {
+        reporting: selectedReporting,
+        institution: selectedInstitution,
+      },
     });
   }
 };
@@ -83,7 +96,6 @@ exports.getAllReporting = async (req, res, next) => {
 exports.getReporting = async (req, res, next) => {
   // const opd = req.session.user;
   const reportingId = req.params.reportId;
-  await dbhBudgetService.calculateBudget(reportingId);
 
   const reporting = await reportingService.findOneReporting({
     _id: reportingId,
@@ -93,9 +105,39 @@ exports.getReporting = async (req, res, next) => {
 
 exports.createReporting = async (req, res, next) => {
   const data = req.body;
+  const reportingData = {
+    title: data.title,
+    period: data.period,
+    year: data.year,
+    totalOpd: data.totalOpd,
+    dbhRecieved: {
+      pkb: data.pkbRecieved,
+      pbbkb: data.pbbkbRecieved,
+      pajakRokok: data.pajakRokokRecieved,
+      bbnkb: data.bbnkbRecieved,
+      pap: data.papRecieved,
+    },
+  };
+  const institutionData = []; 
 
   try {
-    await reportingService.createReporting(data);
+    const reportingAdded =await reportingService.createReporting(reportingData);    
+
+    for (let id = 1; id <= data.totalOpd; id++) {
+      institutionData.push({  
+        reportingId: reportingAdded.insertedId,
+        institutionName: data[`institutionName${id}`],
+        dbhBudget: {
+          pkb: data[`pkbBudget${id}`],
+          pbbkb: data[`pbbkbBudget${id}`],
+          pajakRokok: data[`pajakRokokBudget${id}`],
+          bbnkb: data[`bbnkbBudget${id}`],
+          pap: data[`papBudget${id}`],
+        },
+      });
+    }
+
+    await reportingService.insertInstitution(institutionData);
     res.redirect("/admin?tahun=" + data.year);
   } catch (error) {
     return next(error);
@@ -132,7 +174,7 @@ exports.exportToExcel = async (req, res, next) => {
 
   const workbook = new excelJS.Workbook();
   const reportingData = await Reporting.findOne({ _id: reportingId });
-  const dbhReportingData = await dbhBudgetService.findBudget({
+  const dbhReportingData = await dbhRealizationService.findBudget({
     reportingId: reportingId,
   });
   const worksheet = workbook.addWorksheet(
@@ -497,9 +539,10 @@ exports.exportToExcel = async (req, res, next) => {
     // Write to the response directly as a download
     res.setHeader(
       "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "Content-Disposition",
+      "attachment; filename=" + fileName
     );
-    res.setHeader("Content-Disposition", "attachment; filename=" + fileName);
 
     // Write the Excel file to the response stream
     await workbook.xlsx.write(res);

@@ -16,9 +16,9 @@ const reportingSchema = new Schema(
       type: Number,
       required: true,
     },
-    status: {
-      type: String,
-      default: "Belum Selesai",
+    isDone: {
+      type: Boolean,
+      default: false,
     },
     totalDbhOpdAdded: {
       type: Number,
@@ -72,9 +72,6 @@ const reportingSchema = new Schema(
         type: Number,
         required: true,
       },
-    },
-    fileExcelUrl: {
-      type: String,
     },
   },
   {

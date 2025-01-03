@@ -2,8 +2,8 @@ const bcrypt = require("bcryptjs");
 
 const authService = require("./auth-service");
 const opdService = require("../opd/opd-service");
-const dbhBudgetService = require("../dbh-budget/dbh-budget-service");
 const reportingService = require("../reporting/reporting-service");
+const dbhRealizationService = require("../dbh-realization/dbh-realization-service");
 
 exports.renderLogin = (req, res, next) => {
   res.render("auth/login", {
@@ -26,12 +26,11 @@ exports.renderChangePassword = (req, res, next) => {
 exports.adminLogin = async (req, res, next) => {
   const username = req.body.username;
   const password = req.body.password;
-  const currentYear = new Date().getFullYear();
 
   try {
     const user = await authService.login({ username: username });
 
-    if (!user) {
+    if (user.opdName !== "ADMIN") {
       // return res.status(400).json({ message: "User not found" });
       res.redirect("/admin/login");
     }
@@ -43,7 +42,13 @@ exports.adminLogin = async (req, res, next) => {
       req.session.userRole = "ADMIN";
       req.session.user = user;
 
-      res.redirect('/admin');
+      const lastReporting = await reportingService.getLastReporting();
+
+      if (!lastReporting) {
+        res.redirect("/admin");
+      } else {
+        res.redirect("/admin?tahun=" + lastReporting.year);
+      }
       return req.session.save();
     } else {
       // return res.status(400).json({ message: "Wrong Password" });
@@ -57,20 +62,6 @@ exports.adminLogin = async (req, res, next) => {
 exports.login = async (req, res, next) => {
   const username = req.body.username;
   const password = req.body.password;
-  const currentYear = new Date().getFullYear();
-  const month = new Date().getMonth() + 1;
-  // getMonth() returns 0-11, so add 1
-  let currentPeriod;
-
-  if (month >= 1 && month <= 3) {
-    currentPeriod = 'Triwulan I'; // January to March
-  } else if (month >= 4 && month <= 6) {
-    currentPeriod = 'Triwulan II'; // April to June
-  } else if (month >= 7 && month <= 9) {
-    currentPeriod = 'Triwulan III'; // July to September
-  } else {
-    currentPeriod = 'Triwulan VI'; // October to December
-  }
 
   try {
     const user = await authService.login({ username: username });
@@ -87,9 +78,22 @@ exports.login = async (req, res, next) => {
       req.session.userRole = "OPD";
       req.session.user = user;
 
-      res.redirect(
-        `/?triwulan=Triwulan%20II&tahun=${currentYear}&edit=false`
-      );      
+      const lastDataDbhByOpd = await dbhRealizationService.findBudget({
+        opdId: user._id,
+      });
+      console.log("LAST DBH : " + lastDataDbhByOpd.length);
+
+      const lastReporting = await reportingService.findOneReporting({
+        _id: lastDataDbhByOpd[lastDataDbhByOpd.length - 1]?.reportingId,
+      });
+
+      if (!lastReporting) {
+        res.redirect("/");
+      } else {
+        res.redirect(
+          `/?triwulan=${lastReporting.period.trim()} ${lastReporting.year}&edit=false`
+        );
+      }
 
       return req.session.save();
     } else {

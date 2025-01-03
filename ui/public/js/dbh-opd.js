@@ -1,9 +1,11 @@
-const dbhListDatajsonString = $("input#dbh-budget-data").val();
-const parseDbhBudgetList = JSON.parse(dbhListDatajsonString);
+const dbhListDatajsonString = $("input#dbh-realization-data").val();
+const parseDbhRealizationList = JSON.parse(dbhListDatajsonString);
 let $period = $(".dropdown button#period-btn").text();
 let $year = $(".dropdown button#year-btn").text();
 
-console.log("DBH LIST : " + parseDbhBudgetList);
+$(".hide-input").hide();
+
+console.log("DBH LIST : " + parseDbhRealizationList);
 
 const showParentParameter = (element, parameter) => {
   const prevParameter = $(element).parent().prev().children().text();
@@ -13,8 +15,8 @@ const showParentParameter = (element, parameter) => {
 
   $("#parent-parameter").empty();
 
-  if (parameter !== "Lembaga") {
-    for (const item of parseDbhBudgetList) {
+  if (parameter !== "Program") {
+    for (const item of parseDbhRealizationList) {
       if (prevParameter === item.parameter) {
         parameterTypeItem.push(`<li>
           <a class="dropdown-item parameter-type-item" id="${item._id}">${item.name}</a>
@@ -57,13 +59,6 @@ $(".dropdown ul li a#period-list").click(function () {
   $("#period-btn").text($period);
 });
 
-$(".dropdown ul li a#year-list").click(function () {
-  $(".dropdown ul li a#year-list").removeClass("active");
-  $(this).addClass("active");
-  $year = $(this).text();
-  $("#year-btn").text($year);
-});
-
 $(".dropdown-menu .parameter-item").click(function () {
   const parameter = $(this).text();
   console.log("TEXT: " + parameter);
@@ -73,7 +68,15 @@ $(".dropdown-menu .parameter-item").click(function () {
   $("#parameter-btn").text(parameter);
   $(".dropdown input#parameter").val(parameter);
   showParentParameter(this, parameter);
-});
+
+  if(parameter != 'Sub Kegiatan') {
+    $(".hide-input").hide();    
+    $(".form-input").addClass("container w-50");
+  } else {
+    $(".hide-input").show();
+    $(".form-input").removeClass("container w-50");
+  }
+}); 
 
 $("button#clear-btn").click(function () {
   clearAllInputForm();
@@ -83,21 +86,21 @@ const clearAllInputForm = () => {
   $(".dropdown ul li a#parameter-item").removeClass("active");
   $("#parameter-btn").text("Pilih Parameter");
   $("#parent-parameter").empty();
-  // $("form#dbh-budget-form")[0].reset();
+  // $("form#dbh-realization-form")[0].reset();
 
-  $("#dbh-budget-form").find("input").val("");
+  $("#dbh-realization-form").find("input").val("");
 
   // Option 1: Remove validation attributes
-  $("#dbh-budget-form").find("input").removeAttr("required");
+  $("#dbh-realization-form").find("input").removeAttr("required");
 };
 
 $("button a#filter-btn").click(function () {
-  $(this).attr("href", `/?triwulan=${$period}&tahun=${$year}&edit=false`);
+  $(this).attr("href", `/?triwulan=${$period.trim()} ${$year}&edit=false`);
 });
 
 $("td#edit-btn").click(function () {
   const dbhId = $(this).parent().attr("id");
-  const selectedBudget = parseDbhBudgetList.find((dbh) => dbh._id === dbhId);
+  const selectedBudget = parseDbhRealizationList.find((dbh) => dbh._id === dbhId);
   console.log("DBH ID : " + dbhId);
 
   // Get the current URL parameters
@@ -125,12 +128,27 @@ $("td#edit-btn").click(function () {
   $("#pajak-rokok-budget").val(selectedBudget.dbh.pajakRokok[0] ?? 0);
   $("#pajak-rokok-realization").val(selectedBudget.dbh.pajakRokok[1] ?? 0);
 
-  $("form#dbh-budget-form").attr(
+  $("form#dbh-realization-form").attr(
     "action",
     `api/dbh/edit/${selectedBudget._id}`
   );
   $("#submit-form-btn").text("RUBAH DATA");
   $(".dropdown button#parameter-btn").prop("disabled", true);
+});
+
+$("button#send-report-btn").click(function () {  
+
+  fetch("/api/dbh/send-report/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })    
+    .then((data) => {
+      $(this).prop("disabled", true);
+      
+    })
+    .catch((error) => console.error(error));
 });
 
 $("td#delete-btn").click(function () {

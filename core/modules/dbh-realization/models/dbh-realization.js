@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const Schema = mongoose.Schema;
 
-const dbhBudgetSchema = new Schema(
+const dbhRealizationSchema = new Schema(
   {
     _id: {
       type: String,
@@ -52,4 +52,4 @@ const dbhBudgetSchema = new Schema(
   }
 );
 
-module.exports = mongoose.model("DbhBudget", dbhBudgetSchema);
+module.exports = mongoose.model("DbhRealization", dbhRealizationSchema);

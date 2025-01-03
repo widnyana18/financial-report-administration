@@ -1,52 +1,106 @@
 <%- include('../partials/head.ejs') %>
 </head>
 <body>
-    <main class="mx-auto my-5 w-50">                   
+    <main class="mx-auto my-5 w-75">                   
         <p class="h5 mb-5 text-center"><%= pageTitle %></p>            
-        <form action="<%= apiRoute %>" method="POST" id="dbh-budget-form" class="needs-validation" novalidate>
+        <form action="<%= apiRoute %>" method="POST" id="dbh-realization-form" class="needs-validation" novalidate>
             <div class="mb-3">
                 <label for="title" class="form-label">Judul<span class="text-danger"> *</span></label>
-                <input value="<%= selectedReporting?.title %>" type="text" class="form-control" name="title" id="title" required>
+                <input value="<%= selectedReporting.reporting.title %>" type="text" class="form-control" name="title" id="title" required>
             </div>
             <div class="mb-3">
-                <label for="period" class="form-label">Triwulan<span class="text-danger"> *</span></label>
-                <input value="<%= selectedReporting?.period %>" type="text" class="form-control" name="period" id="period" required>
+                <label for="period" class="form-label">Triwulan <span class="text-danger">*</span></label>
+                <div class="dropdown">
+                    <input type="hidden" name="period" id="period" value="<%= selectedReporting.reporting.period %>" required>
+                    <button id="period-btn" class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <%= selectedReporting.reporting.period ?? "Pilih Triwulan" %>
+                    </button>
+                    <ul class="dropdown-menu">
+                      <li><a class="dropdown-item period-item" id="triwulan1">Triwulan I</a></li>
+                      <li><a class="dropdown-item period-item" id="triwulan2">Triwulan II</a></li>                              
+                      <li><a class="dropdown-item period-item" id="triwulan3">Triwulan III</a></li>                              
+                      <li><a class="dropdown-item period-item" id="triwulan4">Triwulan IV</a></li>                              
+                    </ul>
+                </div>
             </div>
             <div class="mb-3">
                 <label for="year" class="form-label">Tahun <span class="text-danger"> *</span></label>                                
-                <input value="<%= selectedReporting?.year %>" type="number" class="form-control" name="year" id="year" required>
+                <input value="<%= selectedReporting.reporting.year %>" type="number" class="form-control" name="year" id="year" required>
             </div>
-            <div class="mb-3">
-                <label for="totalOpd" class="form-label">Jumlah Lembaga <span class="text-danger"> *</span></label>                                
-                <input value="<%= selectedReporting?.totalOpd %>" type="number" class="form-control" name="totalOpd" id="totalOpd" required>
+            <div class="border row rounded p-2 mb-3">
+                <div class="row my-3">
+                    <div class="col"><p class="h6 mb-3">Daftar Lembaga Penerima Anggaran DBH : <span class="text-danger"> *</span></p></div>
+                    <div class="col"><button type="button" id="add-institution-btn" class="btn btn-success mb-3 mx-2 btn-sm">TAMBAH LEMBAGA</button></div>
+                </div> 
+                <div id="institution-dbh-form">
+                    <div class="d-inline mb-3">
+                        <p class="h6">Total Lembaga : <span id="total-opd-txt"><%= selectedReporting.reporting.totalOpd ?? 0 %></span></p>
+                        <input type="hidden" name="totalOpd" id="total-opd" value="<%= selectedReporting.reporting.totalOpd ?? 0 %>" required>
+                    </div>
+                    <% let id = 1; %>
+                    <% if(selectedReporting.institution.length > 0) { %>
+                        <% for(let item of selectedReporting.institution) { %>
+                            <div class="row my-2" id="institution-${id}">
+                                <div class="col-4 me-2">                      
+                                    <label for="institutionName${id}" class="form-label">Nama Lembaga<span class="text-danger"> *</span></label>
+                                    <input type="text" value="<%= item.institutionName %>" class="form-control" name="institutionName${id}" id="institution-name-${id}" required>
+                                </div>                
+                                <div class="col me-2">
+                                    <label for="pkbBudget${id}" class="form-label">PKB</label>
+                                    <input type="number" value="<%= item.dbhBudget.pkb ?? 0 %>" class="form-control" name="pkbBudget${id}" id="pkb-budget-${id}">
+                                </div>                                                        
+                                <div class="col me-2">
+                                    <label for="pbbkbBudget${id}" class="form-label">PBBKB</label>
+                                    <input type="number" value="<%= item.dbhBudget.pbbkb ?? 0 %>" class="form-control" name="pbbkbBudget${id}" id="pbbkb-budget-${id}">
+                                </div>                                                        
+                                <div class="col me-2">
+                                    <label for="pajakRokokBudget${id}" class="form-label">Pajak Rokok</label>
+                                    <input type="number" value="<%= item.dbhBudget.pajakRokok ?? 0 %>" class="form-control" name="pajakRokokBudget${id}" id="pajakRokok-budget-${id}">
+                                </div>    
+                                <div class="col me-2">
+                                    <label for="bbnkbBudget${id}" class="form-label">BBNKB</label>
+                                    <input type="number" value="<%= item.dbhBudget.bbnkb ?? 0 %>" class="form-control" name="bbnkbBudget${id}" id="bbnkb-budget-${id}">
+                                </div> 
+                                <div class="col me-2">
+                                    <label for="papBudget${id}" class="form-label">PAP</label>
+                                    <input type="number" value="<%= item.dbhBudget.pap ?? 0 %>" class="form-control" name="papBudget${id}" id="pap-budget-${id}">
+                                </div>
+                                <div class="col p-2" id="remove-institution-btn">
+                                    <i class="bi bi-x w-25"></i>
+                                </div>                                                     
+                            </div>
+                            <% id++; %>
+                        <% } %>
+                    <% } %>
+                </div>                
             </div>
-            <div class="border row rounded p-2">
+            <div class="border row rounded p-2 mb-5">
                 <p class="h6 text-primary mb-3">Jumlah Penerimaan DBH</p>
                 <div class="col me-3">                      
                     <div class="my-2">
-                        <label for="pkb" class="form-label">PKB<span class="text-danger"> *</span></label>
-                        <input value="<%= selectedReporting?.dbhRecieved.pkb %>" type="number" class="form-control" name="pkb" id="pkb" required>
+                        <label for="pkbRecieved" class="form-label">PKB<span class="text-danger"> *</span></label>
+                        <input value="<%= selectedReporting.reporting.dbhRecieved.pkb %>" type="number" class="form-control" name="pkbRecieved" id="pkb-recieved" required>
                     </div>                                                        
                     <div class="my-2">
-                        <label for="pbbkb" class="form-label">PBBKB<span class="text-danger"> *</span></label>
-                        <input value="<%= selectedReporting?.dbhRecieved.pbbkb %>" type="number" class="form-control" name="pbbkb" id="pbbkb" required>
+                        <label for="pbbkbRecieved" class="form-label">PBBKB<span class="text-danger"> *</span></label>
+                        <input value="<%= selectedReporting.reporting.dbhRecieved.pbbkb %>" type="number" class="form-control" name="pbbkbRecieved" id="pbbkb-recieved" required>
                     </div>                                                        
                     <div class="my-2">
-                        <label for="pajakRokok" class="form-label">Pajak Rokok<span class="text-danger"> *</span></label>
-                        <input value="<%= selectedReporting?.dbhRecieved.pajakRokok %>" type="number" class="form-control" name="pajakRokok" id="pajakRokok" required>
+                        <label for="pajakRokokRecieved" class="form-label">Pajak Rokok<span class="text-danger"> *</span></label>
+                        <input value="<%= selectedReporting.reporting.dbhRecieved.pajakRokok %>" type="number" class="form-control" name="pajakRokokRecieved" id="pajakRokok-recieved" required>
                     </div>                                                        
                 </div>
-                <div class="col-3">
+                <div class="col">
                     <div class="my-2">
-                        <label for="bbnkb" class="form-label">BBNKB<span class="text-danger"> *</span></label>
-                        <input value="<%= selectedReporting?.dbhRecieved.bbnkb %>" type="number" class="form-control" name="bbnkb" id="bbnkb" required>
+                        <label for="bbnkbRecieved" class="form-label">BBNKB<span class="text-danger"> *</span></label>
+                        <input value="<%= selectedReporting.reporting.dbhRecieved.bbnkb %>" type="number" class="form-control" name="bbnkbRecieved" id="bbnkb-recieved" required>
                     </div> 
                     <div class="my-2">
-                        <label for="pap" class="form-label">PAP<span class="text-danger"> *</span></label>
-                        <input value="<%= selectedReporting?.dbhRecieved.pap %>" type="number" class="form-control" name="pap" id="pap" required>
+                        <label for="papRecieved" class="form-label">PAP<span class="text-danger"> *</span></label>
+                        <input value="<%= selectedReporting.reporting.dbhRecieved.pap %>" type="number" class="form-control" name="papRecieved" id="pap-recieved" required>
                     </div> 
                 </div>
-            </div>
+            </div>            
             <div class="d-flex ms-2 mt-3  justify-content-end">                                                    
                 <button type="button" id="clear-btn" class="btn btn-secondary mb-3 mx-2" style="width: 18%;">CLEAR</button>                            
                 <button type="submit" id="submit-form-btn" class="btn btn-primary mb-3 mx-2" style="width: 18%;">SIMPAN DATA</button>                            

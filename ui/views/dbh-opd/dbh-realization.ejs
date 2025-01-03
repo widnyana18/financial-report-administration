@@ -11,41 +11,30 @@
                 <div class="col-5 p-2 w-5">
                     <p class="h6 my-1">OPD <span class="px-5">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : <%= opd.opdName %></span></p>
                     <p class="h6 my-1">Lembaga <span class="px-5"> &nbsp;: <%= opd.institution %></span></p>
-                        <div class="d-flex my-1 align-items-center">
-                            <p class="h6">Triwulan <span class="ps-5"> &nbsp; : &nbsp;&nbsp;</p>
-                            <div class="dropdown">
-                                <button id="period-btn" class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"><%= selectedFilter.period %></button>
-                                <ul class="dropdown-menu">
-                                    <% for(let period of filters.periods) { %>
-                                        <li><a id="period-list" class="dropdown-item <%= selectedFilter.period == period ? 'active' : '' %>"><%= period %></a></li>
-                                    <% } %>                
-                                </ul> 
-                            </div>
+                    <div class="d-flex my-1 align-items-center">
+                        <p class="h6">Triwulan <span class="ps-5"> &nbsp; : &nbsp;&nbsp;</p>
+                        <div class="dropdown">
+                            <button id="period-btn" class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"><%= selectedFilter %></button>
+                            <ul class="dropdown-menu">
+                                <% for(let period of filters) { %>
+                                    <li><a id="period-list" class="dropdown-item <%= selectedFilter == period ? 'active' : '' %>"><%= period %></a></li>
+                                <% } %>                
+                            </ul> 
                         </div>
-                        <div class="d-flex my-1 align-items-center">
-                            <p class="h6">Tahun Anggaran : &nbsp;&nbsp;</p>
-                            <div class="dropdown" >
-                                <button id="year-btn" class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"><%= selectedFilter.year %></button>
-                                <ul class="dropdown-menu">
-                                    <% for(year of filters.years) { %>
-                                        <li><a id="year-list" class="dropdown-item <%= selectedFilter.year == year ? 'active' : '' %>"><%= year %></a></li> 
-                                    <% } %>                             
-                                </ul>
-                            </div>
-                        </div>
-                        <button type="button" class="w-25 btn btn-secondary mb-3"><a id="filter-btn">TERAPKAN</a></button>             
+                    </div>
+                    <button type="button" id="send-report-btn" class="btn btn-primary py-2 px-4"><a class="text-white">KIRIM LAPORAN</a></button>                    
                 </div>
                 <nav class="nav nav-pills flex-column flex-sm-row mx-3 mb-5">
-                    <a class="flex-sm-fill text-sm-center nav-link bg-light fw-medium" aria-current="page" href="#">EDIT PROFILE</a>
+                    <a class="flex-sm-fill me-4 text-sm-center nav-link bg-light fw-medium" aria-current="page" href="#">EDIT PROFILE</a>
                     <form action="/api/auth/logout" method="post">       
                         <button type="submit" id="logout-btn" class="me-4 btn btn-secondary py-2 px-4"><a class="text-white">LOGOUT</a></button>                   
                     </form>
                     <a class="flex-sm-fill text-sm-center nav-link bg-light text-black fw-medium" href="#">DELETE ACCOUNT</a>
-                  </nav>
+                </nav>
             </div>
-            <div class="border p-3">
+            <div class="form-input container w-50 align-items-center border p-3">
                 <p class="h5 mb-5 text-center">Formulir Input Data Realisasi DBH</p>
-                <form action="api/dbh/add" method="POST" id="dbh-budget-form" class="needs-validation" novalidate>
+                <form action="api/dbh/add" method="POST" id="dbh-realization-form" class="needs-validation" novalidate>
                     <div class="row d-flex row-cols-3">
                         <div class="col-4 flex-grow-1 me-2">
                             <div class="mb-3">
@@ -55,8 +44,7 @@
                                     <button id="parameter-btn" class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                         <%= selectedDbh?.parameter ?? "Pilih Parameter" %>
                                     </button>
-                                    <ul class="dropdown-menu">
-                                      <li><a class="dropdown-item parameter-item" id="lembaga">Lembaga</a></li>
+                                    <ul class="dropdown-menu">                                      
                                       <li><a class="dropdown-item parameter-item" id="program">Program</a></li>                              
                                       <li><a class="dropdown-item parameter-item" id="kegiatan">Kegiatan</a></li>                              
                                       <li><a class="dropdown-item parameter-item" id="sub-kegiatan">Sub Kegiatan</a></li>                              
@@ -73,12 +61,12 @@
                                 <label for="no-rek" class="form-label">No. Rek <span class="text-danger"> *</span></label>
                                 <input value="<%= selectedDbh?.noRek ?? '' %>" type="text" class="form-control" name="noRek" id="no-rek" required>
                             </div>
-                            <div class="mb-3">
+                            <div class="mb-3 hide-input">
                                 <label for="pagu" class="form-label">Pagu Anggaran (DPA) <span class="text-danger"> *</span></label>                                
                                 <input value="<%= selectedDbh?.pagu ?? 0 %>" type="number" class="form-control" name="pagu" id="pagu" required>
                             </div>
                         </div>
-                        <div class="col-4 flex-grow-1 mx-2">
+                        <div class="col-4 flex-grow-1 mx-2 hide-input">
                             <p class="h6 text-primary mb-3">Dana Bagi Hasil</p>
                             <div class="d-flex mb-3">
                                 <div class="me-4">
@@ -160,7 +148,7 @@
                 </form>
             </div>
         </div>
-        <% if(dbhBudgets.length > 0) { %>
+        <% if(dbhRealizations.length > 0) { %>
             <%- include('../partials/data-table.ejs') %>
         <% } else { %> 
             <div class="h-100 w-100 justify-content-center align-items-center text-center">
@@ -168,7 +156,7 @@
             </div>
         <% } %>
     </main>
-    <input type="hidden" name="dataDbh" id="dbh-budget-data" value="<%= JSON.stringify(dbhBudgets) %>">        
+    <input type="hidden" name="dataDbh" id="dbh-realization-data" value="<%= JSON.stringify(dbhRealizations) %>">        
 
-    <script src="/js/dbh.js"></script>
+    <script src="/js/dbh-opd.js"></script>
 <%- include('../partials/end.ejs') %>

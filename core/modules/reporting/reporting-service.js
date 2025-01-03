@@ -1,43 +1,72 @@
 const Reporting = require("./models/reporting");
-const dbhBudgetService = require("./../dbh-budget/dbh-budget-service");
+const Institution = require("../dbh-realization/models/institution");
 
-exports.findOneReporting = async (filter) => {
+exports.findInstitution = async (filter) => {
   try {
-    const reporting = await Reporting.findOne(filter);
-
-    return reporting;
+    return await Institution.find(filter);
   } catch (error) {
     throw new Error(error);
   }
 };
 
-exports.findManyReporting = async (filter) => {
-  let reportStatus;
+exports.insertInstitution = async (dataArray) => {
+  try {
+    return await Institution.insertMany(dataArray);
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+exports.updateInstitution = async (dataArray) => {
+  let updateDataQuery = [];
+  dataArray.forEach((item) => {
+    updateDataQuery.push({
+      updateOne: { filter: { _id: item.id }, update: { $set: { ...item } } },
+    });
+  });
 
   try {
-    const reportingData = await Reporting.find(filter);
+    return await Institution.bulkWrite(updateDataQuery);
+  } catch (error) {
+    throw new Error(error);
+  }
+};
 
-    for (let item of reportingData) {
-      if (item.totalDbhOpdAdded == item.totalOpd) {
-        reportStatus = "Sudah Selesai";
-        await this.updateReporting({ _id: item._id }, { status: reportStatus });
-      }
-    }
+exports.deleteInstitution = async (filter) => {
+  try {
+    return await Institution.deleteMany({ _id: { $in: filter } });
+  } catch (error) {
+    throw new Error(error);
+  }
+};
 
-    return reportingData;
+exports.findOneReporting = async (filter) => {
+  try {
+    return await Reporting.findOne(filter);
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+exports.getLastReporting = async () => {
+  try {
+    return await Reporting.findOne().sort({ createdAt: -1 }).exec();
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+exports.findManyReporting = async (filter) => {  
+
+  try {
+    return await Reporting.find(filter);       
   } catch (error) {
     throw new Error(error);
   }
 };
 
 exports.createReporting = async (data) => {
-  const dbhRecieved = {
-    pkb: data.pkb,
-    pbbkb: data.pbbkb,
-    pajakRokok: data.pajakRokok,
-    bbnkb: data.bbnkb,
-    pap: data.pap,
-  };
+ 
 
   const getReportingByYear = await Reporting.find({
     year: data.year,
@@ -55,11 +84,7 @@ exports.createReporting = async (data) => {
   console.log("Total Sum:", totalSumDbh); // Output: Total Sum: 1000
 
   const reporting = new Reporting({
-    title: data.title,
-    period: data.period,
-    year: data.year,
-    dbhRecieved: dbhRecieved,
-    totalOpd: data.totalOpd,
+    ...data,
     totalDbhRecieved: totalSumDbh,
   });
 
@@ -81,4 +106,3 @@ exports.updateReporting = async (filter, input) => {
 exports.deleteReporting = async (id) => {
   return await Reporting.deleteOne({ _id: id });
 };
-

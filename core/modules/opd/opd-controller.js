@@ -43,7 +43,17 @@ exports.updateOpd = async (req, res, next) => {
     }
     await opdService.updateOpd({ _id: opdId }, data);
 
-    res.redirect("/?triwulan=Triwulan%20II&tahun=2024&edit=false");
+    const lastDataDbhByOpd = await dbhRealizationService.findBudget({
+      opdId: opdId,
+    });    
+
+    const lastReporting = await reportingService.findOneReporting({
+      _id: lastDataDbhByOpd[lastDataDbhByOpd.length - 1]?.reportingId,
+    });
+
+    res.redirect(
+      `/?triwulan=${lastReporting.period.trim()} ${lastReporting.year}&edit=false`
+    );
   } catch (error) {
     return next(error);
   }
