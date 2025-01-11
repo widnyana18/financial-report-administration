@@ -1,7 +1,9 @@
+const dbhRealization = require("../../modules/dbh-realization/models/dbh-realization");
+
 exports.createBudgetId = async (data) => {
   let dbhId;
 
-  const latestBudget = await DbhRealization.findOne({
+  const latestBudget = await dbhRealization.findOne({
     parameter: data.parameter,
   }).sort({ createdAt: -1 });
 
@@ -26,7 +28,7 @@ exports.createBudgetId = async (data) => {
   return dbhId;
 };
 
-generatedId = (budget) => {
+const generatedId = (budget) => {
   if (!budget) {
     return null;
   }

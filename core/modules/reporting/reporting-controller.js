@@ -20,7 +20,7 @@ exports.renderIndex = async (req, res, next) => {
       }
     });
 
-    res.render("admin/reportings", {
+    res.render("admin/admin-reporting", {
       pageTitle: "Portal Admin",
       years: years,
       reportingList: reportingByYear,
@@ -105,6 +105,7 @@ exports.getReporting = async (req, res, next) => {
 
 exports.createReporting = async (req, res, next) => {
   const data = req.body;
+  const institutionData = [];
   const reportingData = {
     title: data.title,
     period: data.period,
@@ -118,14 +119,17 @@ exports.createReporting = async (req, res, next) => {
       pap: data.papRecieved,
     },
   };
-  const institutionData = []; 
 
   try {
-    const reportingAdded =await reportingService.createReporting(reportingData);    
+    const reportingAdded = await reportingService.createReporting(
+      reportingData
+    );
+
+    console.log("REPORTING ADDED : " + reportingAdded);
 
     for (let id = 1; id <= data.totalOpd; id++) {
-      institutionData.push({  
-        reportingId: reportingAdded.insertedId,
+      institutionData.push({
+        reportingId: reportingAdded._id,
         institutionName: data[`institutionName${id}`],
         dbhBudget: {
           pkb: data[`pkbBudget${id}`],
@@ -147,9 +151,39 @@ exports.createReporting = async (req, res, next) => {
 exports.updateReporting = async (req, res, next) => {
   const reportingId = req.params.reportId;
   const data = req.body;
+  const institutionData = [];
+
+  const reportingData = {
+    title: data.title,
+    period: data.period,
+    year: data.year,
+    totalOpd: data.totalOpd,
+    dbhRecieved: {
+      pkb: data.pkbRecieved,
+      pbbkb: data.pbbkbRecieved,
+      pajakRokok: data.pajakRokokRecieved,
+      bbnkb: data.bbnkbRecieved,
+      pap: data.papRecieved,
+    },
+  };
+
+  for (let id = 1; id <= data.totalOpd; id++) {
+    institutionData.push({
+      _id: data[`docId${id}`],
+      institutionName: data[`institutionName${id}`],
+      dbhBudget: {
+        pkb: data[`pkbBudget${id}`],
+        pbbkb: data[`pbbkbBudget${id}`],
+        pajakRokok: data[`pajakRokokBudget${id}`],
+        bbnkb: data[`bbnkbBudget${id}`],
+        pap: data[`papBudget${id}`],
+      },
+    });
+  }
 
   try {
-    await reportingService.updateReporting(reportingId, data);
+    await reportingService.updateReporting({_id: reportingId}, reportingData);
+    await reportingService.updateInstitution(institutionData);
     res.redirect("/admin?tahun=" + data.year);
   } catch (error) {
     return next(error);
@@ -163,7 +197,11 @@ exports.deleteReporting = async (req, res, next) => {
     const deletedReporting = await reportingService.deleteReporting(
       reportingId
     );
-    return res.status(200).json(deletedReporting);
+    const deleteManyInstitution = await reportingService.deleteInstitution(
+      reportingId
+    );
+
+    return res.status(200).json({ deletedReporting, deleteManyInstitution });
   } catch (error) {
     return next(error);
   }

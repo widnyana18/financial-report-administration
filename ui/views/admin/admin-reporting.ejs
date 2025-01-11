@@ -20,7 +20,7 @@
                     <button id="year-dropdown-btn" class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"></button>
                     <ul class="dropdown-menu">
                         <% for(year of years) { %>
-                            <li><a id="year-dropdown-item" class="dropdown-item"><%= year %></a></li> 
+                            <li><a id="<%= year %>" class="dropdown-item year-dropdown-item"><%= year %></a></li> 
                         <% } %>                             
                     </ul>
                 </div>                                                                 
@@ -61,6 +61,10 @@
                         </div>
                         <div class="d-flex align-items-center justify-content-between">
                             <p>- Bagi Hasil Pajak Air Tanah Permukaan</p>                                        
+                            <p class="h6"><%= reportingList[i].dbhRecieved.pap %></p>                        
+                        </div>                      
+                        <div class="d-flex align-items-center justify-content-between">
+                            <p>- Bagi Hasil Pajak Rokok</p>                                        
                             <p class="h6"><%= reportingList[i].dbhRecieved.pajakRokok %></p>                        
                         </div>                      
                     </div>                    
@@ -78,6 +82,6 @@
         <% } %> 
     </main>    
 
-    <script src="/js/admin.js"></script>
+    <script src="/js/admin/admin-reporting.js"></script>
 
 <%- include('../partials/end.ejs') %>

@@ -8,6 +8,10 @@ const institutionSchema = new Schema({
     ref: "Reporting",
     required: true,
   },
+  institutionName: {
+    type: String,
+    required: true,
+  },
   dbhBudget: {
     pkb: { type: Number },
     bbnkb: { type: Number },

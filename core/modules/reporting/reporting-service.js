@@ -19,10 +19,21 @@ exports.insertInstitution = async (dataArray) => {
 
 exports.updateInstitution = async (dataArray) => {
   let updateDataQuery = [];
+
   dataArray.forEach((item) => {
-    updateDataQuery.push({
-      updateOne: { filter: { _id: item.id }, update: { $set: { ...item } } },
-    });
+    if (!item.institutionName || !item.dbhBudget) {
+      updateDataQuery.push({
+        deleteOne: { filter: { _id:  item._id } },
+      });
+    } else {
+      updateDataQuery.push({
+        updateOne: {
+          filter: { _id: item._id },
+          update: { $set: {item} },
+          upsert: true,
+        },
+      });
+    }
   });
 
   try {
@@ -56,33 +67,30 @@ exports.getLastReporting = async () => {
   }
 };
 
-exports.findManyReporting = async (filter) => {  
-
+exports.findManyReporting = async (filter) => {
   try {
-    return await Reporting.find(filter);       
+    return await Reporting.find(filter);
   } catch (error) {
     throw new Error(error);
   }
 };
 
 exports.createReporting = async (data) => {
- 
-
   const getReportingByYear = await Reporting.find({
     year: data.year,
   });
 
-  let totalSumDbh = Object.values(dbhRecieved).reduce(
-    (acc, value) => acc + value,
+  let totalSumDbh = Object.values(data.dbhRecieved).reduce(
+    (acc, value) => parseInt(acc) + parseInt(value),
     0
   );
-
+  
   getReportingByYear.forEach((item) => {
-    totalSumDbh += item.totalDbhRecieved;
-  });
-
-  console.log("Total Sum:", totalSumDbh); // Output: Total Sum: 1000
-
+      totalSumDbh += item.totalDbhRecieved;
+    });
+    
+    console.log("Total Sum:", totalSumDbh);
+    
   const reporting = new Reporting({
     ...data,
     totalDbhRecieved: totalSumDbh,
