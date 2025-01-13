@@ -23,13 +23,13 @@ exports.updateInstitution = async (dataArray) => {
   dataArray.forEach((item) => {
     if (!item.institutionName || !item.dbhBudget) {
       updateDataQuery.push({
-        deleteOne: { filter: { _id:  item._id } },
+        deleteOne: { filter: { _id: item._id } },
       });
     } else {
       updateDataQuery.push({
         updateOne: {
           filter: { _id: item._id },
-          update: { $set: {item} },
+          update: { $set: { item } },
           upsert: true,
         },
       });
@@ -76,24 +76,9 @@ exports.findManyReporting = async (filter) => {
 };
 
 exports.createReporting = async (data) => {
-  const getReportingByYear = await Reporting.find({
-    year: data.year,
-  });
-
-  let totalSumDbh = Object.values(data.dbhRecieved).reduce(
-    (acc, value) => parseInt(acc) + parseInt(value),
-    0
-  );
-  
-  getReportingByYear.forEach((item) => {
-      totalSumDbh += item.totalDbhRecieved;
-    });
-    
-    console.log("Total Sum:", totalSumDbh);
-    
   const reporting = new Reporting({
     ...data,
-    totalDbhRecieved: totalSumDbh,
+    totalDbhRecieved: await calculateTotalDbhRecieved(data),
   });
 
   try {
@@ -103,9 +88,12 @@ exports.createReporting = async (data) => {
   }
 };
 
-exports.updateReporting = async (filter, input) => {
+exports.updateReporting = async (filter, data) => {
   try {
-    return await Reporting.findOneAndUpdate(filter, input);
+    return await Reporting.findOneAndUpdate(filter, {
+      ...data,
+      totalDbhRecieved: await calculateTotalDbhRecieved(data),
+    });
   } catch (error) {
     throw new Error(error);
   }
@@ -113,4 +101,21 @@ exports.updateReporting = async (filter, input) => {
 
 exports.deleteReporting = async (id) => {
   return await Reporting.deleteOne({ _id: id });
+};
+
+calculateTotalDbhRecieved = async (data) => {
+  const getReportingByYear = await Reporting.find({
+    year: data.year,
+  });
+
+  let sumLastDbhRecieved = Object.values(data.dbhRecieved).reduce(
+    (acc, value) => parseInt(acc) + parseInt(value),
+    0
+  );
+
+  getReportingByYear.forEach((item) => {
+    sumLastDbhRecieved += item.totalDbhRecieved;
+  });
+
+  return sumLastDbhRecieved;
 };
