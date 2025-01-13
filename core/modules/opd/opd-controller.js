@@ -1,19 +1,23 @@
-const { Types } = require("mongoose");
-
 const opdService = require("./opd-service");
+const institutionService = require("../reporting/reporting-service");
 
 exports.renderUpdateOpd = async (req, res, next) => {
   const opdId = req.user._id;
   const opd = await opdService.getOpdById(opdId);
+  const institution = await institutionService.findInstitution({_id: opd.institutionId});
 
-  if (!opd) {
-    res.redirect("/login");
-  } else {
-    res.render("dbh-opd/update-profile", {
-      pageTitle: "Update Opd",
-      path: "/opd",
-      opd: opd,
-    });
+  try {
+    if (!opd) {
+      res.redirect("/login");
+    } else {
+      res.render("auth/signup", {
+        pageTitle: "Update Opd",
+        selectedOpd: opd,
+        selectedInstitution: institution,
+      });
+    }
+  } catch (error) {
+    return next(error);
   }
 };
 
@@ -45,14 +49,16 @@ exports.updateOpd = async (req, res, next) => {
 
     const lastDataDbhByOpd = await dbhRealizationService.findBudget({
       opdId: opdId,
-    });    
+    });
 
     const lastReporting = await reportingService.findOneReporting({
       _id: lastDataDbhByOpd[lastDataDbhByOpd.length - 1]?.reportingId,
     });
 
     res.redirect(
-      `/?triwulan=${lastReporting.period.trim()} ${lastReporting.year}&edit=false`
+      `/?triwulan=${lastReporting.period.trim()} ${
+        lastReporting.year
+      }&edit=false`
     );
   } catch (error) {
     return next(error);

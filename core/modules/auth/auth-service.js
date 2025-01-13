@@ -14,7 +14,7 @@ exports.signup = async (req) => {
     username: req.username,
     password: req.password,   
     phone: req.phone, 
-    institution: req.institution,
+    institutionId: req.institutionId,
   });
   
   try {

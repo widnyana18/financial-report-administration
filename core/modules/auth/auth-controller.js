@@ -12,8 +12,29 @@ exports.renderLogin = (req, res, next) => {
   });
 };
 
-exports.renderSignup = (req, res, next) => {
-  res.render("auth/signup", { pageTitle: "Signup", path: "/signup" });
+exports.renderSignup = async (req, res, next) => {
+  const institutionData = [];
+
+  try {
+    const institutionAll = await reportingService.findInstitution({});
+    console.log("INSTITUTION ALL : " + institutionAll);
+
+    institutionAll.forEach((item) => {
+      if (!institutionData.includes(item.institutionName)) {
+        institutionData.push(item.institutionName);
+      }
+    });
+
+    res.render("auth/signup", {
+      pageTitle: "Signup",
+      path: "/signup",
+      institutionData,
+      selectedOpd: null,
+      selectedInstitution: null,
+    });
+  } catch (error) {
+    return next(error);
+  }
 };
 
 exports.renderChangePassword = (req, res, next) => {
@@ -91,7 +112,9 @@ exports.login = async (req, res, next) => {
         res.redirect("/");
       } else {
         res.redirect(
-          `/?triwulan=${lastReporting.period.trim()} ${lastReporting.year}&edit=false`
+          `/?triwulan=${lastReporting.period.trim()} ${
+            lastReporting.year
+          }&edit=false`
         );
       }
 

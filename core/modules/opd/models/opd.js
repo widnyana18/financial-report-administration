@@ -20,8 +20,9 @@ const opdSchema = new Schema(
       type: String,
       required: true,
     },    
-    institution: {
-      type: String,
+    institutionId: {
+      type: Schema.Types.ObjectId,
+      ref: "Institution",
       required: true,
     },
   },
