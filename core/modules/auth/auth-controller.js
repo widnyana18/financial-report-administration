@@ -5,10 +5,17 @@ const opdService = require("../opd/opd-service");
 const reportingService = require("../reporting/reporting-service");
 const dbhRealizationService = require("../dbh-realization/dbh-realization-service");
 
+exports.renderAdminLogin = (req, res, next) => {
+  res.render("auth/login", {
+    pageTitle: "Admin Login",
+    path: '/admin/login',
+  });
+};
+
 exports.renderLogin = (req, res, next) => {
   res.render("auth/login", {
     pageTitle: "Login",
-    path: req.originalUrl,
+    path: '/login',
   });
 };
 
@@ -18,16 +25,17 @@ exports.renderSignup = async (req, res, next) => {
   try {
     const institutionAll = await reportingService.findInstitution({});
     console.log("INSTITUTION ALL : " + institutionAll);
-
+  
     institutionAll.forEach((item) => {
       if (!institutionData.includes(item.institutionName)) {
-        institutionData.push(item.institutionName);
+        institutionData.push(item);
       }
     });
 
     res.render("auth/signup", {
-      pageTitle: "Signup",
-      path: "/signup",
+      pageTitle: "Buat Akun Baru",      
+      domain: "auth",
+      path: "/auth/signup",
       institutionData,
       selectedOpd: null,
       selectedInstitution: null,

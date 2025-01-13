@@ -6,7 +6,7 @@ const appRouter = Router();
 const apiRouter = Router();
 
 //root route opd
-appRouter.get('/admin/login', authController.renderLogin);
+appRouter.get('/admin/login', authController.renderAdminLogin);
 appRouter.get('/login', authController.renderLogin);
 appRouter.get('/signup', authController.renderSignup);
 appRouter.get('/ganti-password', authController.renderChangePassword);

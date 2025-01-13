@@ -1,19 +1,35 @@
 const opdService = require("./opd-service");
-const institutionService = require("../reporting/reporting-service");
+const reportingService = require("../reporting/reporting-service");
 
 exports.renderUpdateOpd = async (req, res, next) => {
   const opdId = req.user._id;
-  const opd = await opdService.getOpdById(opdId);
-  const institution = await institutionService.findInstitution({_id: opd.institutionId});
-
+  const institutionData = [];
+  
   try {
-    if (!opd) {
+    const selectedOpd = await opdService.getOpdById(opdId);
+    const selectedInstitution = await reportingService.findInstitution({
+      _id: selectedOpd.institutionId,
+    });
+
+    const allInstitution = await reportingService.findInstitution({});    
+
+    allInstitution.forEach((item) => {
+      if (!institutionData.includes(item.institutionName)) {
+        institutionData.push(item);
+      }
+    });
+
+    if (!selectedOpd) {
       res.redirect("/login");
     } else {
+      delete selectedOpd.password;
       res.render("auth/signup", {
-        pageTitle: "Update Opd",
-        selectedOpd: opd,
-        selectedInstitution: institution,
+        pageTitle: "Update OPD",  
+        domain: 'opd',      
+        path: `/opd/edit/${opdId}`,
+        institutionData,
+        selectedOpd,
+        selectedInstitution: selectedInstitution[0],
       });
     }
   } catch (error) {

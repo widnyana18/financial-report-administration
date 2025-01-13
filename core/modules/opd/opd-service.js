@@ -12,8 +12,8 @@ exports.getAllOpd = async () => {
   return await Opd.find();
 };
 
-exports.updateOpd = async (filter, input) => {
-  const opd = await Opd.findOneAndUpdate(filter, input, {
+exports.updateOpd = async (filter, data) => {
+  const opd = await Opd.findOneAndUpdate(filter, data, {
     new: true,
   });
   return opd;

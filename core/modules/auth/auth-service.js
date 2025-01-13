@@ -8,17 +8,10 @@ exports.login = async (filter) => {
   }
 };
 
-exports.signup = async (req) => {
-  const opd = new Opd({
-    opdName: req.opdName,
-    username: req.username,
-    password: req.password,   
-    phone: req.phone, 
-    institutionId: req.institutionId,
-  });
-  
+exports.signup = async (data) => {
   try {
-     return await opd.save();
+    const opd = new Opd(data);
+    return await opd.save();
   } catch (error) {
     throw new Error(error);
   }
