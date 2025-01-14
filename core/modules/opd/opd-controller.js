@@ -1,35 +1,38 @@
+const bcrypt = require("bcryptjs");
+
 const opdService = require("./opd-service");
 const reportingService = require("../reporting/reporting-service");
 
 exports.renderUpdateOpd = async (req, res, next) => {
-  const opdId = req.user._id;
-  const institutionData = [];
-  
+  const opdId = req.user._id;  
+  const institution = [];          
+
   try {
     const selectedOpd = await opdService.getOpdById(opdId);
     const selectedInstitution = await reportingService.findInstitution({
-      _id: selectedOpd.institutionId,
+      _id: selectedOpd.institutionId[0],
     });
 
-    const allInstitution = await reportingService.findInstitution({});    
-
-    allInstitution.forEach((item) => {
-      if (!institutionData.includes(item.institutionName)) {
-        institutionData.push(item);
-      }
-    });
+        const getAllInstitution = await reportingService.findInstitution({});        
+    
+        getAllInstitution.forEach((item) => {
+          if (!institution.includes(item.institutionName)) {
+            institution.push(item.institutionName);
+          }
+        });
 
     if (!selectedOpd) {
       res.redirect("/login");
     } else {
       delete selectedOpd.password;
+
       res.render("auth/signup", {
-        pageTitle: "Update OPD",  
-        domain: 'opd',      
+        pageTitle: "Update OPD",
+        domain: "opd",
         path: `/opd/edit/${opdId}`,
-        institutionData,
+        institution,
         selectedOpd,
-        selectedInstitution: selectedInstitution[0],
+        selectedInstitution: selectedInstitution[0].institutionName,
       });
     }
   } catch (error) {
@@ -58,24 +61,39 @@ exports.updateOpd = async (req, res, next) => {
 
   try {
     const opd = await opdService.getOpdById(opdId);
+    const getManyReportInstitution = await reportingService.findInstitution({
+      institutionName: req.body.institution,
+    });
+    const institutionIdArr = getManyReportInstitution.map((item) => {
+      return item._id;
+    });
+    const hashedPassword = await bcrypt.hash(data.password, 12);
+
     if (!opd) {
       res.status(404).json({ message: "Opd not found" });
     }
-    await opdService.updateOpd({ _id: opdId }, data);
 
-    const lastDataDbhByOpd = await dbhRealizationService.findBudget({
-      opdId: opdId,
-    });
-
-    const lastReporting = await reportingService.findOneReporting({
-      _id: lastDataDbhByOpd[lastDataDbhByOpd.length - 1]?.reportingId,
-    });
-
-    res.redirect(
-      `/?triwulan=${lastReporting.period.trim()} ${
-        lastReporting.year
-      }&edit=false`
+    const successUpdateData = await opdService.updateOpd(
+      { _id: opdId },
+      { ...data, institutionId: institutionIdArr, password: hashedPassword }
     );
+
+    if(successUpdateData){
+      const lastDataDbhByOpd = await dbhRealizationService.findBudget({
+        opdId: opdId,
+      });
+  
+      const lastReporting = await reportingService.findOneReporting({
+        _id: lastDataDbhByOpd[lastDataDbhByOpd.length - 1]?.reportingId,
+      });
+  
+      res.redirect(
+        `/?triwulan=${lastReporting.period.trim()} ${
+          lastReporting.year
+        }&edit=false`
+      );
+
+    }
   } catch (error) {
     return next(error);
   }

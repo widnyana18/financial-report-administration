@@ -1,4 +1,5 @@
 const excelJS = require("exceljs");
+const { Types } = require("mongoose");
 
 const reportingService = require("./reporting-service");
 const dbhRealizationService = require("../dbh-realization/dbh-realization-service");
@@ -168,8 +169,11 @@ exports.updateReporting = async (req, res, next) => {
   };
 
   for (let id = 1; id <= data.totalOpd; id++) {
+    // const objId = new Types.ObjectId(data[`docId${id}`]);
+
     institutionData.push({
-      _id: data[`docId${id}`],
+      _id: data[`docId${id}`] ?? null,
+      reportingId,
       institutionName: data[`institutionName${id}`],
       dbhBudget: {
         pkb: data[`pkbBudget${id}`],

@@ -15,8 +15,7 @@ $(".dropdown ul li a.period-item").click(function () {
 $("#add-institution-btn").click(function () {
     totalOpd++;
   
-    const institutionBudgetField = `<div class="d-inline-flex my-2 align-items-center" id="institution-${totalOpd}">
-                          <input type="hidden" name="docId" id="doc-id" required>
+    const institutionBudgetField = `<div class="d-inline-flex my-2 align-items-center" id="institution-${totalOpd}">                          
                           <div class="me-2 w-50">                      
                               <label for="institutionName${totalOpd}" class="form-label">Nama Lembaga<span class="text-danger"> *</span></label>
                               <input type="text" class="form-control" name="institutionName${totalOpd}" id="institution-name-${totalOpd}" required>

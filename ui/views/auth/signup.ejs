@@ -8,31 +8,31 @@
                     <p class="h2 mb-5 text-center"><%= pageTitle %></p>                    
                     <form action="/api<%= path %>" method="POST" class="needs-validation"  novalidate>
                         <div class="mb-3">
-                            <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="username" id="username" value="<%= selectedOpd?.username %>" required>
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" name="username" id="username" value="<%= selectedOpd?.username %>">
                         </div>
                         <div class="mb-3">
-                            <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
-                            <input type="password" class="form-control" name="password" id="password" required>
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" name="password" id="password">
                         </div>
                         <div class="mb-3">
-                            <label for="opd-name" class="form-label">Nama OPD <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="opdName" id="opd-name" value="<%= selectedOpd?.opdName %>" required>
+                            <label for="opd-name" class="form-label">Nama OPD</label>
+                            <input type="text" class="form-control" name="opdName" id="opd-name" value="<%= selectedOpd?.opdName %>">
                         </div>
                         <div class="mb-3">
-                            <label for="phone-number" class="form-label">Nomor HP <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="phone" id="phone-number" value="<%= selectedOpd?.phone %>" required>
+                            <label for="phone-number" class="form-label">Nomor HP</label>
+                            <input type="text" class="form-control" name="phone" id="phone-number" value="<%= selectedOpd?.phone %>">
                         </div>                     
                         <div class="mb-5">
-                            <label for="institutionId" class="form-label">Lembaga <span class="text-danger">*</span></label>
+                            <label for="institution" class="form-label">Lembaga</label>
                             <div class="dropdown">
-                                <input type="hidden" class="form-control" name="institutionId" id="institution" value='<%= selectedInstitution?._id %>' required>                                
+                                <input type="hidden" class="form-control" name="institution" id="institution-val" value='<%= selectedInstitution %>'>                                
                                 <button id="institution-btn" class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <%= selectedInstitution?.institutionName ?? "Pilih Lembaga" %>
+                                    <%= selectedInstitution ?? "Pilih Lembaga" %>
                                 </button>
                                 <ul class="dropdown-menu">
-                                    <% for(let item of institutionData) { %>
-                                        <li><a class="dropdown-item institution-item <%= item._id == selectedInstitution?._id ? 'active' : '' %>" id="<%= item._id %>"><%= item.institutionName %></a></li>                                        
+                                    <% for(let item of institution) { %>
+                                        <li><a class="dropdown-item institution-item <%= item == selectedInstitution ? 'active' : '' %>" id="<%= item.id %>"><%= item.name %></a></li>                                        
                                     <% } %>
                                 </ul>
                             </div>

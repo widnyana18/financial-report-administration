@@ -3,40 +3,42 @@ const bcrypt = require("bcryptjs");
 const authService = require("./auth-service");
 const opdService = require("../opd/opd-service");
 const reportingService = require("../reporting/reporting-service");
-const dbhRealizationService = require("../dbh-realization/dbh-realization-service");
 
 exports.renderAdminLogin = (req, res, next) => {
   res.render("auth/login", {
     pageTitle: "Admin Login",
-    path: '/admin/login',
+    path: "/admin-login",
   });
 };
 
 exports.renderLogin = (req, res, next) => {
   res.render("auth/login", {
     pageTitle: "Login",
-    path: '/login',
+    path: "/login",
   });
 };
 
 exports.renderSignup = async (req, res, next) => {
-  const institutionData = [];
+  const institution = [];
 
   try {
-    const institutionAll = await reportingService.findInstitution({});
-    console.log("INSTITUTION ALL : " + institutionAll);
-  
-    institutionAll.forEach((item) => {
-      if (!institutionData.includes(item.institutionName)) {
-        institutionData.push(item);
+    const getAllInstitution = await reportingService.findInstitution({});
+    console.log("INSTITUTION ALL : " + getAllInstitution);
+
+    getAllInstitution.forEach((item) => {
+      if (!institution.includes(item.institutionName)) {
+        institution.push({
+          id: item.institutionName?.toLowerCase().split(" ").join("-"),
+          name: item.institutionName,
+        });
       }
     });
 
     res.render("auth/signup", {
-      pageTitle: "Buat Akun Baru",      
+      pageTitle: "Buat Akun Baru",
       domain: "auth",
       path: "/auth/signup",
-      institutionData,
+      institution,
       selectedOpd: null,
       selectedInstitution: null,
     });
@@ -55,34 +57,41 @@ exports.renderChangePassword = (req, res, next) => {
 exports.adminLogin = async (req, res, next) => {
   const username = req.body.username;
   const password = req.body.password;
+  const userEnv = process.env;
 
   try {
-    const user = await authService.login({ username: username });
+    const currentUser = await authService.login({ username: username });
 
-    if (user.opdName !== "ADMIN") {
-      // return res.status(400).json({ message: "User not found" });
-      res.redirect("/admin/login");
-    }
+    if (!currentUser) {
+      if (username == userEnv.username && password == userEnv.password) {
+        const hashedPsw = await bcrypt.hash(password, 12);
 
-    const doMatch = await bcrypt.compare(password, user.password);
-
-    if (doMatch) {
-      req.session.isLoggedIn = true;
-      req.session.userRole = "ADMIN";
-      req.session.user = user;
-
-      const lastReporting = await reportingService.getLastReporting();
-
-      if (!lastReporting) {
-        res.redirect("/admin");
+        await authService.signup({
+          username,
+          hashedPsw,
+          opdName: "ADMIN",
+          phone: userEnv.phone,
+          institutionId: [],
+          password: hashedPassword,
+        });
       } else {
-        res.redirect("/admin?tahun=" + lastReporting.year);
+        res.redirect("/admin/login");
       }
-      return req.session.save();
-    } else {
-      // return res.status(400).json({ message: "Wrong Password" });
-      res.redirect("/admin/login");
     }
+
+    delete currentUser.password;
+    req.session.isLoggedIn = true;
+    req.session.userRole = "ADMIN";
+    req.session.user = currentUser;
+
+    const lastReporting = await reportingService.getLastReporting();
+
+    if (!lastReporting) {
+      res.redirect("/admin");
+    } else {
+      res.redirect("/admin?tahun=" + lastReporting.year);
+    }
+    return req.session.save();
   } catch (error) {
     return next(error);
   }
@@ -107,13 +116,13 @@ exports.login = async (req, res, next) => {
       req.session.userRole = "OPD";
       req.session.user = user;
 
-      const lastDataDbhByOpd = await dbhRealizationService.findBudget({
-        opdId: user._id,
+      const selectedInstitution = await reportingService.findInstitution({
+        _id: user.institutionId,
       });
-      console.log("LAST DBH : " + lastDataDbhByOpd.length);
+      console.log("LAST DBH : " + selectedInstitution.length);
 
       const lastReporting = await reportingService.findOneReporting({
-        _id: lastDataDbhByOpd[lastDataDbhByOpd.length - 1]?.reportingId,
+        _id: selectedInstitution[selectedInstitution.length - 1]?.reportingId,
       });
 
       if (!lastReporting) {
@@ -138,11 +147,20 @@ exports.login = async (req, res, next) => {
 
 exports.signup = async (req, res, next) => {
   try {
+    const getManyReportInstitution = await reportingService.findInstitution({
+      institutionName: req.body.institution,
+    });
+
+    const institutionIdArr = getManyReportInstitution.map((item) => {
+      return item._id;
+    });
+
     bcrypt
       .hash(req.body.password, 12)
       .then(async (hashedPassword) => {
         return await authService.signup({
           ...req.body,
+          institutionId: institutionIdArr,
           password: hashedPassword,
         });
       })

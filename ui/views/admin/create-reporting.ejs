@@ -36,7 +36,7 @@
                     <% let id = 1; %>
                     <% if(selectedReporting?.institution.length > 0) { %>
                         <% for(let item of selectedReporting?.institution) { %>
-                            <input type="hidden" name="docId" id="doc-id" value="<%= item._id %>" required>
+                            <input type="hidden" name="docId<%= id %>" id="doc-id-<%= id %>" value="<%= item._id %>" required>
                             <div class="d-inline-flex my-2 align-items-center" id="institution-<%= id %>">                                
                                 <div class="me-2 w-50">                      
                                     <label for="institutionName<%= id %>" class="form-label">Nama Lembaga<span class="text-danger"> *</span></label>

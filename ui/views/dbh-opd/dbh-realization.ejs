@@ -24,12 +24,14 @@
                     </div>
                     <button type="button" id="send-report-btn" class="btn btn-primary py-2 px-4"><a class="text-white">KIRIM LAPORAN</a></button>                    
                 </div>
-                <nav class="nav nav-pills flex-column flex-sm-row mx-3 mb-5">
-                    <a class="flex-sm-fill me-4 text-sm-center nav-link bg-light fw-medium" aria-current="page" href="#">EDIT PROFILE</a>
-                    <form action="/api/auth/logout" method="post">       
-                        <button type="submit" id="logout-btn" class="me-4 btn btn-secondary py-2 px-4"><a class="text-white">LOGOUT</a></button>                   
-                    </form>
-                    <a class="flex-sm-fill text-sm-center nav-link bg-light text-black fw-medium" href="#">DELETE ACCOUNT</a>
+                <nav class="nav nav-pills row mx-3 mb-5">
+                    <a class="col me-4 text-sm-center nav-link bg-warning text-white fw-medium" aria-current="page" href="/<%= opd._id %>/edit-profile">EDIT PROFILE</a>                    
+                    <div class="col me-4">
+                        <form action="/api/auth/logout" method="post">       
+                            <button type="submit" id="logout-btn" class="btn btn-secondary py-2 text-white px-4 w-100">LOGOUT</button>                   
+                        </form>
+                    </div>
+                    <a class="col text-sm-center nav-link bg-danger text-white fw-medium" href="#">DELETE ACCOUNT</a>
                 </nav>
             </div>
             <div class="form-input container w-50 align-items-center border p-3">

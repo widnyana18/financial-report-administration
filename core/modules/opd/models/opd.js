@@ -19,12 +19,14 @@ const opdSchema = new Schema(
     phone: {
       type: String,
       required: true,
-    },    
-    institutionId: {
-      type: Schema.Types.ObjectId,
-      ref: "Institution",
-      required: true,
     },
+    institutionId: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Institution",
+        required: true,
+      },
+    ],
   },
   {
     timestamps: true,

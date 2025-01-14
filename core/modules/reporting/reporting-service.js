@@ -25,12 +25,18 @@ exports.updateInstitution = async (dataArray) => {
       updateDataQuery.push({
         deleteOne: { filter: { _id: item._id } },
       });
+    } else if (!item._id) {
+      delete item._id;
+      updateDataQuery.push({
+        insertOne: {          
+          document: { ...item },
+        },
+      });
     } else {
       updateDataQuery.push({
         updateOne: {
           filter: { _id: item._id },
-          update: { $set: { item } },
-          upsert: true,
+          update: { $set: { ...item } },
         },
       });
     }

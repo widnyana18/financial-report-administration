@@ -1,10 +1,8 @@
 $(".dropdown ul li a.institution-item").click(function () {
-  const institutionName = $(this).text();
-  const institutionId = $(this).attr("id");
+  const institutionVal = $(this).text();  
 
   $(".dropdown ul li a.institution-item").removeClass("active");
   $(this).addClass("active");
-  $("#institution-btn").text(institutionName);
-  $(".dropdown input#institution").val(institutionId);
-  console.log('INSTITUTION ID : ' + institutionId);
+  $("#institution-btn").text(institutionVal);
+  $(".dropdown input#institution").val(institutionVal);  
 });
