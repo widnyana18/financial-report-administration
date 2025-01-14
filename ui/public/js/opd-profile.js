@@ -4,5 +4,5 @@ $(".dropdown ul li a.institution-item").click(function () {
   $(".dropdown ul li a.institution-item").removeClass("active");
   $(this).addClass("active");
   $("#institution-btn").text(institutionVal);
-  $(".dropdown input#institution").val(institutionVal);  
+  $(".dropdown input#institution-val").val(institutionVal);  
 });

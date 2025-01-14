@@ -10,7 +10,7 @@ exports.renderUpdateOpd = async (req, res, next) => {
   try {
     const selectedOpd = await opdService.getOpdById(opdId);
     const selectedInstitution = await reportingService.findInstitution({
-      _id: selectedOpd.institutionId[0],
+      _id: selectedOpd.reportingId[0],
     });
 
         const getAllInstitution = await reportingService.findInstitution({});        
@@ -64,8 +64,8 @@ exports.updateOpd = async (req, res, next) => {
     const getManyReportInstitution = await reportingService.findInstitution({
       institutionName: req.body.institution,
     });
-    const institutionIdArr = getManyReportInstitution.map((item) => {
-      return item._id;
+    const reportingIdArr = getManyReportInstitution.map((item) => {
+      return item.reportingId;
     });
     const hashedPassword = await bcrypt.hash(data.password, 12);
 
@@ -75,7 +75,7 @@ exports.updateOpd = async (req, res, next) => {
 
     const successUpdateData = await opdService.updateOpd(
       { _id: opdId },
-      { ...data, institutionId: institutionIdArr, password: hashedPassword }
+      { ...data, reportingId: reportingIdArr, password: hashedPassword }
     );
 
     if(successUpdateData){

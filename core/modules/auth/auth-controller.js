@@ -71,7 +71,7 @@ exports.adminLogin = async (req, res, next) => {
           hashedPsw,
           opdName: "ADMIN",
           phone: userEnv.phone,
-          institutionId: [],
+          reportingId: [],
           password: hashedPassword,
         });
       } else {
@@ -114,15 +114,10 @@ exports.login = async (req, res, next) => {
     if (doMatch) {
       req.session.isLoggedIn = true;
       req.session.userRole = "OPD";
-      req.session.user = user;
-
-      const selectedInstitution = await reportingService.findInstitution({
-        _id: user.institutionId,
-      });
-      console.log("LAST DBH : " + selectedInstitution.length);
+      req.session.user = user;            
 
       const lastReporting = await reportingService.findOneReporting({
-        _id: selectedInstitution[selectedInstitution.length - 1]?.reportingId,
+        _id: user.reportingId[user.reportingId.length - 1],
       });
 
       if (!lastReporting) {
@@ -151,8 +146,8 @@ exports.signup = async (req, res, next) => {
       institutionName: req.body.institution,
     });
 
-    const institutionIdArr = getManyReportInstitution.map((item) => {
-      return item._id;
+    const reportingIdArr = getManyReportInstitution.map((item) => {
+      return item.reportingId;
     });
 
     bcrypt
@@ -160,7 +155,7 @@ exports.signup = async (req, res, next) => {
       .then(async (hashedPassword) => {
         return await authService.signup({
           ...req.body,
-          institutionId: institutionIdArr,
+          reportingId: reportingIdArr,
           password: hashedPassword,
         });
       })
