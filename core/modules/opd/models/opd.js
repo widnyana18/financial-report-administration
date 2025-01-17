@@ -20,13 +20,10 @@ const opdSchema = new Schema(
       type: String,
       required: true,
     },
-    reportingId: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Institution",
-        required: true,
-      },
-    ],
+    institutionName: {
+      type: String,
+      required: true,
+    },
   },
   {
     timestamps: true,

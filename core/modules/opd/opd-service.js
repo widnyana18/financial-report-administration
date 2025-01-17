@@ -8,8 +8,8 @@ exports.getOpdById = async (id) => {
   }
 };
 
-exports.getAllOpd = async () => {
-  return await Opd.find();
+exports.findManyOpd = async (filter) => {
+  return await Opd.find(filter);
 };
 
 exports.updateOpd = async (filter, data) => {

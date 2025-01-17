@@ -2,15 +2,16 @@ const mongoose = require("mongoose");
 
 const Schema = mongoose.Schema;
 
-const institutionSchema = new Schema(
+const InstitutionBudgetSchema = new Schema(
   {
+    opdId: {
+      type: Schema.Types.ObjectId,
+      ref: "Opd",
+      required: true,
+    },
     reportingId: {
       type: Schema.Types.ObjectId,
       ref: "Reporting",
-      required: true,
-    },
-    institutionName: {
-      type: String,
       required: true,
     },
     dbhBudget: {
@@ -31,4 +32,4 @@ const institutionSchema = new Schema(
   }
 );
 
-module.exports = mongoose.model("Institution", institutionSchema);
+module.exports = mongoose.model("InstitutionBudget", InstitutionBudgetSchema);

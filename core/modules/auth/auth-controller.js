@@ -19,28 +19,12 @@ exports.renderLogin = (req, res, next) => {
 };
 
 exports.renderSignup = async (req, res, next) => {
-  const institution = [];
-
   try {
-    const getAllInstitution = await reportingService.findInstitution({});
-    console.log("INSTITUTION ALL : " + getAllInstitution);
-
-    getAllInstitution.forEach((item) => {
-      if (!institution.includes(item.institutionName)) {
-        institution.push({
-          id: item.institutionName?.toLowerCase().split(" ").join("-"),
-          name: item.institutionName,
-        });
-      }
-    });
-
     res.render("auth/signup", {
       pageTitle: "Buat Akun Baru",
       domain: "auth",
       path: "/auth/signup",
-      institution,
       selectedOpd: null,
-      selectedInstitution: null,
     });
   } catch (error) {
     return next(error);
@@ -57,41 +41,41 @@ exports.renderChangePassword = (req, res, next) => {
 exports.adminLogin = async (req, res, next) => {
   const username = req.body.username;
   const password = req.body.password;
-  const userEnv = process.env;
+  const userEnv = process.env;  
 
   try {
     const currentUser = await authService.login({ username: username });
 
-    if (!currentUser) {
-      if (username == userEnv.username && password == userEnv.password) {
+    if (username == userEnv.USER && password == userEnv.PASSWORD) {
+      if (!currentUser) {
         const hashedPsw = await bcrypt.hash(password, 12);
 
         await authService.signup({
           username,
           hashedPsw,
-          opdName: "ADMIN",
-          phone: userEnv.phone,
-          reportingId: [],
+          opdName: userEnv.NAME,
+          phone: userEnv.PHONE,
+          institutionName: userEnv.INSTITUTION,
           password: hashedPassword,
         });
-      } else {
-        res.redirect("/admin/login");
       }
-    }
 
-    delete currentUser.password;
-    req.session.isLoggedIn = true;
-    req.session.userRole = "ADMIN";
-    req.session.user = currentUser;
+      delete currentUser.password;
+      req.session.isLoggedIn = true;
+      req.session.userRole = "ADMIN";
+      req.session.user = currentUser;
 
-    const lastReporting = await reportingService.getLastReporting();
+      const lastReporting = await reportingService.getLastReporting();
 
-    if (!lastReporting) {
-      res.redirect("/admin");
+      if (!lastReporting) {
+        res.redirect("/admin");
+      } else {
+        res.redirect("/admin?tahun=" + lastReporting.year);
+      }
+      return req.session.save();
     } else {
-      res.redirect("/admin?tahun=" + lastReporting.year);
+      res.redirect("/admin/login");
     }
-    return req.session.save();
   } catch (error) {
     return next(error);
   }
@@ -114,18 +98,24 @@ exports.login = async (req, res, next) => {
     if (doMatch) {
       req.session.isLoggedIn = true;
       req.session.userRole = "OPD";
-      req.session.user = user;            
+      req.session.user = user;
 
-      const lastReporting = await reportingService.findOneReporting({
-        _id: user.reportingId[user.reportingId.length - 1],
+      const getAllDataInstitutionByOpd = await reportingService.findInstitutionBudget(
+        {
+          opdId: user._id,
+        }
+      );
+      const lastReportingOpd = await reportingService.findOneReporting({
+        _id: getAllDataInstitutionByOpd[getAllDataInstitutionByOpd.length - 1]
+          .reportingId,
       });
 
-      if (!lastReporting) {
+      if (!lastReportingOpd) {
         res.redirect("/");
       } else {
         res.redirect(
-          `/?triwulan=${lastReporting.period.trim()} ${
-            lastReporting.year
+          `/?triwulan=${lastReportingOpd.period.trim()}&tahun=${
+            lastReportingOpd.year
           }&edit=false`
         );
       }
@@ -142,20 +132,11 @@ exports.login = async (req, res, next) => {
 
 exports.signup = async (req, res, next) => {
   try {
-    const getManyReportInstitution = await reportingService.findInstitution({
-      institutionName: req.body.institution,
-    });
-
-    const reportingIdArr = getManyReportInstitution.map((item) => {
-      return item.reportingId;
-    });
-
     bcrypt
       .hash(req.body.password, 12)
       .then(async (hashedPassword) => {
         return await authService.signup({
           ...req.body,
-          reportingId: reportingIdArr,
           password: hashedPassword,
         });
       })

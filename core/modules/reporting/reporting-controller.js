@@ -1,6 +1,6 @@
 const excelJS = require("exceljs");
-const { Types } = require("mongoose");
 
+const opdService = require("../opd/opd-service");
 const reportingService = require("./reporting-service");
 const dbhRealizationService = require("../dbh-realization/dbh-realization-service");
 
@@ -31,7 +31,7 @@ exports.renderIndex = async (req, res, next) => {
 
 exports.renderReportingDetails = async (req, res, next) => {
   const reportingId = req.params.reportId;
-  const dbhOpdCompletedArray = await reportingService.findInstitution({
+  const dbhOpdCompletedArray = await reportingService.findInstitutionBudget({
     reportingId,
     isCompleted: true,
   });
@@ -57,34 +57,49 @@ exports.renderReportingDetails = async (req, res, next) => {
   });
 };
 
-exports.renderCreateReporting = (req, res, next) => {
+exports.renderCreateReporting = async (req, res, next) => {
+  const institutions = await opdService.findManyOpd({
+    opdName: { $ne: "ADMIN" },
+  });
+
   res.render("admin/create-reporting", {
     pageTitle: "Buat Laporan Baru",
     apiRoute: "/api/laporan/add",
     selectedReporting: null,
+    institutions,
   });
 };
 
 exports.renderUpdateReporting = async (req, res, next) => {
   const reportingId = req.params.reportingId;
-  const selectedReporting = await reportingService.findOneReporting({
-    _id: reportingId,
-  });
-  const selectedInstitution = await reportingService.findInstitution({
-    reportingId: reportingId,
-  });
 
-  if (!selectedReporting) {
-    res.redirect(`/admin/${reportingId}`);
-  } else {
-    res.render("admin/create-reporting", {
-      pageTitle: "Update Data Anggaran",
-      apiRoute: "/api/laporan/edit/" + reportingId,
-      selectedReporting: {
-        reporting: selectedReporting,
-        institution: selectedInstitution,
-      },
+  try {
+    const institutions = await opdService.findManyOpd({
+      opdName: { $ne: "ADMIN" },
     });
+    const selectedReporting = await reportingService.findOneReporting({
+      _id: reportingId,
+    });
+    const selectedInstitutionBudget =
+      await reportingService.findInstitutionBudget({
+        reportingId: reportingId,
+      });
+
+    if (!selectedReporting) {
+      res.redirect(`/admin/${reportingId}`);
+    } else {
+      res.render("admin/create-reporting", {
+        pageTitle: "Update Data Anggaran",
+        apiRoute: "/api/laporan/edit/" + reportingId,
+        institutions,
+        selectedReporting: {
+          reporting: selectedReporting,
+          institutionBudget: selectedInstitutionBudget,
+        },
+      });
+    }
+  } catch (error) {
+    return next(error);
   }
 };
 
@@ -105,21 +120,9 @@ exports.getReporting = async (req, res, next) => {
 };
 
 exports.createReporting = async (req, res, next) => {
-  const data = req.body;
-  const institutionData = [];
-  const reportingData = {
-    title: data.title,
-    period: data.period,
-    year: data.year,
-    totalOpd: data.totalOpd,
-    dbhRecieved: {
-      pkb: data.pkbRecieved,
-      pbbkb: data.pbbkbRecieved,
-      pajakRokok: data.pajakRokokRecieved,
-      bbnkb: data.bbnkbRecieved,
-      pap: data.papRecieved,
-    },
-  };
+  const institutionBudget = req.body.institutionBudget;
+  const reportingData = req.body.reporting;
+  console.log("REPORTING DATA = ", reportingData); 
 
   try {
     const reportingAdded = await reportingService.createReporting(
@@ -128,22 +131,15 @@ exports.createReporting = async (req, res, next) => {
 
     console.log("REPORTING ADDED : " + reportingAdded);
 
-    for (let id = 1; id <= data.totalOpd; id++) {
-      institutionData.push({
-        reportingId: reportingAdded._id,
-        institutionName: data[`institutionName${id}`],
-        dbhBudget: {
-          pkb: data[`pkbBudget${id}`],
-          pbbkb: data[`pbbkbBudget${id}`],
-          pajakRokok: data[`pajakRokokBudget${id}`],
-          bbnkb: data[`bbnkbBudget${id}`],
-          pap: data[`papBudget${id}`],
-        },
-      });
-    }
+    const institutionBudgetData = institutionBudget.map((item, index) => {
+      return {reportingId: reportingAdded._id, ...item};
+    });
 
-    await reportingService.insertInstitution(institutionData);
-    res.redirect("/admin?tahun=" + data.year);
+    console.log("institutionBudgetData = ", institutionBudgetData);    
+
+    await reportingService.insertInstitutionBudget(institutionBudgetData);
+
+    res.redirect("/admin?tahun=" + reportingData.year);
   } catch (error) {
     return next(error);
   }
@@ -151,44 +147,23 @@ exports.createReporting = async (req, res, next) => {
 
 exports.updateReporting = async (req, res, next) => {
   const reportingId = req.params.reportId;
-  const data = req.body;
-  const institutionData = [];
+  const institutionBudget = req.body.institutionBudget;
+  const reportingData = req.body.reporting;
+  console.log("REPORTING DATA = ", reportingData); 
 
-  const reportingData = {
-    title: data.title,
-    period: data.period,
-    year: data.year,
-    totalOpd: data.totalOpd,
-    dbhRecieved: {
-      pkb: data.pkbRecieved,
-      pbbkb: data.pbbkbRecieved,
-      pajakRokok: data.pajakRokokRecieved,
-      bbnkb: data.bbnkbRecieved,
-      pap: data.papRecieved,
-    },
-  };
+  const institutionBudgetData = institutionBudget.map((item, index) => {
+    return {reportingId, ...item};
+  });
 
-  for (let id = 1; id <= data.totalOpd; id++) {
-    // const objId = new Types.ObjectId(data[`docId${id}`]);
-
-    institutionData.push({
-      _id: data[`docId${id}`] ?? null,
-      reportingId,
-      institutionName: data[`institutionName${id}`],
-      dbhBudget: {
-        pkb: data[`pkbBudget${id}`],
-        pbbkb: data[`pbbkbBudget${id}`],
-        pajakRokok: data[`pajakRokokBudget${id}`],
-        bbnkb: data[`bbnkbBudget${id}`],
-        pap: data[`papBudget${id}`],
-      },
-    });
-  }
+  console.log("institutionBudgetData = ", institutionBudgetData); 
 
   try {
-    await reportingService.updateReporting({_id: reportingId}, reportingData);
-    await reportingService.updateInstitution(institutionData);
-    res.redirect("/admin?tahun=" + data.year);
+    await reportingService.updateReporting({ _id: reportingId }, reportingData);
+    await reportingService.updateInstitutionBudget(
+      institutionBudgetData
+    );
+    
+    res.redirect("/admin?tahun=" + reportingData.year);
   } catch (error) {
     return next(error);
   }
@@ -201,11 +176,12 @@ exports.deleteReporting = async (req, res, next) => {
     const deletedReporting = await reportingService.deleteReporting(
       reportingId
     );
-    const deleteManyInstitution = await reportingService.deleteInstitution(
-      reportingId
-    );
+    const deleteManyInstitutionBudget =
+      await reportingService.deleteInstitutionBudget(reportingId);
 
-    return res.status(200).json({ deletedReporting, deleteManyInstitution });
+    return res
+      .status(200)
+      .json({ deletedReporting, deleteManyInstitutionBudget });
   } catch (error) {
     return next(error);
   }

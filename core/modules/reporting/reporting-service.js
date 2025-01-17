@@ -1,57 +1,56 @@
 const Reporting = require("./models/reporting");
-const Institution = require("../dbh-realization/models/institution");
+const InstitutionBudget = require("../dbh-realization/models/institution-budget");
 
-exports.findInstitution = async (filter) => {
+exports.findInstitutionBudget = async (filter) => {
   try {
-    return await Institution.find(filter);
+    return await InstitutionBudget.find(filter);
   } catch (error) {
     throw new Error(error);
   }
 };
 
-exports.insertInstitution = async (dataArray) => {
+exports.insertInstitutionBudget = async (dataArray) => {
   try {
-    return await Institution.insertMany(dataArray);
+    return await InstitutionBudget.insertMany(dataArray);
   } catch (error) {
     throw new Error(error);
   }
 };
 
-exports.updateInstitution = async (dataArray) => {
+exports.updateInstitutionBudget = async (dataArray) => {
   let updateDataQuery = [];
 
   dataArray.forEach((item) => {
-    if (!item.institutionName || !item.dbhBudget) {
+    if (!item.opdId) {
       updateDataQuery.push({
         deleteOne: { filter: { _id: item._id } },
       });
-    } else if (!item._id) {
-      delete item._id;
+    } else if (!item._id) {      
       updateDataQuery.push({
         insertOne: {          
-          document: { ...item },
+          document: item,
         },
       });
     } else {
       updateDataQuery.push({
         updateOne: {
           filter: { _id: item._id },
-          update: { $set: { ...item } },
+          update: { $set: item },
         },
       });
     }
   });
 
   try {
-    return await Institution.bulkWrite(updateDataQuery);
+    return await InstitutionBudget.bulkWrite(updateDataQuery);
   } catch (error) {
     throw new Error(error);
   }
 };
 
-exports.deleteInstitution = async (filter) => {
+exports.deleteInstitutionBudget = async (filter) => {
   try {
-    return await Institution.deleteMany({ _id: { $in: filter } });
+    return await InstitutionBudget.deleteMany({ _id: { $in: filter } });
   } catch (error) {
     throw new Error(error);
   }

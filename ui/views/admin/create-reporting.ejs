@@ -6,12 +6,12 @@
         <form action="<%= apiRoute %>" method="POST" id="dbh-realization-form" class="needs-validation" novalidate>
             <div class="mb-3">
                 <label for="title" class="form-label">Judul<span class="text-danger"> *</span></label>
-                <input value="<%= selectedReporting?.reporting.title %>" type="text" class="form-control" name="title" id="title" required>
+                <input value="<%= selectedReporting?.reporting.title %>" type="text" class="form-control" name="reporting[title]" id="title" required>
             </div>
             <div class="mb-3">
                 <label for="period" class="form-label">Triwulan <span class="text-danger">*</span></label>
                 <div class="dropdown">
-                    <input type="hidden" name="period" id="period" value="<%= selectedReporting?.reporting.period %>" required>
+                    <input type="hidden" name="reporting[period]" id="period" value="<%= selectedReporting?.reporting.period %>" required>
                     <button id="period-btn" class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <%= selectedReporting?.reporting.period ?? "Pilih Triwulan" %>
                     </button>
@@ -25,43 +25,54 @@
             </div>
             <div class="mb-3">
                 <label for="year" class="form-label">Tahun <span class="text-danger"> *</span></label>                                
-                <input value="<%= selectedReporting?.reporting.year %>" type="number" class="form-control" name="year" id="year" required>
+                <input value="<%= selectedReporting?.reporting.year %>" type="number" class="form-control" name="reporting[year]" id="year" required>
             </div>
             <div class="border row rounded p-2 mb-3">
+                <input type="hidden" id="institutions-data" value="<%= JSON.stringify(institutions) %>">
                 <div class="d-flex flex-row justify-content-between">
-                    <p class="h6 mb-3">Daftar Lembaga Penerima Anggaran DBH : <span class="text-danger"> *</span></p>
+                    <p class="h6 mb-3">Daftar Lembaga Penerima Anggaran DBH : </p>
                     <button type="button" id="add-institution-btn" class="btn btn-success mb-3 mx-2 btn-sm">TAMBAH LEMBAGA</button>
                 </div> 
                 <div id="institution-dbh-form">                    
                     <% let id = 1; %>
-                    <% if(selectedReporting?.institution.length > 0) { %>
-                        <% for(let item of selectedReporting?.institution) { %>
-                            <input type="hidden" name="docId<%= id %>" id="doc-id-<%= id %>" value="<%= item._id %>" required>
-                            <div class="d-inline-flex my-2 align-items-center" id="institution-<%= id %>">                                
-                                <div class="me-2 w-50">                      
-                                    <label for="institutionName<%= id %>" class="form-label">Nama Lembaga<span class="text-danger"> *</span></label>
-                                    <input type="text" class="form-control" value="<%= item.institutionName %>" name="institutionName<%= id %>" id="institution-name-<%= id %>" required>
-                                </div>                
+                    <% if(selectedReporting?.institutionBudget.length > 0) { %>
+                        <% for(let item of selectedReporting?.institutionBudget) { %>
+                            <input type="hidden" name="institutionBudget[<%= id %>][_id]" id="doc-id-<%= id %>" value="<%= item._id %>">
+                            <div class="d-inline-flex my-2 align-items-center" id="institution-<%= id %>">                                                                
+                                <div class="me-2 w-50">
+                                    <label for="opdId<%= id %>" class="form-label">Nama Lembaga <span class="text-danger"> *</span></label>
+                                    <div class="dropdown w-100">
+                                        <input type="hidden" class="form-control opd-val" name="institutionBudget[<%= id %>][opdId]" id="opd-id-<%= id %>" value='<%= item.opdId %>' required>                                
+                                        <button id="institution-btn" class="btn btn-light dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <%= institutions.find(opd => opd._id.toString() == item.opdId.toString()).institutionName ?? "Pilih Lembaga" %>
+                                        </button>
+                                        <ul class="dropdown-menu w-100">
+                                            <% for(let opd of institutions) { %>
+                                                <li><a class="dropdown-item institution-item <%= opd._id.toString() == item.opdId.toString() ? 'active' : '' %>" id="<%= opd._id %>"><%= opd.institutionName %></a></li>                                        
+                                            <% } %>
+                                        </ul>
+                                    </div>
+                                </div>           
                                 <div class="me-2">
                                     <label for="pkbBudget<%= id %>" class="form-label">PKB</label>
-                                    <input type="number" class="form-control" value="<%= item.dbhBudget.pkb %>" name="pkbBudget<%= id %>" id="pkb-budget-<%= id %>">
+                                    <input type="number" class="form-control" value="<%= item.dbhBudget.pkb %>" name="institutionBudget[<%= id %>][dbhBudget][pkb]" id="pkb-budget-<%= id %>">
                                 </div>                                                        
-                                <div class="me-2">
-                                    <label for="pbbkbBudget<%= id %>" class="form-label">PBBKB</label>
-                                    <input type="number" class="form-control" value="<%= item.dbhBudget.pbbkb %>" name="pbbkbBudget<%= id %>" id="pbbkb-budget-<%= id %>">
-                                </div>                                                        
-                                <div class="me-2">
-                                    <label for="pajakRokokBudget<%= id %>" class="form-label">Pajak Rokok</label>
-                                    <input type="number" class="form-control" value="<%= item.dbhBudget.pajakRokok %>" name="pajakRokokBudget<%= id %>" id="pajakRokok-budget-<%= id %>">
-                                </div>    
                                 <div class="me-2">
                                     <label for="bbnkbBudget<%= id %>" class="form-label">BBNKB</label>
-                                    <input type="number" class="form-control" value="<%= item.dbhBudget.bbnkb %>" name="bbnkbBudget<%= id %>" id="bbnkb-budget-<%= id %>">
+                                    <input type="number" class="form-control" value="<%= item.dbhBudget.bbnkb %>" name="institutionBudget[<%= id %>][dbhBudget][bbnkb]" id="bbnkb-budget-<%= id %>">
                                 </div> 
                                 <div class="me-2">
+                                    <label for="pbbkbBudget<%= id %>" class="form-label">PBBKB</label>
+                                    <input type="number" class="form-control" value="<%= item.dbhBudget.pbbkb %>" name="institutionBudget[<%= id %>][dbhBudget][pbbkb]" id="pbbkb-budget-<%= id %>">
+                                </div>                                                        
+                                <div class="me-2">
                                     <label for="papBudget<%= id %>" class="form-label">PAP</label>
-                                    <input type="number" class="form-control" value="<%= item.dbhBudget.pap %>" name="papBudget<%= id %>" id="pap-budget-<%= id %>">
+                                    <input type="number" class="form-control" value="<%= item.dbhBudget.pap %>" name="institutionBudget[<%= id %>][dbhBudget][pap]" id="pap-budget-<%= id %>">
                                 </div>
+                                <div class="me-2">
+                                    <label for="pajakRokokBudget<%= id %>" class="form-label">Pajak Rokok</label>
+                                    <input type="number" class="form-control" value="<%= item.dbhBudget.pajakRokok %>" name="institutionBudget[<%= id %>][dbhBudget][pajakRokok]" id="pajakRokok-budget-<%= id %>">
+                                </div>    
                                 <div class="px-2 pt-3 remove-institution-btn">
                                     &#x274C;
                                 </div>                                                     
@@ -72,7 +83,7 @@
                 </div> 
                 <div class="d-inline mb-3">
                     <p class="h6">Total Lembaga : <span id="total-opd-txt"><%= selectedReporting?.reporting.totalOpd ?? 0 %></span></p>
-                    <input type="hidden" name="totalOpd" id="total-opd" value="<%= selectedReporting?.reporting.totalOpd ?? 0 %>" required>
+                    <input type="hidden" name="reporting[totalOpd]" id="total-opd" value="<%= selectedReporting?.reporting.totalOpd ?? 0 %>" required>
                 </div>               
             </div>
             <div class="border row rounded p-2 mb-5">
@@ -80,25 +91,25 @@
                 <div class="col me-3">                      
                     <div class="my-2">
                         <label for="pkbRecieved" class="form-label">PKB<span class="text-danger"> *</span></label>
-                        <input value="<%= selectedReporting?.reporting.dbhRecieved.pkb %>" type="number" class="form-control" name="pkbRecieved" id="pkb-recieved" required>
+                        <input value="<%= selectedReporting?.reporting.dbhRecieved.pkb %>" type="number" class="form-control" name="reporting[dbhRecieved][pkb]" id="pkb-recieved" required>
                     </div>                                                        
                     <div class="my-2">
                         <label for="pbbkbRecieved" class="form-label">PBBKB<span class="text-danger"> *</span></label>
-                        <input value="<%= selectedReporting?.reporting.dbhRecieved.pbbkb %>" type="number" class="form-control" name="pbbkbRecieved" id="pbbkb-recieved" required>
+                        <input value="<%= selectedReporting?.reporting.dbhRecieved.pbbkb %>" type="number" class="form-control" name="reporting[dbhRecieved][pbbkb]" id="pbbkb-recieved" required>
                     </div>                                                        
                     <div class="my-2">
                         <label for="pajakRokokRecieved" class="form-label">Pajak Rokok<span class="text-danger"> *</span></label>
-                        <input value="<%= selectedReporting?.reporting.dbhRecieved.pajakRokok %>" type="number" class="form-control" name="pajakRokokRecieved" id="pajakRokok-recieved" required>
+                        <input value="<%= selectedReporting?.reporting.dbhRecieved.pajakRokok %>" type="number" class="form-control" name="reporting[dbhRecieved][pajakRokok]" id="pajakRokok-recieved" required>
                     </div>                                                        
                 </div>
                 <div class="col">
                     <div class="my-2">
                         <label for="bbnkbRecieved" class="form-label">BBNKB<span class="text-danger"> *</span></label>
-                        <input value="<%= selectedReporting?.reporting.dbhRecieved.bbnkb %>" type="number" class="form-control" name="bbnkbRecieved" id="bbnkb-recieved" required>
+                        <input value="<%= selectedReporting?.reporting.dbhRecieved.bbnkb %>" type="number" class="form-control" name="reporting[dbhRecieved][bbnkb]" id="bbnkb-recieved" required>
                     </div> 
                     <div class="my-2">
                         <label for="papRecieved" class="form-label">PAP<span class="text-danger"> *</span></label>
-                        <input value="<%= selectedReporting?.reporting.dbhRecieved.pap %>" type="number" class="form-control" name="papRecieved" id="pap-recieved" required>
+                        <input value="<%= selectedReporting?.reporting.dbhRecieved.pap %>" type="number" class="form-control" name="reporting[dbhRecieved][pap]" id="pap-recieved" required>
                     </div> 
                 </div>
             </div>            

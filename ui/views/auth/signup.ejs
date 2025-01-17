@@ -23,20 +23,10 @@
                             <label for="phone-number" class="form-label">Nomor HP</label>
                             <input type="text" class="form-control" name="phone" id="phone-number" value="<%= selectedOpd?.phone %>">
                         </div>                     
-                        <div class="mb-5">
-                            <label for="institution" class="form-label">Lembaga</label>
-                            <div class="dropdown">
-                                <input type="hidden" class="form-control" name="institution" id="institution-val" value='<%= selectedInstitution %>'>                                
-                                <button id="institution-btn" class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <%= selectedInstitution ?? "Pilih Lembaga" %>
-                                </button>
-                                <ul class="dropdown-menu">
-                                    <% for(let item of institution) { %>
-                                        <li><a class="dropdown-item institution-item <%= item == selectedInstitution ? 'active' : '' %>" id="<%= item.id %>"><%= item.name %></a></li>                                        
-                                    <% } %>
-                                </ul>
-                            </div>
-                        </div>
+                        <div class="mb-3">
+                            <label for="institutionName" class="form-label">Nama Lembaga</label>
+                            <input type="text" class="form-control" name="institutionName" id="institution" value="<%= selectedOpd?.institutionName %>">
+                        </div>                                             
                         <div class="mt-5 w-100 text-center">
                             <% if(domain == "auth") { %>
                                 <button type="submit" class="w-100 btn btn-primary mb-3">DAFTAR AKUN</button>
@@ -49,8 +39,6 @@
                 </div>
             </div>
         </div>
-    </main>
-
-    <script src="/js/opd-profile.js"></script>
+    </main>    
 
 <%- include('../partials/end.ejs') %>

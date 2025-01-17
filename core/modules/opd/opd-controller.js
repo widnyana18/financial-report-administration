@@ -4,22 +4,10 @@ const opdService = require("./opd-service");
 const reportingService = require("../reporting/reporting-service");
 
 exports.renderUpdateOpd = async (req, res, next) => {
-  const opdId = req.user._id;  
-  const institution = [];          
+  const opdId = req.user._id;
 
   try {
     const selectedOpd = await opdService.getOpdById(opdId);
-    const selectedInstitution = await reportingService.findInstitution({
-      _id: selectedOpd.reportingId[0],
-    });
-
-        const getAllInstitution = await reportingService.findInstitution({});        
-    
-        getAllInstitution.forEach((item) => {
-          if (!institution.includes(item.institutionName)) {
-            institution.push(item.institutionName);
-          }
-        });
 
     if (!selectedOpd) {
       res.redirect("/login");
@@ -30,9 +18,7 @@ exports.renderUpdateOpd = async (req, res, next) => {
         pageTitle: "Update OPD",
         domain: "opd",
         path: `/opd/edit/${opdId}`,
-        institution,
         selectedOpd,
-        selectedInstitution: selectedInstitution[0].institutionName,
       });
     }
   } catch (error) {
@@ -40,8 +26,8 @@ exports.renderUpdateOpd = async (req, res, next) => {
   }
 };
 
-exports.getAllOpd = async (req, res, next) => {
-  const opd = await opdService.getAllOpd();
+exports.findManyOpd = async (req, res, next) => {
+  const opd = await opdService.findManyOpd();
   return res.status(200).json(opd);
 };
 
@@ -60,13 +46,7 @@ exports.updateOpd = async (req, res, next) => {
   const data = req.body;
 
   try {
-    const opd = await opdService.getOpdById(opdId);
-    const getManyReportInstitution = await reportingService.findInstitution({
-      institutionName: req.body.institution,
-    });
-    const reportingIdArr = getManyReportInstitution.map((item) => {
-      return item.reportingId;
-    });
+    const opd = await opdService.getOpdById(opdId);  
     const hashedPassword = await bcrypt.hash(data.password, 12);
 
     if (!opd) {
@@ -75,24 +55,23 @@ exports.updateOpd = async (req, res, next) => {
 
     const successUpdateData = await opdService.updateOpd(
       { _id: opdId },
-      { ...data, reportingId: reportingIdArr, password: hashedPassword }
+      { ...data, password: hashedPassword }
     );
 
-    if(successUpdateData){
-      const lastDataDbhByOpd = await dbhRealizationService.findBudget({
+    if (successUpdateData) {
+      const lastDataDbhByOpd = await reportingService.findInstitutionBudget({
         opdId: opdId,
       });
-  
+
       const lastReporting = await reportingService.findOneReporting({
         _id: lastDataDbhByOpd[lastDataDbhByOpd.length - 1]?.reportingId,
       });
-  
+
       res.redirect(
-        `/?triwulan=${lastReporting.period.trim()} ${
+        `/?triwulan=${lastReporting.period.trim()}&tahun=${
           lastReporting.year
         }&edit=false`
       );
-
     }
   } catch (error) {
     return next(error);

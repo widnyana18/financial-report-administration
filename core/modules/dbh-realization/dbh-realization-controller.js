@@ -143,7 +143,7 @@ exports.postSendDbhOpdReporting = async (req, res, next) => {
   let selectedReportingUpdated;
 
   try {
-    const dbhOpdCompleted = await reportingService.updateInstitution([
+    const dbhOpdCompleted = await reportingService.updateInstitutionBudget([
       {
         opdId,
         isCompleted: true,
