@@ -21,12 +21,20 @@ exports.renderIndex = async (req, res, next) => {
       }
     });
 
+    const totalDbhRecievedByYear = reportingByYear.reduce(
+      (total, item) => parseInt(total) + parseInt(item.totalDbhRecieved),
+      0
+    );
+
     res.render("admin/admin-reporting", {
       pageTitle: "Portal Admin",
       years: years,
       reportingList: reportingByYear,
+      totalDbhRecievedByYear,
     });
-  } catch (error) {}
+  } catch (error) {
+    return next(error);
+  }
 };
 
 exports.renderReportingDetails = async (req, res, next) => {
@@ -122,20 +130,26 @@ exports.getReporting = async (req, res, next) => {
 exports.createReporting = async (req, res, next) => {
   const institutionBudget = req.body.institutionBudget;
   const reportingData = req.body.reporting;
-  console.log("REPORTING DATA = ", reportingData); 
+  const totalDbhRecieved = Object.values(reportingData.dbhRecieved).reduce(
+    (total, value) => parseInt(total) + parseInt(value),
+    0
+  );
+
+  console.log("REPORTING DATA = ", reportingData);
 
   try {
-    const reportingAdded = await reportingService.createReporting(
-      reportingData
-    );
+    const reportingAdded = await reportingService.createReporting({
+      ...reportingData,
+      totalDbhRecieved,
+    });
 
     console.log("REPORTING ADDED : " + reportingAdded);
 
     const institutionBudgetData = institutionBudget.map((item, index) => {
-      return {reportingId: reportingAdded._id, ...item};
+      return { reportingId: reportingAdded._id, ...item };
     });
 
-    console.log("institutionBudgetData = ", institutionBudgetData);    
+    console.log("institutionBudgetData = ", institutionBudgetData);
 
     await reportingService.insertInstitutionBudget(institutionBudgetData);
 
@@ -149,20 +163,23 @@ exports.updateReporting = async (req, res, next) => {
   const reportingId = req.params.reportId;
   const institutionBudget = req.body.institutionBudget;
   const reportingData = req.body.reporting;
-  console.log("REPORTING DATA = ", reportingData); 
+  const totalDbhRecieved = Object.values(reportingData.dbhRecieved).reduce(
+    (total, value) => parseInt(total) + parseInt(value),
+    0
+  );
+
+  console.log("REPORTING DATA = ", reportingData);
 
   const institutionBudgetData = institutionBudget.map((item, index) => {
-    return {reportingId, ...item};
+    return { reportingId, ...item };
   });
 
-  console.log("institutionBudgetData = ", institutionBudgetData); 
+  console.log("institutionBudgetData = ", institutionBudgetData);
 
   try {
-    await reportingService.updateReporting({ _id: reportingId }, reportingData);
-    await reportingService.updateInstitutionBudget(
-      institutionBudgetData
-    );
-    
+    await reportingService.updateReporting({ _id: reportingId }, {...reportingData, totalDbhRecieved});
+    await reportingService.updateInstitutionBudget(institutionBudgetData);
+
     res.redirect("/admin?tahun=" + reportingData.year);
   } catch (error) {
     return next(error);

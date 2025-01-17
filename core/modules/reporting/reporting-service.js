@@ -25,9 +25,9 @@ exports.updateInstitutionBudget = async (dataArray) => {
       updateDataQuery.push({
         deleteOne: { filter: { _id: item._id } },
       });
-    } else if (!item._id) {      
+    } else if (!item._id) {
       updateDataQuery.push({
-        insertOne: {          
+        insertOne: {
           document: item,
         },
       });
@@ -81,10 +81,7 @@ exports.findManyReporting = async (filter) => {
 };
 
 exports.createReporting = async (data) => {
-  const reporting = new Reporting({
-    ...data,
-    totalDbhRecieved: await calculateTotalDbhRecieved(data),
-  });
+  const reporting = new Reporting(data);
 
   try {
     return await reporting.save();
@@ -95,10 +92,7 @@ exports.createReporting = async (data) => {
 
 exports.updateReporting = async (filter, data) => {
   try {
-    return await Reporting.findOneAndUpdate(filter, {
-      ...data,
-      totalDbhRecieved: await calculateTotalDbhRecieved(data),
-    });
+    return await Reporting.findOneAndUpdate(filter, data);
   } catch (error) {
     throw new Error(error);
   }
@@ -106,21 +100,4 @@ exports.updateReporting = async (filter, data) => {
 
 exports.deleteReporting = async (id) => {
   return await Reporting.deleteOne({ _id: id });
-};
-
-calculateTotalDbhRecieved = async (data) => {
-  const getReportingByYear = await Reporting.find({
-    year: data.year,
-  });
-
-  let sumLastDbhRecieved = Object.values(data.dbhRecieved).reduce(
-    (acc, value) => parseInt(acc) + parseInt(value),
-    0
-  );
-
-  getReportingByYear.forEach((item) => {
-    sumLastDbhRecieved += item.totalDbhRecieved;
-  });
-
-  return sumLastDbhRecieved;
 };
