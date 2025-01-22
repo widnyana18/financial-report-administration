@@ -1,5 +1,8 @@
+const { Types } = require("mongoose");
+
 const Reporting = require("./models/reporting");
 const InstitutionBudget = require("../dbh-realization/models/institution-budget");
+const DbhRealization = require("../dbh-realization/models/dbh-realization");
 
 exports.findInstitutionBudget = async (filter) => {
   try {
@@ -100,4 +103,85 @@ exports.updateReporting = async (filter, data) => {
 
 exports.deleteReporting = async (id) => {
   return await Reporting.deleteOne({ _id: id });
+};
+
+exports.calculateTotalDbhReporting = async (filter) => {
+  const sumDbhInAllDoc = {
+    pagu: { $sum: "$pagu" },
+    pkbBudget: { $sum: { $arrayElemAt: ["$dbh.pkb", 0] } },
+    pkbRealization: { $sum: { $arrayElemAt: ["$dbh.pkb", 1] } },
+    bbnkbBudget: { $sum: { $arrayElemAt: ["$dbh.bbnkb", 0] } },
+    bbnkbRealization: { $sum: { $arrayElemAt: ["$dbh.bbnkb", 1] } },
+    pbbkbBudget: { $sum: { $arrayElemAt: ["$dbh.pbbkb", 0] } },
+    pbbkbRealization: { $sum: { $arrayElemAt: ["$dbh.pbbkb", 1] } },
+    papBudget: { $sum: { $arrayElemAt: ["$dbh.pap", 0] } },
+    papRealization: { $sum: { $arrayElemAt: ["$dbh.pap", 1] } },
+    pajakRokokBudget: {
+      $sum: { $arrayElemAt: ["$dbh.pajakRokok", 0] },
+    },
+    pajakRokokRealization: {
+      $sum: { $arrayElemAt: ["$dbh.pajakRokok", 1] },
+    },
+  };
+
+  const setTotalDbhField = {
+    pagu: "$pagu",
+    dbh: {
+      pkb: ["$pkbBudget", "$pkbRealization"],
+      bbnkb: ["$bbnkbBudget", "$bbnkbRealization"],
+      pbbkb: ["$pbbkbBudget", "$pbbkbRealization"],
+      pap: ["$papBudget", "$papRealization"],
+      pajakRokok: ["$pajakRokokBudget", "$pajakRokokRealization"],
+    },
+  };
+
+  try {
+    const sumAllDocInstitutionByReportId = await DbhRealization.aggregate([
+      {
+        $match: {
+          reportingId: new Types.ObjectId(filter.reportingId),
+          parameter: "Lembaga",
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          ...sumDbhInAllDoc,
+          totalDbhBudget: {
+            $sum: [
+              { $arrayElemAt: ["$dbh.pkb", 0] },
+              { $arrayElemAt: ["$dbh.bbnkb", 0] },
+              { $arrayElemAt: ["$dbh.pbbkb", 0] },
+              { $arrayElemAt: ["$dbh.pap", 0] },
+              { $arrayElemAt: ["$dbh.pajakRokok", 0] },
+            ],
+          },
+          sumDbhRealization: {
+            $sum: [
+              { $arrayElemAt: ["$dbh.pkb", 1] },
+              { $arrayElemAt: ["$dbh.bbnkb", 1] },
+              { $arrayElemAt: ["$dbh.pbbkb", 1] },
+              { $arrayElemAt: ["$dbh.pap", 1] },
+              { $arrayElemAt: ["$dbh.pajakRokok", 1] },
+            ],
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          totalDbhBudget: 1,
+          totalDbhRealization: 1,
+          totalInstitutionDbh: setTotalDbhField,
+        },
+      },
+    ]);
+
+    return await Reporting.findOneAndUpdate(
+      { _id: filter.reportingId },
+      sumAllDocInstitutionByReportId[0]
+    );
+  } catch (error) {
+    throw new Error(error);
+  }
 };

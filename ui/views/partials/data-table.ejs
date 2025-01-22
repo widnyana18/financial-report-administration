@@ -6,7 +6,7 @@
     <colgroup>
       <col span="1" style="width: 3%" />
       <col span="1" style="width: 10%" />
-      <col span="11" style="width: 5%" />
+      <col span="11" style="width: 3%" />
       <% if(userRole == "opd") { %>
         <col span="2" style="width: 1%" />
       <% } %>
@@ -25,7 +25,7 @@
         <th colspan="2" scope="col">
           Pendapatan Bagi Hasil Pajak Kendaraan Bermotor (PKB)
         </th>
-        <th colspan="2" scope="col">rep
+        <th colspan="2" scope="col">
           Pendapatan Bagi Hasil Bea Balik Nama Kendaraan Bermotor (BBNKB)
         </th>
         <th colspan="2" scope="col">
@@ -53,99 +53,81 @@
         <% } %>
       </tr>
     </thead>
-    <tbody class="table-light table-group-divider align-middle">
-      <% for(let dbhList of dbhRealization) { %> 
-        <input type="hidden" name="opdDbh" value="<%= dbhList._id %>">
-        <% for(let data of dbhList.data) { %>   
-          <% if(data.parameter === "Lembaga") { %>
-            <tr id="<%= data._id %>">
-              <th scope="row"><%= data.noRek %></th>
-              <td class="text-uppercase fw-bold"><%= data.name %></td>              
-              <td></td>              
-              <td></td>              
-              <td></td>              
-              <td></td>              
-              <td></td>              
-              <td></td>              
-              <td></td>              
-              <td></td>              
-              <td></td>              
-              <td></td>              
-              <td></td>              
-            </tr>
-          <% }  else { %>        
-            <tr id="<%= data._id %>" class="<%= data.parameter === 'Program' ? 'table-success' : '' %>">
-              <th scope="row"><%= data.noRek %></th>
-              <% if(data.parameter === "Program") { %>
-                <td class="text-uppercase fw-semibold"><%= data.name %></td>              
-              <% }  else { %>
-                <td class="px-3 text-start"><%= data.name %></td>              
-              <% } %>
-              <td><%= data.pagu %></td>
-              <td><%= data.dbh.pkb[0] %></td>
-              <td><%= data.dbh.pkb[1] %></td>
-              <td><%= data.dbh.bbnkb[0] %></td>
-              <td><%= data.dbh.bbnkb[1] %></td>
-              <td><%= data.dbh.pbbkb[0] %></td>
-              <td><%= data.dbh.pbbkb[1] %></td>
-              <td><%= data.dbh.pap[0] %></td>
-              <td><%= data.dbh.pap[1] %></td>
-              <td><%= data.dbh.pajakRokok[0] %></td>
-              <td><%= data.dbh.pajakRokok[1] %></td> 
-              <% if(userRole == "opd") { %>
-                <td id="edit-btn"><i class="bi bi-pencil"></i></td>
-                <td id="delete-btn"><i class="bi bi-trash3"></i></td>
-              <% } %>
-            </tr>
-          <% } %>
+    <tbody class="table-light table-group-divider align-middle"> 
+      <% const dbhRealizationData = dbhRealizationOpd.find(item => item.reportingId == currentReporting?._id.toString())?.data ?? []; %>                            
+      <% const totalDataInstitution = dbhRealizationData.find(item => item.parameter == "Lembaga"); %>                            
+      <% for(let data of dbhRealizationData) { %> 
+        <% if(data.parameter !== "Lembaga") { %>
+          <input type="hidden" name="dbhId" value="<%= data._id %>">                                    
+          <tr id="<%= data._id %>" class="<%= data.parameter === 'Program' ? 'table-success' : '' %>">
+            <th scope="row"><%= data.noRek %></th>
+            <% if(data.parameter === "Program") { %>
+              <td class="text-uppercase fw-semibold"><%= data.name %></td>              
+            <% }  else { %>
+              <td class="px-3 text-start"><%= data.name %></td>              
+            <% } %>
+            <td><%= data.pagu %></td>
+            <td><%= data.dbh.pkb[0] %></td>
+            <td><%= data.dbh.pkb[1] %></td>
+            <td><%= data.dbh.bbnkb[0] %></td>
+            <td><%= data.dbh.bbnkb[1] %></td>
+            <td><%= data.dbh.pbbkb[0] %></td>
+            <td><%= data.dbh.pbbkb[1] %></td>
+            <td><%= data.dbh.pap[0] %></td>
+            <td><%= data.dbh.pap[1] %></td>
+            <td><%= data.dbh.pajakRokok[0] %></td>
+            <td><%= data.dbh.pajakRokok[1] %></td> 
+            <% if(userRole == "opd") { %>
+              <td id="edit-btn"><i class="bi bi-pencil"></i></td>
+              <td id="delete-btn"><i class="bi bi-trash3"></i></td>
+            <% } %>
+          </tr>                
         <% } %>
-          
-        <tr id="sub-total">
-          <td></td>
-          <th scope="row">Sub Total</th>
-          <td><%= dbhList.totalDbhOpd[0].pagu %></td>
-          <td><%= dbhList.totalDbhOpd[0].dbh.pkb[0] %></td>
-          <td><%= dbhList.totalDbhOpd[0].dbh.pkb[1] %></td>
-          <td><%= dbhList.totalDbhOpd[0].dbh.bbnkb[0] %></td>
-          <td><%= dbhList.totalDbhOpd[0].dbh.bbnkb[1] %></td>
-          <td><%= dbhList.totalDbhOpd[0].dbh.pbbkb[0] %></td>
-          <td><%= dbhList.totalDbhOpd[0].dbh.pbbkb[1] %></td>
-          <td><%= dbhList.totalDbhOpd[0].dbh.pap[0] %></td>
-          <td><%= dbhList.totalDbhOpd[0].dbh.pap[1] %></td>
-          <td><%= dbhList.totalDbhOpd[0].dbh.pajakRokok[0] %></td>
-          <td><%= dbhList.totalDbhOpd[0].dbh.pajakRokok[1] %></td>  
-          <% if(userRole == "opd") { %>
-            <td colspan="2"></td>
-          <% } %>          
-        </tr>        
       <% } %>
-
+      <tr id="sub-total">
+        <td></td>
+        <th scope="row">Sub Total</th>
+        <td><%= totalDataInstitution.pagu %></td>
+        <td><%= totalDataInstitution.dbh.pkb[0] %></td>
+        <td><%= totalDataInstitution.dbh.pkb[1] %></td>
+        <td><%= totalDataInstitution.dbh.bbnkb[0] %></td>
+        <td><%= totalDataInstitution.dbh.bbnkb[1] %></td>
+        <td><%= totalDataInstitution.dbh.pbbkb[0] %></td>
+        <td><%= totalDataInstitution.dbh.pbbkb[1] %></td>
+        <td><%= totalDataInstitution.dbh.pap[0] %></td>
+        <td><%= totalDataInstitution.dbh.pap[1] %></td>
+        <td><%= totalDataInstitution.dbh.pajakRokok[0] %></td>
+        <td><%= totalDataInstitution.dbh.pajakRokok[1] %></td> 
+        <% if(userRole == "opd") { %>
+          <td colspan="2"></td>
+        <% } %>          
+      </tr>                
       <% if(userRole == "admin") { %>             
         <tr>
           <td></td>
           <th scope="row" class="text-danger">TOTAL</th>
-          <td><%= reporting.totalInstitutionDbh.pagu %></td>
-          <td><%= reporting.totalInstitutionDbh.pkb[0] %></td>
-          <td><%= reporting.totalInstitutionDbh.pkb[1] %></td>
-          <td><%= reporting.totalInstitutionDbh.bbnkb[0] %></td>
-          <td><%= reporting.totalInstitutionDbh.bbnkb[1] %></td>
-          <td><%= reporting.totalInstitutionDbh.pbbkb[0] %></td>
-          <td><%= reporting.totalInstitutionDbh.pbbkb[1] %></td>
-          <td><%= reporting.totalInstitutionDbh.pap[0] %></td>
-          <td><%= reporting.totalInstitutionDbh.pap[1] %></td>
-          <td><%= reporting.totalInstitutionDbh.pajakRokok[0] %></td>
-          <td><%= reporting.totalInstitutionDbh.pajakRokok[1] %></td>          
+          <td><%= currentReporting.totalInstitutionDbh.pagu %></td>
+          <td><%= currentReporting.totalInstitutionDbh.pkb[0] %></td>
+          <td><%= currentReporting.totalInstitutionDbh.pkb[1] %></td>
+          <td><%= currentReporting.totalInstitutionDbh.bbnkb[0] %></td>
+          <td><%= currentReporting.totalInstitutionDbh.bbnkb[1] %></td>
+          <td><%= currentReporting.totalInstitutionDbh.pbbkb[0] %></td>
+          <td><%= currentReporting.totalInstitutionDbh.pbbkb[1] %></td>
+          <td><%= currentReporting.totalInstitutionDbh.pap[0] %></td>
+          <td><%= currentReporting.totalInstitutionDbh.pap[1] %></td>
+          <td><%= currentReporting.totalInstitutionDbh.pajakRokok[0] %></td>
+          <td><%= currentReporting.totalInstitutionDbh.pajakRokok[1] %></td>          
         </tr>          
         <tr>
           <td></td>
           <th scope="row" class="text-danger">DANA DBH PROVINSI</th>
-          <td><%= reporting.totalDbhBudget %></td>            
+          <td><%= currentReporting.totalDbhBudget %></td>            
           <td colspan="10"></td>
         </tr>          
         <tr>
           <td></td>
-          <th scope="row" class="text-danger">REALISASI S/D BULAN JUNI (<%= reporting.period %>)</th>
-          <td><%= reporting.totalDbhRealization %></td>            
+          <th scope="row" class="text-danger">REALISASI S/D BULAN JUNI (<%= currentReporting.period %>)</th>
+          <td><%= currentReporting.totalDbhRealization %></td>            
           <td colspan="10"></td>
         </tr>                
       <% } %>

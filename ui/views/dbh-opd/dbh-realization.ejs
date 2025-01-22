@@ -1,71 +1,60 @@
 <%- include('../partials/head.ejs') %>
 </head>
-<body>
-    <main class="mx-3">
+<body> 
+    <% let dbhRealizationData = dbhRealizationOpd.find(item => item.reportingId == currentReporting?._id.toString())?.data ?? []; %>       
+    <input type="hidden" id="dbh-realization-data" value="<%= JSON.stringify(dbhRealizationData) %>">   
+    <main class="mx-4 my-5">
         <div class="container-fluid my-5">
-            <div class="row justify-content-between">                
-                <div class="col-5 d-flex flex-row p-2 w-50">
-                    <img src="images/logo.png" class="rounded d-block w-75 h-75" alt="logo">
-                    <h1 class="display-6 mt-3 mx-4 mb-5 fw-semibold align-self-center">SISTEM APLIKASI PERTANGGUNGJAWABAN-DBH PROVINSI (SIAP-DP)</h1>  
-                </div>
-                <div class="col-5 p-2 w-5">
-                    <p class="h6 my-1">OPD <span class="px-5">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : <%= opd.opdName %></span></p>
-                    <p class="h6 my-1">Lembaga <span class="px-5"> &nbsp;: <%= opd.institution %></span></p>
-                    <div class="d-flex my-1 align-items-center">
-                        <p class="h6">Triwulan <span class="ps-5"> &nbsp; : &nbsp;&nbsp;</p>
-                        <div class="dropdown">
-                            <button id="period-btn" class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"><%= selectedFilter %></button>
-                            <ul class="dropdown-menu">
-                                <% for(let period of filters) { %>
-                                    <li><a id="period-list" class="dropdown-item <%= selectedFilter == period ? 'active' : '' %>"><%= period %></a></li>
-                                <% } %>                
-                            </ul> 
-                        </div>
+            <form action="api/dbh/<%= apiUrl %>" method="POST" id="dbh-realization-form" class="needs-validation" novalidate>
+                <div class="row justify-content-between">                
+                    <div class="col-5 d-flex flex-row p-2 w-50">
+                        <img src="images/logo.png" class="rounded d-block w-75 h-75" alt="logo">
+                        <h1 class="display-6 mt-3 mx-4 mb-5 fw-semibold align-self-center">SISTEM APLIKASI PERTANGGUNGJAWABAN-DBH PROVINSI (SIAP-DP)</h1>  
                     </div>
-                    <button type="button" id="send-report-btn" class="btn btn-primary py-2 px-4"><a class="text-white">KIRIM LAPORAN</a></button>                    
+                    <div class="col-5 p-2 w-5">
+                        <p class="h6 my-1">OPD <span style="padding: 0 6px 0 52px;">:</span> <%= opd.opdName %></p>
+                        <p class="h6 my-1">Lembaga <span style="padding: 0 6px 0 17px;">:</span> <%= opd.institutionName %></p>
+                        <div class="d-flex my-1 align-items-center">                            
+                            <label for="report" class="form-label h6">Triwulan <span style="padding: 0 12px 0 22px;">:</span> </label>                                                        
+                            <select name="dbhRealization[reportingId]" class="form-select-sm d-inline report-select" id="report" aria-label="Report Select" required>
+                                <option class="report-item" selected>Pilih Laporan</option>
+                                <% for(let report of opdReportingData) { %>                                    
+                                    <option id="<%= report._id %>" class="report-item" value="<%= report._id %>" <%= currentReporting?._id.toString() === report._id.toString() ? 'selected' : '' %>><%= (report?.period + " | " + report?.year.toString()).trim() %></option>
+                                <% } %>                                
+                            </select>
+                        </div>                                        
+                    </div>
                 </div>
                 <nav class="nav nav-pills row mx-3 mb-5">
                     <a class="col me-4 text-sm-center nav-link bg-warning text-white fw-medium" aria-current="page" href="/<%= opd._id %>/edit-profile">EDIT PROFILE</a>                    
-                    <div class="col me-4">
-                        <form action="/api/auth/logout" method="post">       
-                            <button type="submit" id="logout-btn" class="btn btn-secondary py-2 text-white px-4 w-100">LOGOUT</button>                   
-                        </form>
-                    </div>
+                    <a class="col me-4 text-sm-center nav-link bg-secondary text-white fw-medium" aria-current="page" href="/logout">LOGOUT</a>                                                            
                     <a class="col text-sm-center nav-link bg-danger text-white fw-medium" href="#">DELETE ACCOUNT</a>
                 </nav>
-            </div>
-            <div class="form-input container w-50 align-items-center border p-3">
-                <p class="h5 mb-5 text-center">Formulir Input Data Realisasi DBH</p>
-                <form action="api/dbh/add" method="POST" id="dbh-realization-form" class="needs-validation" novalidate>
+                <div class="form-input container w-50 align-items-center border p-3">
+                    <p class="h5 mb-5 text-center">Formulir Input Data Realisasi DBH</p>                    
                     <div class="row d-flex row-cols-3">
                         <div class="col-4 flex-grow-1 me-2">
-                            <div class="mb-3">
+                            <div class="mb-3">                                
                                 <label for="parameter" class="form-label">Parameter <span class="text-danger">*</span></label>
-                                <div class="dropdown">
-                                    <input type="hidden" name="parameter" id="parameter" required>
-                                    <button id="parameter-btn" class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <%= selectedDbh?.parameter ?? "Pilih Parameter" %>
-                                    </button>
-                                    <ul class="dropdown-menu">                                      
-                                      <li><a class="dropdown-item parameter-item" id="program">Program</a></li>                              
-                                      <li><a class="dropdown-item parameter-item" id="kegiatan">Kegiatan</a></li>                              
-                                      <li><a class="dropdown-item parameter-item" id="sub-kegiatan">Sub Kegiatan</a></li>                              
-                                    </ul>
-                                </div>
+                                <select name="dbhRealization[parameter]" id="parameter" class="form-select parameter-select" aria-label="Parameter Select" required>
+                                    <option class="parameter-item" value="">Pilih Parameter</option>                              
+                                    <option class="parameter-item" id="program" value="Program" <%= selectedDbhRealization?.parameter === 'Program' ? 'selected' : '' %>>Program</option>                              
+                                    <option class="parameter-item" id="kegiatan" value="Kegiatan" <%= selectedDbhRealization?.parameter === 'Kegiatan' ? 'selected' : '' %>>Kegiatan</option>                              
+                                    <option class="parameter-item" id="sub-kegiatan" value="Sub Kegiatan" <%= selectedDbhRealization?.parameter === 'Sub Kegiatan' ? 'selected' : '' %>>Sub Kegiatan</option>       
+                                </select>                               
                             </div>                            
-                            <div id="parent-parameter">
-                            </div>
+                            <div id="parent-parameter" class="mb-3"></div> 
                             <div class="mb-3">
                                 <label for="name" class="form-label">Judul<span class="text-danger"> *</span></label>
-                                <input value="<%= selectedDbh?.name ?? '' %>" type="text" class="form-control" name="name" id="name" required>
+                                <input value="<%= selectedDbhRealization?.name ?? '' %>" type="text" class="form-control" name="dbhRealization[name]" id="name" required>
                             </div>
                             <div class="mb-3">
-                                <label for="no-rek" class="form-label">No. Rek <span class="text-danger"> *</span></label>
-                                <input value="<%= selectedDbh?.noRek ?? '' %>" type="text" class="form-control" name="noRek" id="no-rek" required>
+                                <label for="no-rek" class="form-label">No.Rek <span class="text-danger"> *</span></label>
+                                <input value="<%= selectedDbhRealization?.noRek ?? '' %>" type="text" class="form-control" name="dbhRealization[noRek]" id="no-rek" required>
                             </div>
                             <div class="mb-3 hide-input">
                                 <label for="pagu" class="form-label">Pagu Anggaran (DPA) <span class="text-danger"> *</span></label>                                
-                                <input value="<%= selectedDbh?.pagu ?? 0 %>" type="number" class="form-control" name="pagu" id="pagu" required>
+                                <input value="<%= selectedDbhRealization?.pagu ?? 0 %>" type="number" class="form-control" name="dbhRealization[pagu]" id="pagu" required>
                             </div>
                         </div>
                         <div class="col-4 flex-grow-1 mx-2 hide-input">
@@ -76,11 +65,11 @@
                                     <div class="d-flex">
                                         <div class="mb-3 me-3">
                                             <label for="pkb-budget" class="form-label">Anggaran</label>
-                                            <input value="<%= selectedDbh?.dbh.pkb[0] ?? 0 %>" type="number" class="form-control" name="pkbBudget" id="pkb-budget">
+                                            <input value="<%= selectedDbhRealization?.dbh.pkb[0] ?? 0 %>" type="number" class="form-control" name="dbhRealization[dbh][pkb][0]" id="pkb-budget">
                                         </div>
                                         <div class="mb-3">
                                             <label for="pkb-realization" class="form-label">Realisasi</label>
-                                            <input value="<%= selectedDbh?.dbh.pkb[1] ?? 0 %>" type="number" class="form-control" name="pkbRealization" id="pkb-realization">
+                                            <input value="<%= selectedDbhRealization?.dbh.pkb[1] ?? 0 %>" type="number" class="form-control" name="dbhRealization[dbh][pkb][1]" id="pkb-realization">
                                         </div>
                                     </div>
                                 </div>
@@ -89,11 +78,11 @@
                                     <div class="d-flex">
                                         <div class="mb-3 me-3">
                                             <label for="bbnkb-budget" class="form-label">Anggaran</label>
-                                            <input value="<%= selectedDbh?.dbh.bbnkb[0] ?? 0 %>" type="number" class="form-control" name="bbnkbBudget" id="bbnkb-budget">
+                                            <input value="<%= selectedDbhRealization?.dbh.bbnkb[0] ?? 0 %>" type="number" class="form-control" name="dbhRealization[dbh][bbnkb][0]" id="bbnkb-budget">
                                         </div>
                                         <div class="mb-3">
                                             <label for="bbnkb-realization" class="form-label">Realisasi</label>
-                                            <input value="<%= selectedDbh?.dbh.bbnkb[1] ?? 0 %>" type="number" class="form-control" name="bbnkbRealization" id="bbnkb-realization">
+                                            <input value="<%= selectedDbhRealization?.dbh.bbnkb[1] ?? 0 %>" type="number" class="form-control" name="dbhRealization[dbh][bbnkb][1]" id="bbnkb-realization">
                                         </div>
                                     </div>
                                 </div>
@@ -104,11 +93,11 @@
                                     <div class="d-flex">
                                         <div class="mb-3 me-3">
                                             <label for="pbbkb-budget" class="form-label">Anggaran</label>
-                                            <input value="<%= selectedDbh?.dbh.pbbkb[0] ?? 0 %>" type="number" class="form-control" name="pbbkbBudget" id="pbbkb-budget">
+                                            <input value="<%= selectedDbhRealization?.dbh.pbbkb[0] ?? 0 %>" type="number" class="form-control" name="dbhRealization[dbh][pbbkb][0]" id="pbbkb-budget">
                                         </div>
                                         <div class="mb-3">
                                             <label for="pbbkb-realization" class="form-label">Realisasi</label>
-                                            <input value="<%= selectedDbh?.dbh.pbbkb[1] ?? 0 %>" type="number" class="form-control" name="pbbkbRealization" id="pbbkb-realization">
+                                            <input value="<%= selectedDbhRealization?.dbh.pbbkb[1] ?? 0 %>" type="number" class="form-control" name="dbhRealization[dbh][pbbkb][1]" id="pbbkb-realization">
                                         </div>
                                     </div>
                                 </div>
@@ -117,11 +106,11 @@
                                     <div class="d-flex">
                                         <div class="mb-3 me-3">
                                             <label for="pap-budget" class="form-label">Anggaran</label>
-                                            <input value="<%= selectedDbh?.dbh.pap[0] ?? 0 %>" type="number" class="form-control" name="papBudget" id="pap-budget">
+                                            <input value="<%= selectedDbhRealization?.dbh.pap[0] ?? 0 %>" type="number" class="form-control" name="dbhRealization[dbh][pap][0]" id="pap-budget">
                                         </div>
                                         <div class="mb-3">
                                             <label for="pap-realization" class="form-label">Realisasi</label>
-                                            <input value="<%= selectedDbh?.dbh.pap[1] ?? 0 %>" type="number" class="form-control" name="papRealization" id="pap-realization">
+                                            <input value="<%= selectedDbhRealization?.dbh.pap[1] ?? 0 %>" type="number" class="form-control" name="dbhRealization[dbh][pap][1]" id="pap-realization">
                                         </div>
                                     </div>
                                 </div>
@@ -131,34 +120,38 @@
                                 <div class="d-flex">
                                     <div class="mb-3 me-3">
                                         <label for="pajak-rokok-budget" class="form-label">Anggaran</label>
-                                        <input value="<%= selectedDbh?.dbh.pajakRokok[0] ?? 0 %>" type="number" class="form-control" name="pajakRokokBudget" id="pajak-rokok-budget">
+                                        <input value="<%= selectedDbhRealization?.dbh.pajakRokok[0] ?? 0 %>" type="number" class="form-control" name="dbhRealization[dbh][pajakRokok][0]" id="pajak-rokok-budget">
                                     </div>
                                     <div class="mb-3">
                                         <label for="pajak-rokok-realization" class="form-label">Realisasi</label>
-                                        <input value="<%= selectedDbh?.dbh.pajakRokok[1] ?? 0 %>" type="number" class="form-control" name="pajakRokokRealization" id="pajak-rokok-realization">
+                                        <input value="<%= selectedDbhRealization?.dbh.pajakRokok[1] ?? 0 %>" type="number" class="form-control" name="dbhRealization[dbh][pajakRokok][1]" id="pajak-rokok-realization">
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="d-flex ms-2 justify-content-end">   
-                        <input type="hidden" value="<%= selectedFilter.period %>" name="period" required>
-                        <input type="hidden" value="<%= selectedFilter.year %>" name="year" required>                 
+                    <div class="d-flex ms-2 justify-content-end">                                            
                         <button type="button" id="clear-btn" class="btn btn-danger mb-3 mx-2" style="width: 15%;">CLEAR</button>                                                                                                    
-                        <button type="submit" id="submit-form-btn" class="btn btn-primary mb-3 mx-2" style="width: 15%;">TAMBAH</button>                            
-                    </div>
-                </form>
+                        <button type="submit" id="submit-form-btn" class="btn btn-primary mb-3 mx-2" style="width: 15%;">TAMBAH</button>
+                    </div>                    
+                </div>
+            </form>            
+        </div>                       
+        <% if(dbhRealizationData.length > 1) { %>
+            <div class="row justify-content-end align-items-center"> 
+                <%- include('../partials/data-table.ejs') %>
+                <div class="mt-3 col-2">
+                    <form action="/api/dbh/send-report/" method="POST">                           
+                        <button type="button" id="send-report-btn" class="btn btn-primary py-2 px-4 align-self-end"><a class="text-white">KIRIM LAPORAN</a></button>
+                    </form>
+                </div>
             </div>
-        </div>
-        <% if(dbhRealizations.length > 0) { %>
-            <%- include('../partials/data-table.ejs') %>
         <% } else { %> 
             <div class="h-100 w-100 justify-content-center align-items-center text-center">
                 <h1 class="display-4">Data Belum Ditambahkan</h1>
             </div>
-        <% } %>
+        <% } %>        
     </main>
-    <input type="hidden" name="dataDbh" id="dbh-realization-data" value="<%= JSON.stringify(dbhRealizations) %>">        
 
     <script src="/js/opd/dbh-opd.js"></script>
 <%- include('../partials/end.ejs') %>

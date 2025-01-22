@@ -1,5 +1,4 @@
 const DbhRealization = require("./models/dbh-realization");
-const { createBudgetId } = require("../../common/utils/id_gen");
 const reportingService = require("../reporting/reporting-service");
 const { Types } = require("mongoose");
 
@@ -10,9 +9,9 @@ exports.groupDbhByOpd = async (filter) => {
   return await DbhRealization.aggregate([
     {
       // Step 1: Optional - Filter by id if needed (you can remove this if not needed)
-      $match: { reportingId: objReportId, opdId: {$in: filter.opds} },
+      $match: { reportingId: objReportId, opdId: { $in: filter.opds } },
     },
-    { 
+    {
       // Step 2: Sort the documents by opdId and other fields if needed (e.g., createdAt)
       $sort: { opdId: 1, createdAt: 1 }, // Sort by opdId and createdAt field within each group
     },
@@ -24,7 +23,7 @@ exports.groupDbhByOpd = async (filter) => {
         totalDbhOpd: {
           $addToSet: {
             $cond: {
-              if: { $eq: ["$parameter", "Lembaga"] },  
+              if: { $eq: ["$parameter", "Lembaga"] },
               then: "$$ROOT",
               else: null,
             },
@@ -44,237 +43,145 @@ exports.findBudget = async (filter) => {
 };
 
 exports.addDbhRealization = async (data) => {
-  const reporting = await reportingService.findOneReporting({
-    period: data.period,
-    year: data.year,
-  });
-
-  const dbhId = await createBudgetId(data);
-
-  console.log("REPORTING ID :" + reporting);
-
-  const dbhRealization = new DbhRealization({
-    _id: dbhId,
-    reportingId: reporting._id,
-    opdId: data.opdId,
-    noRek: data.noRek,
-    parameter: data.parameter,
-    name: data.name,
-    pagu: data.pagu,
-    dbh: {
-      pkb: [data.pkbBudget, data.pkbRealization],
-      bbnkb: [data.bbnkbBudget, data.bbnkbRealization],
-      pbbkb: [data.pbbkbBudget, data.pbbkbRealization],
-      pap: [data.papBudget, data.papRealization],
-      pajakRokok: [data.pajakRokokBudget, data.pajakRokokRealization],
-    },
-  });
-
-  console.log("DBH BUDGET : " + dbhRealization);
-
   try {
-    const dbhAdded = await dbhRealization.save();
-
-    console.log("DBH ADDED : " + dbhAdded);
-
-    if (dbhAdded && data.parameter == "Sub Kegiatan") {
-      const calculate = await this.calculateBudget({
-        selectedSkId: new Types.ObjectId(dbhId),
-        opdId: data.opdId,
-        reportingId: reporting._id,
-        selectedParam: data.parameter,
-      });
-
-      console.log("CALCULATE : " + calculate);
-    }
-
-    return dbhAdded;
+    const dbhRealizationMod = new DbhRealization(data);
+    return await dbhRealizationMod.save();
   } catch (error) {
     throw new Error(error);
   }
 };
 
-exports.calculateBudget = async (filter) => {
+exports.calculateTotalDbhOpd = async (filter) => {
+  const splitSkId = filter.selectedSkId.split("/");
+  const lmIdIdx = splitSkId[0];
+  const pgIdIdx = splitSkId[1];
+  const kgIdIdx = splitSkId[2];
+
+  const selectedInstitutionId = lmIdIdx;
+  const selectedProgramId = `${lmIdIdx}/${pgIdIdx}`;
+  const selectedActivityId = `${lmIdIdx}/${pgIdIdx}/${kgIdIdx}`;
+
+  console.log(
+    "INsttitutId = " +
+      selectedInstitutionId +
+      " ## programId = " +
+      selectedProgramId +
+      " ## activityId = " +
+      selectedActivityId
+  );
+
   try {
-    if (filter.selectedParam == "Sub Kegiatan") {
-      const splitSkId = filter.selectedSkId.split(".");
-      const lmIdIdx = splitSkId[0];
-      const pgIdIdx = splitSkId[1];
-      const kgIdIdx = splitSkId[2];
+    const activityDataUpdated = await updateDbhDocByFilter({
+      selectedId: selectedActivityId,
+      selectedParam: "Kegiatan",
+      selectedChildParam: "Sub Kegiatan",
+      ...filter,
+    });
 
-      const selectedInstitutionId = lmIdIdx;
-      const selectedProgramId = `${lmIdIdx}.${pgIdIdx}`;
-      const selectedActivityId = `${lmIdIdx}.${pgIdIdx}.${kgIdIdx}`;
+    if (activityDataUpdated) {
+      const programDataUpdated = await updateDbhDocByFilter({
+        selectedId: selectedProgramId,
+        selectedParam: "Program",
+        selectedChildParam: "Kegiatan",
+        ...filter,
+      });
 
-      const sumDbhInAllDoc = {
-        pagu: { $sum: "$pagu" },
-        pkbBudget: { $sum: { $arrayElemAt: ["$dbh.pkb", 0] } },
-        pkbRealization: { $sum: { $arrayElemAt: ["$dbh.pkb", 1] } },
-        bbnkbBudget: { $sum: { $arrayElemAt: ["$dbh.bbnkb", 0] } },
-        bbnkbRealization: { $sum: { $arrayElemAt: ["$dbh.bbnkb", 1] } },
-        pbbkbBudget: { $sum: { $arrayElemAt: ["$dbh.pbbkb", 0] } },
-        pbbkbRealization: { $sum: { $arrayElemAt: ["$dbh.pbbkb", 1] } },
-        papBudget: { $sum: { $arrayElemAt: ["$dbh.pap", 0] } },
-        papRealization: { $sum: { $arrayElemAt: ["$dbh.pap", 1] } },
-        pajakRokokBudget: {
-          $sum: { $arrayElemAt: ["$dbh.pajakRokok", 0] },
-        },
-        pajakRokokRealization: {
-          $sum: { $arrayElemAt: ["$dbh.pajakRokok", 1] },
-        },
-      };
+      if (programDataUpdated) {
+        const institutionDataUpdated = await updateDbhDocByFilter({
+          selectedId: selectedInstitutionId,
+          selectedParam: "Lembaga",
+          selectedChildParam: "Program",
+          ...filter,
+        });
 
-      const setTotalDbhField = {
-        pagu: "$pagu",
-        dbh: {
-          pkb: ["$pkbBudget", "$pkbRealization"],
-          bbnkb: ["$bbnkbBudget", "$bbnkbRealization"],
-          pbbkb: ["$pbbkbBudget", "$pbbkbRealization"],
-          pap: ["$papBudget", "$papRealization"],
-          pajakRokok: ["$pajakRokokBudget", "$pajakRokokRealization"],
-        },
-      };
-
-      const sumAllDocSubActivityByActivity = await DbhRealization.aggregate([
-        {
-          $match: {
-            _id: `/${selectedActivityId}/`,
-            opdId: filter.opdId,
-            reportingId: filter.reportingId,
-            parameter: "Sub Kegiatan",
-          },
-        },
-        {
-          $group: { _id: null, ...sumDbhInAllDoc },
-        },
-        {
-          $project: { _id: 0, ...setTotalDbhField },
-        },
-      ]);
-
-      const activityDataUpdated = await DbhRealization.findOneAndUpdate(
-        {
-          _id: selectedActivityId,
-          opdId: filter.opdId,
-          reportingId: filter.reportingId,
-          parameter: "Kegiatan",
-        },
-        sumAllDocSubActivityByActivity,
-        {
-          new: true,
-        }
-      );
-
-      if (activityDataUpdated) {
-        const sumAllDocActivityByProgram = await DbhRealization.aggregate([
-          {
-            $match: {
-              _id: `/${selectedProgramId}/`,
-              opdId: filter.opdId,
-              reportingId: filter.reportingId,
-              parameter: "Kegiatan",
-            },
-          },
-          {
-            $group: { _id: null, ...sumDbhInAllDoc },
-          },
-          {
-            $project: { _id: 0, ...setTotalDbhField },
-          },
-        ]);
-
-        const programDataUpdated = await DbhRealization.findOneAndUpdate(
-          {
-            _id: selectedProgramId,
-            opdId: filter.opdId,
-            reportingId: filter.reportingId,
-            parameter: "Program",
-          },
-          sumAllDocActivityByProgram,
-          {
-            new: true,
-          }
+        console.log(
+          "ACTIVITY = " +
+            activityDataUpdated +
+            " ## PROGRAM = " +
+            programDataUpdated +
+            " ## LEMBAGA = " +
+            institutionDataUpdated
         );
 
-        if (programDataUpdated) {
-          const sumAllDocProgramByInstitution = await DbhRealization.aggregate([
-            {
-              $match: {
-                _id: `/${selectedInstitutionId}/`,
-                opdId: filter.opdId,
-                reportingId: filter.reportingId,
-                parameter: "Program",
-              },
-            },
-            {
-              $group: { _id: null, ...sumDbhInAllDoc },
-            },
-            {
-              $project: { _id: 0, ...setTotalDbhField },
-            },
-          ]);
-
-          return await DbhRealization.findOneAndUpdate(
-            {
-              _id: selectedInstitutionId,
-              opdId: filter.opdId,
-              reportingId: filter.reportingId,
-              parameter: "Lembaga",
-            },
-            sumAllDocProgramByInstitution,
-            {
-              new: true,
-            }
-          );
-        }
+        return [
+          activityDataUpdated,
+          programDataUpdated,
+          institutionDataUpdated,
+        ];
       }
-    } else {
-      const sumAllDocInstitutionByReportId = await DbhRealization.aggregate([
-        {
-          $match: {
-            reportingId: filter.reportingId,
-            parameter: "Lembaga",
-          },
-        },
-        {
-          $group: {
-            _id: null,
-            ...sumDbhInAllDoc,
-            totalDbhBudget: {
-              $sum: [
-                { $arrayElemAt: ["$dbh.pkb", 0] },
-                { $arrayElemAt: ["$dbh.bbnkb", 0] },
-                { $arrayElemAt: ["$dbh.pbbkb", 0] },
-                { $arrayElemAt: ["$dbh.pap", 0] },
-                { $arrayElemAt: ["$dbh.pajakRokok", 0] },
-              ],
-            },
-            sumDbhRealization: {
-              $sum: [
-                { $arrayElemAt: ["$dbh.pkb", 1] },
-                { $arrayElemAt: ["$dbh.bbnkb", 1] },
-                { $arrayElemAt: ["$dbh.pbbkb", 1] },
-                { $arrayElemAt: ["$dbh.pap", 1] },
-                { $arrayElemAt: ["$dbh.pajakRokok", 1] },
-              ],
-            },
-          },
-        },
-        {
-          $project: {
-            _id: 0,
-            totalDbhBudget: 1,
-            totalDbhRealization: 1,
-            totalInstitutionDbh: setTotalDbhField,
-          },
-        },
-      ]);
-
-      return await reportingService.updateReporting(
-        filter.reportingId,
-        sumAllDocInstitutionByReportId
-      );
     }
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+const updateDbhDocByFilter = async (filter) => {
+  const sumDbhInAllDoc = {
+    pagu: { $sum: "$pagu" },
+    pkbBudget: { $sum: { $arrayElemAt: ["$dbh.pkb", 0] } },
+    pkbRealization: { $sum: { $arrayElemAt: ["$dbh.pkb", 1] } },
+    bbnkbBudget: { $sum: { $arrayElemAt: ["$dbh.bbnkb", 0] } },
+    bbnkbRealization: { $sum: { $arrayElemAt: ["$dbh.bbnkb", 1] } },
+    pbbkbBudget: { $sum: { $arrayElemAt: ["$dbh.pbbkb", 0] } },
+    pbbkbRealization: { $sum: { $arrayElemAt: ["$dbh.pbbkb", 1] } },
+    papBudget: { $sum: { $arrayElemAt: ["$dbh.pap", 0] } },
+    papRealization: { $sum: { $arrayElemAt: ["$dbh.pap", 1] } },
+    pajakRokokBudget: {
+      $sum: { $arrayElemAt: ["$dbh.pajakRokok", 0] },
+    },
+    pajakRokokRealization: {
+      $sum: { $arrayElemAt: ["$dbh.pajakRokok", 1] },
+    },
+  };
+
+  const setTotalDbhField = {
+    pagu: "$pagu",
+    dbh: {
+      pkb: ["$pkbBudget", "$pkbRealization"],
+      bbnkb: ["$bbnkbBudget", "$bbnkbRealization"],
+      pbbkb: ["$pbbkbBudget", "$pbbkbRealization"],
+      pap: ["$papBudget", "$papRealization"],
+      pajakRokok: ["$pajakRokokBudget", "$pajakRokokRealization"],
+    },
+  };
+
+  try {
+    const calculateDbhDocByFilter = await DbhRealization.aggregate([
+      {
+        $match: {
+          _id: { $regex: new RegExp(filter.selectedId) },
+          opdId: new Types.ObjectId(filter.opdId),
+          reportingId: new Types.ObjectId(filter.reportingId),
+          parameter: filter.selectedChildParam,
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          ...sumDbhInAllDoc,
+        },
+      },
+      {
+        $project: { _id: 0, ...setTotalDbhField },
+      },
+    ]);
+
+    console.log(
+      "SUM DOC = " + JSON.stringify(calculateDbhDocByFilter, null, 2)
+    );
+
+    return await DbhRealization.findOneAndUpdate(
+      {
+        _id: filter.selectedId,
+        opdId: filter.opdId,
+        reportingId: filter.reportingId,
+        parameter: filter.selectedParam,
+      },
+      calculateDbhDocByFilter[0],
+      {
+        new: true,
+      }
+    );
   } catch (error) {
     throw new Error(error);
   }
@@ -311,7 +218,7 @@ exports.updateBudget = async (req, input) => {
     );
 
     if (dbhUpdated) {
-      await this.calculateBudget({
+      await this.calculateTotalDbhOpd({
         opdId: opdId,
         reportingId: reporting._id,
         parameter: input.parameter,
@@ -332,10 +239,12 @@ exports.deleteBudget = async (req) => {
       year: req.tahun,
     });
     const dbh = await DbhRealization.findById(req.dbhId);
-    const dbhDeleted = await DbhRealization.deleteOne({ _id: req.params.dbhId });
+    const dbhDeleted = await DbhRealization.deleteOne({
+      _id: req.params.dbhId,
+    });
 
     if (dbhDeleted) {
-      await this.calculateBudget({
+      await this.calculateTotalDbhOpd({
         opdId: opdId,
         reportingId: reporting._id,
         parameter: dbh.parameter,

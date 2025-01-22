@@ -1,82 +1,52 @@
-const dbhListDatajsonString = $("input#dbh-realization-data").val();
-const parseDbhRealizationList = JSON.parse(dbhListDatajsonString);
-let $period = $(".dropdown button#period-btn").text();
-let $year = $(".dropdown button#year-btn").text();
+const dbhRealizationDataJson = $("input#dbh-realization-data").val();
+const parsedDbhRealizationData = JSON.parse(dbhRealizationDataJson);
 
 $(".hide-input").hide();
 
-console.log("DBH LIST : " + parseDbhRealizationList);
+const showParentParameter = (parentParam, parameter) => {  
+  let parentParameterItem = [];
 
-const showParentParameter = (element, parameter) => {
-  const prevParameter = $(element).parent().prev().children().text();
-  let parameterTypeItem = [];
-
-  console.log(element + "|||" + parameter);
+  console.log(parentParam + "|||" + parameter);
 
   $("#parent-parameter").empty();
 
   if (parameter !== "Program") {
-    for (const item of parseDbhRealizationList) {
-      if (prevParameter === item.parameter) {
-        parameterTypeItem.push(`<li>
-          <a class="dropdown-item parameter-type-item" id="${item._id}">${item.name}</a>
-        </li>`);
+    for (const item of parsedDbhRealizationData) {
+      if (parentParam === item.parameter) {
+        parentParameterItem.push(`<option class="parent-parameter-item" id="${item._id}" value="${item._id}">${item.name}</option>`);
       }
     }
 
-    parameterTypeItem.join(" ");
+    parentParameterItem.join(" ");
 
     const dropdownWidget = `
-        <label for="parameter-type" class="form-label">${prevParameter} <span class="text-danger">*</span></label>
-        <div class="dropdown">
-            <input type="hidden" name="parentId" id="parameter-type">
-            <button id="parameter-type-btn" class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Pilih ${prevParameter}</button>
-            <ul class="dropdown-menu" id="parameter-type-list">
-              ${parameterTypeItem}
-            </ul>
-        </div>`;
+        <label for="parent-parameter" class="form-label">${parentParam} <span class="text-danger">*</span></label>
+        <select name="dbhRealization[parentParamId]" id="parent-parameter" class="form-select parent-parameter-select" aria-label="Parent Parameter Select" required>
+            <option class="parent-parameter-item" value="">Pilih ${parentParam}</option>                              
+            ${parentParameterItem}                                    
+        </select>`;
 
     $("#parent-parameter").append(dropdownWidget);
-
-    $("#parent-parameter > .dropdown ul li a.parameter-type-item").click(
-      function () {
-        const parameterType = $(this).text();
-        const parameterTypeId = $(this).attr("id");
-
-        $(".dropdown ul li a.parameter-type-item").removeClass("active");
-        $(this).addClass("active");
-        $("#parameter-type-btn").text(parameterType);
-        $(".dropdown input#parameter-type").val(parameterTypeId);
-      }
-    );
   }
 };
 
-$(".dropdown ul li a#period-list").click(function () {
-  $(".dropdown ul li a#period-list").removeClass("active");
-  $(this).addClass("active");
-  $period = $(this).text();
-  $("#period-btn").text($period);
-});
+$(".parameter-select").on("change", function () {
+  const selectedParamVal = $(this).val(); 
+  const parentParamVal = $(this).children("option.parameter-item:selected").prev().val();
+  
+  showParentParameter(
+    parentParamVal,
+    selectedParamVal
+  );
 
-$(".dropdown-menu .parameter-item").click(function () {
-  const parameter = $(this).text();
-  console.log("TEXT: " + parameter);
-
-  $(".dropdown ul li a.parameter-item").removeClass("active");
-  $(this).addClass("active");
-  $("#parameter-btn").text(parameter);
-  $(".dropdown input#parameter").val(parameter);
-  showParentParameter(this, parameter);
-
-  if(parameter != 'Sub Kegiatan') {
-    $(".hide-input").hide();    
+  if (selectedParamVal != "Sub Kegiatan") {
+    $(".hide-input").hide();
     $(".form-input").addClass("container w-50");
   } else {
     $(".hide-input").show();
     $(".form-input").removeClass("container w-50");
   }
-}); 
+});
 
 $("button#clear-btn").click(function () {
   clearAllInputForm();
@@ -94,13 +64,11 @@ const clearAllInputForm = () => {
   $("#dbh-realization-form").find("input").removeAttr("required");
 };
 
-$("button a#filter-btn").click(function () {
-  $(this).attr("href", `/?triwulan=${$period.trim()} ${$year}&edit=false`);
-});
-
 $("td#edit-btn").click(function () {
   const dbhId = $(this).parent().attr("id");
-  const selectedBudget = parseDbhRealizationList.find((dbh) => dbh._id === dbhId);
+  const selectedBudget = parsedDbhRealizationData.find(
+    (dbh) => dbh._id === dbhId
+  );
   console.log("DBH ID : " + dbhId);
 
   // Get the current URL parameters
@@ -136,17 +104,15 @@ $("td#edit-btn").click(function () {
   $(".dropdown button#parameter-btn").prop("disabled", true);
 });
 
-$("button#send-report-btn").click(function () {  
-
+$("button#send-report-btn").click(function () {
   fetch("/api/dbh/send-report/", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-  })    
+  })
     .then((data) => {
       $(this).prop("disabled", true);
-      
     })
     .catch((error) => console.error(error));
 });
@@ -171,3 +137,14 @@ $("td#delete-btn").click(function () {
     .then((data) => console.log(data))
     .catch((error) => console.error(error));
 });
+
+// $("a#logout-btn").click(function () {
+//   fetch("/api/auth/logout", {
+//     method: "POST",
+//     headers: {
+//       "Content-Type": "application/x-www-form-urlencoded",
+//     },
+//   })
+//     .then((data) => console.log(data))
+//     .catch((error) => console.error(error));
+// });

@@ -43,24 +43,24 @@ exports.renderReportingDetails = async (req, res, next) => {
     reportingId,
     isCompleted: true,
   });
-  const reporting = await reportingService.findOneReporting({
+  const currentReporting = await reportingService.findOneReporting({
     _id: reportingId,
   });
   const opdIdArray = dbhOpdCompletedArray.map((dbhOpd) => dbhOpd.opdId);
 
-  const getDbhByOpd = await dbhRealizationService.groupDbhByOpd({
+  const dbhRealizationOpd = await dbhRealizationService.groupDbhByOpd({
     reportingId,
     opds: opdIdArray,
   });
 
-  getDbhByOpd.forEach((dbh) => {
+  dbhRealizationOpd.forEach((dbh) => {
     console.log("GET DBH BY OPD : " + JSON.stringify(dbh.totalDbhOpd));
   });
 
   res.render("admin/reporting-details", {
-    pageTitle: reporting.title,
-    reporting: reporting,
-    dbhRealization: getDbhByOpd,
+    pageTitle: currentReporting.title,
+    currentReporting,
+    dbhRealizationOpd,
     userRole: "admin",
   });
 };

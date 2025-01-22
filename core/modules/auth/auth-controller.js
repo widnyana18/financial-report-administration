@@ -41,7 +41,7 @@ exports.renderChangePassword = (req, res, next) => {
 exports.adminLogin = async (req, res, next) => {
   const username = req.body.username;
   const password = req.body.password;
-  const userEnv = process.env;  
+  const userEnv = process.env;
 
   try {
     const currentUser = await authService.login({ username: username });
@@ -100,11 +100,10 @@ exports.login = async (req, res, next) => {
       req.session.userRole = "OPD";
       req.session.user = user;
 
-      const getAllDataInstitutionByOpd = await reportingService.findInstitutionBudget(
-        {
+      const getAllDataInstitutionByOpd =
+        await reportingService.findInstitutionBudget({
           opdId: user._id,
-        }
-      );
+        });
       const lastReportingOpd = await reportingService.findOneReporting({
         _id: getAllDataInstitutionByOpd[getAllDataInstitutionByOpd.length - 1]
           .reportingId,
@@ -181,5 +180,11 @@ exports.logout = async (req, res, next) => {
   } else {
     res.redirect("/login");
   }
-  req.session.destroy();
+  
+  req.session.destroy((err) => {
+    if (err) {
+      console.log(err);
+      return res.send("Error logging out");
+    }
+  });
 };
