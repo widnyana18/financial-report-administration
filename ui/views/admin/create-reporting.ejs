@@ -42,7 +42,8 @@
                                 <div class="me-2 w-50">
                                     <label for="opdId<%= id %>" class="form-label">Nama Lembaga <span class="text-danger"> *</span></label>
                                     <div class="dropdown w-100">
-                                        <input type="hidden" class="form-control opd-val" name="institutionBudget[<%= id %>][opdId]" id="opd-id-<%= id %>" value='<%= item.opdId %>' required>                                
+                                        <input type="hidden" class="form-control opd-id-val" name="institutionBudget[<%= id %>][opdId]" id="opd-id-<%= id %>" value='<%= item.opdId %>' required>                                
+                                        <input type="hidden" class="form-control opd-name-val" name="institutionBudget[<%= id %>][institutionName]" id="institution-name-<%= id %>" required>                                
                                         <button id="institution-btn" class="btn btn-light dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                             <%= institutions.find(opd => opd._id.toString() == item.opdId.toString()).institutionName ?? "Pilih Lembaga" %>
                                         </button>

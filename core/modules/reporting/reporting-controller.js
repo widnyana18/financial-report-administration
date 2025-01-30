@@ -3,6 +3,8 @@ const excelJS = require("exceljs");
 const opdService = require("../opd/opd-service");
 const reportingService = require("./reporting-service");
 const dbhRealizationService = require("../dbh-realization/dbh-realization-service");
+const { createBudgetId } = require("../../common/utils/id_gen");
+const { Types } = require("mongoose");
 
 exports.renderIndex = async (req, res, next) => {
   const years = [];
@@ -151,7 +153,34 @@ exports.createReporting = async (req, res, next) => {
 
     console.log("institutionBudgetData = ", institutionBudgetData);
 
-    await reportingService.insertInstitutionBudget(institutionBudgetData);
+    const institutionBudgetAdded =
+      await reportingService.insertInstitutionBudget(institutionBudgetData);
+
+    if (institutionBudgetAdded) {
+      const latestInstitutionInReport = await reportingService.findOneReporting(
+        {
+          parameter: "Lembaga",
+        }
+      );
+      const lastNoRek = latestInstitutionInReport?.noRek ?? 1;
+
+      for (let i = 0; i < institutionBudgetData.length; i++) {
+        const dbhOpdObjData = {
+          reportingId: institutionBudgetData[i].reportingId,
+          opdId: new Types.ObjectId(institutionBudgetData[i].opdId),
+          noRek: lastNoRek + 1,
+          parameter: "Lembaga",
+          name: institutionBudgetData[i].institutionName,
+        };
+
+        const dbhOpdId = await createBudgetId(dbhOpdObjData);
+
+        await dbhRealizationService.addDbhRealization({
+          _id: dbhOpdId,
+          ...dbhOpdObjData,
+        });
+      }
+    }
 
     res.redirect("/admin?tahun=" + reportingData.year);
   } catch (error) {
@@ -177,8 +206,57 @@ exports.updateReporting = async (req, res, next) => {
   console.log("institutionBudgetData = ", institutionBudgetData);
 
   try {
-    await reportingService.updateReporting({ _id: reportingId }, {...reportingData, totalDbhRecieved});
+    const latestInstitutionInReport = await reportingService.findOneReporting({
+      parameter: "Lembaga",
+    });
+
+    const lastNoRek = latestInstitutionInReport?.noRek ?? 1;
+
+    for (let i = 0; i < institutionBudgetData.length; i++) {
+      const dbhOpdObjData = {
+        reportingId: institutionBudgetData[i].reportingId,
+        opdId: new Types.ObjectId(institutionBudgetData[i].opdId),
+        noRek: lastNoRek + 1,
+        parameter: "Lembaga",
+        name: institutionBudgetData[i].institutionName,
+      };
+
+      if (!dbhOpdObjData.opdId || !dbhOpdObjData.name) {
+        const curretInstitutionBudget =
+          await reportingService.getLastOneInstitutionBudget({
+            _id: institutionBudgetData[i]._id,
+          });
+
+        await dbhRealizationService.deleteBudget({
+          opdId: curretInstitutionBudget.opdId,
+          reportingId: dbhOpdObjData.reportingId,
+          parameter: "Lembaga",
+        });
+      } else if (!institutionBudgetData[i]._id) {
+        const dbhOpdId = await createBudgetId(dbhOpdObjData);
+
+        await dbhRealizationService.addDbhRealization({
+          _id: dbhOpdId,
+          ...dbhOpdObjData,
+        });
+      } else {
+        await dbhRealizationService.updateBudget(
+          {
+            opdId: curretInstitutionBudget[i].opdId,
+            reportingId: dbhOpdObjData.reportingId,
+            parameter: "Lembaga",
+          },
+          dbhOpdObjData
+        );
+      }
+    }
+
     await reportingService.updateInstitutionBudget(institutionBudgetData);
+
+    await reportingService.updateReporting(
+      { _id: reportingId },
+      { ...reportingData, totalDbhRecieved }
+    );
 
     res.redirect("/admin?tahun=" + reportingData.year);
   } catch (error) {

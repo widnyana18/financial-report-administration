@@ -27,7 +27,8 @@ $("#add-institution-btn").click(function () {
                           <div class="me-2 w-50">
                               <label for="opdId${totalOpd}" class="form-label">Nama Lembaga <span class="text-danger"> *</span></label>
                               <div class="dropdown w-100">
-                                  <input type="hidden" class="form-control opd-val" name="institutionBudget[${totalOpd}][opdId]" id="opd-id-${totalOpd}" required>                                
+                                  <input type="hidden" class="form-control opd-id-val" name="institutionBudget[${totalOpd}][opdId]" id="opd-id-${totalOpd}" required>                                
+                                  <input type="hidden" class="form-control opd-name-val" name="institutionBudget[${totalOpd}][institutionName]" id="institution-name-${totalOpd}" required>                                
                                   <button id="institution-btn" class="btn btn-light dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     Pilih Lembaga
                                   </button>
@@ -68,7 +69,7 @@ $("#add-institution-btn").click(function () {
 
 $("#institution-dbh-form").on("click", ".remove-institution-btn", function () {
   totalOpd--;
-    
+
   $(this).parent().remove();
   $("input#total-opd").val(totalOpd);
   $("#total-opd-txt").text(totalOpd.toString());
@@ -88,7 +89,12 @@ $("#institution-dbh-form").on(
       .parent()
       .siblings("button#institution-btn")
       .text(institutionTxt);
-    $(this).parent().parent().siblings("input").val(institutionVal);
+    $(this).parent().parent().siblings("input.opd-id-val").val(institutionVal);
+    $(this)
+      .parent()
+      .parent()
+      .siblings("input.opd-name-val")
+      .val(institutionTxt);
   }
 );
 
@@ -119,7 +125,7 @@ $("#dbh-realization-form").on("submit", function (event) {
     }
   });
 
-  console.log('INPUT FIELD VALID : ' + opdIdValIsValid);
+  console.log("INPUT FIELD VALID : " + opdIdValIsValid);
 
   if (!periodVal) {
     event.preventDefault();

@@ -42,6 +42,14 @@ exports.findBudget = async (filter) => {
   }
 };
 
+exports.getLastOneDbh = async (filter) => {
+  try {
+    return await DbhRealization.findOne(filter).sort({ createdAt: -1 });
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
 exports.addDbhRealization = async (data) => {
   try {
     const dbhRealizationMod = new DbhRealization(data);
@@ -52,14 +60,15 @@ exports.addDbhRealization = async (data) => {
 };
 
 exports.calculateTotalDbhOpd = async (filter) => {
-  const splitSkId = filter.selectedSkId.split("/");
-  const lmIdIdx = splitSkId[0];
-  const pgIdIdx = splitSkId[1];
-  const kgIdIdx = splitSkId[2];
+  console.log("FILTER = " + JSON.stringify(filter));
+  const splitDbhId = filter._id.split(".");
+  const lmIdIdx = splitDbhId[0];
+  const pgIdIdx = splitDbhId[1] ?? "";
+  const kgIdIdx = splitDbhId[2] ?? "";
 
   const selectedInstitutionId = lmIdIdx;
-  const selectedProgramId = `${lmIdIdx}/${pgIdIdx}`;
-  const selectedActivityId = `${lmIdIdx}/${pgIdIdx}/${kgIdIdx}`;
+  const selectedProgramId = `${lmIdIdx}.${pgIdIdx}`;
+  const selectedActivityId = `${lmIdIdx}.${pgIdIdx}.${kgIdIdx}`;
 
   console.log(
     "INsttitutId = " +
@@ -78,38 +87,27 @@ exports.calculateTotalDbhOpd = async (filter) => {
       ...filter,
     });
 
-    if (activityDataUpdated) {
-      const programDataUpdated = await updateDbhDocByFilter({
-        selectedId: selectedProgramId,
-        selectedParam: "Program",
-        selectedChildParam: "Kegiatan",
-        ...filter,
-      });
+    console.log("ACTIVITY = " + activityDataUpdated);
 
-      if (programDataUpdated) {
-        const institutionDataUpdated = await updateDbhDocByFilter({
-          selectedId: selectedInstitutionId,
-          selectedParam: "Lembaga",
-          selectedChildParam: "Program",
-          ...filter,
-        });
+    const programDataUpdated = await updateDbhDocByFilter({
+      selectedId: selectedProgramId,
+      selectedParam: "Program",
+      selectedChildParam: "Kegiatan",
+      ...filter,
+    });
 
-        console.log(
-          "ACTIVITY = " +
-            activityDataUpdated +
-            " ## PROGRAM = " +
-            programDataUpdated +
-            " ## LEMBAGA = " +
-            institutionDataUpdated
-        );
+    console.log(" ## PROGRAM = " + programDataUpdated);
 
-        return [
-          activityDataUpdated,
-          programDataUpdated,
-          institutionDataUpdated,
-        ];
-      }
-    }
+    const institutionDataUpdated = await updateDbhDocByFilter({
+      selectedId: selectedInstitutionId,
+      selectedParam: "Lembaga",
+      selectedChildParam: "Program",
+      ...filter,
+    });
+
+    console.log(" ## LEMBAGA = " + institutionDataUpdated);
+
+    return [activityDataUpdated, programDataUpdated, institutionDataUpdated];
   } catch (error) {
     throw new Error(error);
   }
@@ -177,80 +175,37 @@ const updateDbhDocByFilter = async (filter) => {
         reportingId: filter.reportingId,
         parameter: filter.selectedParam,
       },
-      calculateDbhDocByFilter[0],
-      {
-        new: true,
-      }
-    );
-  } catch (error) {
-    throw new Error(error);
-  }
-};
-
-exports.updateBudget = async (req, input) => {
-  const opdId = req.user._id;
-
-  console.log("DBH ID : " + req.params.dbhId);
-  try {
-    const reporting = await reportingService.findOneReporting({
-      period: input.period,
-      year: input.year,
-    });
-
-    const dbhUpdated = await DbhRealization.findOneAndUpdate(
-      { _id: req.params.dbhId },
-      {
-        ...input,
+      calculateDbhDocByFilter[0] ?? {
+        pagu: 0,
         dbh: {
-          pkb: [input.pkbBudget ?? 0, input.pkbRealization ?? 0],
-          bbnkb: [input.bbnkbBudget ?? 0, input.bbnkbRealization ?? 0],
-          pbbkb: [input.pbbkbBudget ?? 0, input.pbbkbRealization ?? 0],
-          pap: [input.papBudget ?? 0, input.papRealization ?? 0],
-          pajakRokok: [
-            input.pajakRokokBudget ?? 0,
-            input.pajakRokokRealization ?? 0,
-          ],
+          pkb: [0, 0],
+          bbnkb: [0, 0],
+          pbbkb: [0, 0],
+          pap: [0, 0],
+          pajakRokok: [0, 0],
         },
       },
       {
         new: true,
       }
     );
-
-    if (dbhUpdated) {
-      await this.calculateTotalDbhOpd({
-        opdId: opdId,
-        reportingId: reporting._id,
-        parameter: input.parameter,
-      });
-    }
-    return dbhUpdated;
   } catch (error) {
     throw new Error(error);
   }
 };
 
-exports.deleteBudget = async (req) => {
-  const opdId = req.user._id;
-
+exports.updateBudget = async (filter, data) => {
   try {
-    const reporting = await reportingService.findOneReporting({
-      period: req.triwulan,
-      year: req.tahun,
+    return await DbhRealization.findOneAndUpdate(filter, data, {
+      new: true,
     });
-    const dbh = await DbhRealization.findById(req.dbhId);
-    const dbhDeleted = await DbhRealization.deleteOne({
-      _id: req.params.dbhId,
-    });
+  } catch (error) {
+    throw new Error(error);
+  }
+};
 
-    if (dbhDeleted) {
-      await this.calculateTotalDbhOpd({
-        opdId: opdId,
-        reportingId: reporting._id,
-        parameter: dbh.parameter,
-      });
-    }
-
-    return dbhDeleted;
+exports.deleteBudget = async (filter) => {
+  try {
+    return await DbhRealization.deleteMany(filter);
   } catch (error) {}
 };

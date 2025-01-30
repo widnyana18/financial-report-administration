@@ -1,41 +1,41 @@
-const DbhRealization = require("../../modules/dbh-realization/models/dbh-realization");
+const dbhRealizationService = require("../../modules/dbh-realization/dbh-realization-service");
 
 exports.createBudgetId = async (data) => {
   let dbhId;
 
-  const selectedInstitution = await DbhRealization.findOne({
-    opdId: data.opdId,
-    reportingId: data.reportingId,
-    parameter: "Lembaga",
-  }).sort({ createdAt: -1 });
-
-  const latestDbh = await DbhRealization.findOne({
+  const latestDbh = await dbhRealizationService.getLastOneDbh({
     _id: { $regex: new RegExp(data.parentParamId) },
     parameter: data.parameter,
     opdId: data.opdId,
     reportingId: data.reportingId,
-  }).sort({ createdAt: -1 });
-
-  console.log("parentParamId", data.parentParamId);
+  })
 
   if (latestDbh) {
     dbhId = generatedId(latestDbh._id);
-    console.log("LATEST BUDGET ID = ", latestDbh._id);
   } else {
     switch (data.parameter) {
       case "Lembaga":
-        dbhId = selectedInstitution
-          ? generatedId(selectedInstitution._id)
-          : "LM01";
+        const latestInstitution = await dbhRealizationService.getLastOneDbh({
+          parameter: "Lembaga",
+        })
+
+        console.log('LATEST INSTITUTION : ' + latestInstitution);
+        dbhId = latestInstitution ? generatedId(latestInstitution._id) : "LM01";
         break;
       case "Program":
-        dbhId = `${selectedInstitution._id}/PG01`;
+        const selectedInstitution = await dbhRealizationService.getLastOneDbh({
+          opdId: data.opdId,
+          reportingId: data.reportingId,
+          parameter: "Lembaga",
+        });
+
+        dbhId = `${selectedInstitution._id}.PG01`;
         break;
       case "Kegiatan":
-        dbhId = `${data.parentParamId}/KG01`;
+        dbhId = `${data.parentParamId}.KG01`;
         break;
       default:
-        dbhId = `${data.parentParamId}/SK01`;
+        dbhId = `${data.parentParamId}.SK01`;
         break;
     }
   }

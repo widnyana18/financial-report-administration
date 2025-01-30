@@ -12,6 +12,14 @@ exports.findInstitutionBudget = async (filter) => {
   }
 };
 
+exports.getLastOneInstitutionBudget = async (filter) => {
+  try {
+    return await InstitutionBudget.findOne(filter).sort({ createdAt: -1 });
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
 exports.insertInstitutionBudget = async (dataArray) => {
   try {
     return await InstitutionBudget.insertMany(dataArray);
@@ -61,7 +69,7 @@ exports.deleteInstitutionBudget = async (filter) => {
 
 exports.findOneReporting = async (filter) => {
   try {
-    return await Reporting.findOne(filter);
+    return await Reporting.findOne(filter).sort({ createdAt: -1 });
   } catch (error) {
     throw new Error(error);
   }

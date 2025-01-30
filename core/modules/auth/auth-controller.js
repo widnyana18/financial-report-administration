@@ -44,19 +44,18 @@ exports.adminLogin = async (req, res, next) => {
   const userEnv = process.env;
 
   try {
-    const currentUser = await authService.login({ username: username });
+    let currentUser = await authService.login({ username: username });
 
     if (username == userEnv.USER && password == userEnv.PASSWORD) {
       if (!currentUser) {
         const hashedPsw = await bcrypt.hash(password, 12);
 
-        await authService.signup({
+        currentUser = await authService.signup({
           username,
-          hashedPsw,
+          password: hashedPsw,
           opdName: userEnv.NAME,
           phone: userEnv.PHONE,
           institutionName: userEnv.INSTITUTION,
-          password: hashedPassword,
         });
       }
 
@@ -106,7 +105,7 @@ exports.login = async (req, res, next) => {
         });
       const lastReportingOpd = await reportingService.findOneReporting({
         _id: getAllDataInstitutionByOpd[getAllDataInstitutionByOpd.length - 1]
-          .reportingId,
+          ?.reportingId,
       });
 
       if (!lastReportingOpd) {
@@ -131,24 +130,17 @@ exports.login = async (req, res, next) => {
 
 exports.signup = async (req, res, next) => {
   try {
-    bcrypt
-      .hash(req.body.password, 12)
-      .then(async (hashedPassword) => {
-        return await authService.signup({
-          ...req.body,
-          password: hashedPassword,
-        });
-      })
-      .then((result) => {
-        res.redirect("/login");
-      })
-      .catch((err) => {
-        const error = new Error(err);
-        error.httpStatusCode = 500;
-        return next(error);
-      });
-    // return res.status(200).json(result);
+    const hashedPassword = await bcrypt.hash(req.body.password, 12);
+    const result = await authService.signup({
+      ...req.body,
+      password: hashedPassword,
+    });
+
+    if (result) {
+      res.redirect("/login");
+    }
   } catch (error) {
+    error.httpStatusCode = 500;
     return next(error);
   }
 };
@@ -180,7 +172,7 @@ exports.logout = async (req, res, next) => {
   } else {
     res.redirect("/login");
   }
-  
+
   req.session.destroy((err) => {
     if (err) {
       console.log(err);

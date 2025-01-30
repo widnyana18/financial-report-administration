@@ -8,7 +8,7 @@ const apiRouter = Router();
 
 //admin route Reporting website
 appRouter.get("/", isAuth, dbhRealizationController.renderDataDbhOpd);
-appRouter.get("/:dbhId", isAuth, dbhRealizationController.renderDataDbhOpd);
+appRouter.get("/:dbhName", isAuth, dbhRealizationController.renderDataDbhOpd);
 
 // route API
 apiRouter.get("/", dbhRealizationController.findDbhRealizationOpd);

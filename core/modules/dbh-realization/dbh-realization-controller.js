@@ -1,11 +1,9 @@
-const { Types } = require("mongoose");
-
 const reportingService = require("../reporting/reporting-service");
 const dbhRealizationService = require("./dbh-realization-service");
 const { createBudgetId } = require("../../common/utils/id_gen");
 
 exports.renderDataDbhOpd = async (req, res, next) => {
-  const dbhId = req.params?.dbhId;
+  let dbhName = req.params?.dbhName;
   const query = req.query;
   let dbhRealizationOpd = [];
 
@@ -37,20 +35,25 @@ exports.renderDataDbhOpd = async (req, res, next) => {
       ).then((result) => result);
     }
 
-    if (query.edit && dbhId) {
-      const selectedDbh = await dbhRealizationService.findBudget({
-        _id: dbhId,
+    // console.log("DBH REALIAZATION OPD", dbhRealizationOpd);
+
+    if (query.edit && dbhName) {
+      const dbhNameOri = dbhName.replace(/-/g, " ");
+      const selectedDbh = await dbhRealizationService.getLastOneDbh({
+        name: { $regex: dbhNameOri, $options: "i" },
       });
+
+      console.log("SELECTED DBH ID = " + selectedDbh);
 
       res.render("dbh-opd/dbh-realization", {
         pageTitle: "Update Data DBH OPD",
         userRole: "opd",
-        apiUrl: `edit/${dbhId}`,
+        apiUrl: `edit/${selectedDbh._id}`,
         opd: req.user,
         opdReportingData,
         dbhRealizationOpd,
         currentReporting,
-        selectedDbhRealization: selectedDbh[0],
+        selectedDbhRealization: selectedDbh,
       });
     } else {
       res.render("dbh-opd/dbh-realization", {
@@ -107,7 +110,6 @@ exports.postAddBudget = async (req, res, next) => {
     const dbhObjData = {
       _id: dbhId,
       opdId: req.user._id,
-      reportingId: formData.reportingId,
       ...formData,
     };
 
@@ -119,11 +121,15 @@ exports.postAddBudget = async (req, res, next) => {
 
     const dbhAdded = await dbhRealizationService.addDbhRealization(dbhObjData);
 
+    console.log(
+      "FORM DATA = " + JSON.stringify(formData) + " DBH ADDED = " + dbhAdded
+    );
+
     if (dbhAdded && dbhObjData.parameter == "Sub Kegiatan") {
-      const calculate = await dbhRealizationService.calculateTotalDbhOpd({
-        selectedSkId: dbhId,
-        ...dbhObjData,
-      });
+      delete dbhObjData.selectedDbhId;
+      const calculate = await dbhRealizationService.calculateTotalDbhOpd(
+        dbhObjData
+      );
 
       console.log("CALCULATE : " + calculate);
     }
@@ -139,29 +145,64 @@ exports.postAddBudget = async (req, res, next) => {
 };
 
 exports.updateBudgetRecord = async (req, res, next) => {
-  const data = req.body;
+  const formData = req.body.dbhRealization;
 
   try {
-    const budgetRecord = await dbhRealizationService.findBudget({
-      _id: req.params.dbhId,
+    const currentReporting = await reportingService.findOneReporting({
+      _id: formData.reportingId,
     });
 
-    if (!budgetRecord) {
-      res.status(404).json({ message: "Reporting not found" });
-    }
-    await dbhRealizationService.updateBudget(req, data);
+    const dbhUpdated = await dbhRealizationService.updateBudget(
+      {
+        _id: formData.selectedDbhId,
+        opdId: req.user._id,
+        reportingId: formData.reportingId,
+      },
+      formData
+    );
 
-    // return res.status(200).json(updatedBudget);
-    res.redirect(`/?triwulan=${data.period.trim()} ${data.year}&edit=false`);
+    console.log(
+      "FORM DATA = " + JSON.stringify(formData) + " DBH UPDATED = " + dbhUpdated
+    );
+
+    if (dbhUpdated && dbhUpdated.parameter == "Sub Kegiatan") {
+      const calculateResult = await dbhRealizationService.calculateTotalDbhOpd({
+        _id: formData.selectedDbhId,
+        opdId: req.user._id,
+        ...formData,
+      });
+
+      console.log("CALCULATE = " + calculateResult);
+    }
+
+    res.redirect(
+      `/?triwulan=${currentReporting.period.trim()}&tahun=${
+        currentReporting.year
+      }&edit=false`
+    );
   } catch (error) {
     return next(error);
   }
 };
 
 exports.deleteBudgetRecord = async (req, res, next) => {
+  const formData = req.body;
+
   try {
-    const deletedBudget = await dbhRealizationService.deleteBudget(req);
-    return res.status(200).json(deletedBudget);
+    const deletedBudget = await dbhRealizationService.deleteBudget({
+      _id: { $regex: new RegExp(`^${formData.dbhId}(\\..*)?$`) },
+    });
+
+    if (deletedBudget) {
+      const calculateResult = await dbhRealizationService.calculateTotalDbhOpd({
+        _id: formData.dbhId,
+        opdId: req.user._id,
+        reportingId: formData.reportingId,
+      });
+      console.log("CALCULATE = " + calculateResult);
+    }
+
+    // return res.status(200).json(deletedBudget);
   } catch (error) {
     return next(error);
   }
