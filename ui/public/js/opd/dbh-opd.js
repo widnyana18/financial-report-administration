@@ -108,17 +108,23 @@ $("td a#edit-btn").click(function () {
   $("input#selected-dbh-id").val(dbhId);
 });
 
-$("button#send-report-btn").click(function () {
-  fetch("/api/dbh/send-report/", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
+$("#send-report-btn").on("click", function () {
+  const reportingId = $("input#reporting-id").val();
+  console.log("REPORTING ID = " + reportingId);
+  $.ajax({
+    url: "/api/dbh/send-report", // Replace with your API endpoint
+    type: "POST",
+    data: JSON.stringify({ reportingId }),
+    contentType: "application/json",    
+    success: function (response) {      
+      console.log("Success:", response);
     },
-  })
-    .then((data) => {
-      $(this).prop("disabled", true);
-    })
-    .catch((error) => console.error(error));
+    error: function (xhr, status, error) {
+      console.error("Error:", error);
+    },
+  });
+  
+  $(this).prop("disabled", true);
 });
 
 $("td > a#delete-btn").click(function () {

@@ -36,17 +36,14 @@ exports.updateInstitutionBudget = async (dataArray) => {
       updateDataQuery.push({
         deleteOne: { filter: { _id: item._id } },
       });
-    } else if (!item._id) {
-      updateDataQuery.push({
-        insertOne: {
-          document: item,
-        },
-      });
     } else {
+      const { _id, opdId, reportingId, ...others } = item;
+
       updateDataQuery.push({
         updateOne: {
-          filter: { _id: item._id },
-          update: { $set: item },
+          filter: { $or: [{ _id }, { opdId, reportingId }] },
+          update: { $set: others },
+          upsert: true,
         },
       });
     }
@@ -113,7 +110,7 @@ exports.deleteReporting = async (id) => {
   return await Reporting.deleteOne({ _id: id });
 };
 
-exports.calculateTotalDbhReporting = async (filter) => {
+exports.calculateTotalDbhReporting = async (reportingId) => {
   const sumDbhInAllDoc = {
     pagu: { $sum: "$pagu" },
     pkbBudget: { $sum: { $arrayElemAt: ["$dbh.pkb", 0] } },
@@ -147,7 +144,7 @@ exports.calculateTotalDbhReporting = async (filter) => {
     const sumAllDocInstitutionByReportId = await DbhRealization.aggregate([
       {
         $match: {
-          reportingId: new Types.ObjectId(filter.reportingId),
+          reportingId: new Types.ObjectId(reportingId),
           parameter: "Lembaga",
         },
       },
@@ -186,7 +183,7 @@ exports.calculateTotalDbhReporting = async (filter) => {
     ]);
 
     return await Reporting.findOneAndUpdate(
-      { _id: filter.reportingId },
+      { _id: reportingId },
       sumAllDocInstitutionByReportId[0]
     );
   } catch (error) {

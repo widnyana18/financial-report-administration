@@ -80,34 +80,32 @@ exports.calculateTotalDbhOpd = async (filter) => {
   );
 
   try {
-    const activityDataUpdated = await updateDbhDocByFilter({
+    const activityDbhDataUpdated = await updateDbhDocByFilter({
       selectedId: selectedActivityId,
       selectedParam: "Kegiatan",
       selectedChildParam: "Sub Kegiatan",
       ...filter,
     });
 
-    console.log("ACTIVITY = " + activityDataUpdated);
+    console.log("ACTIVITY = " + activityDbhDataUpdated);
 
-    const programDataUpdated = await updateDbhDocByFilter({
+    const programDbhDataUpdated = await updateDbhDocByFilter({
       selectedId: selectedProgramId,
       selectedParam: "Program",
       selectedChildParam: "Kegiatan",
       ...filter,
     });
 
-    console.log(" ## PROGRAM = " + programDataUpdated);
+    console.log(" ## PROGRAM = " + programDbhDataUpdated);
 
-    const institutionDataUpdated = await updateDbhDocByFilter({
+    const institutionDbhDataUpdated = await updateDbhDocByFilter({
       selectedId: selectedInstitutionId,
       selectedParam: "Lembaga",
       selectedChildParam: "Program",
       ...filter,
     });
 
-    console.log(" ## LEMBAGA = " + institutionDataUpdated);
-
-    return [activityDataUpdated, programDataUpdated, institutionDataUpdated];
+    console.log(" ## LEMBAGA = " + institutionDbhDataUpdated);
   } catch (error) {
     throw new Error(error);
   }

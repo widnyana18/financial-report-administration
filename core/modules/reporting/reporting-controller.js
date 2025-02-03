@@ -1,10 +1,10 @@
 const excelJS = require("exceljs");
+const { Types } = require("mongoose");
 
+const { createBudgetId } = require("../../common/utils/id_gen");
 const opdService = require("../opd/opd-service");
 const reportingService = require("./reporting-service");
 const dbhRealizationService = require("../dbh-realization/dbh-realization-service");
-const { createBudgetId } = require("../../common/utils/id_gen");
-const { Types } = require("mongoose");
 
 exports.renderIndex = async (req, res, next) => {
   const years = [];
@@ -41,30 +41,37 @@ exports.renderIndex = async (req, res, next) => {
 
 exports.renderReportingDetails = async (req, res, next) => {
   const reportingId = req.params.reportId;
-  const dbhOpdCompletedArray = await reportingService.findInstitutionBudget({
-    reportingId,
-    isCompleted: true,
-  });
-  const currentReporting = await reportingService.findOneReporting({
-    _id: reportingId,
-  });
-  const opdIdArray = dbhOpdCompletedArray.map((dbhOpd) => dbhOpd.opdId);
+  try {
+    await reportingService.calculateTotalDbhReporting(reportingId);
 
-  const dbhRealizationOpd = await dbhRealizationService.groupDbhByOpd({
-    reportingId,
-    opds: opdIdArray,
-  });
+    const currentReporting = await reportingService.findOneReporting({
+      _id: reportingId,
+    });
 
-  dbhRealizationOpd.forEach((dbh) => {
-    console.log("GET DBH BY OPD : " + JSON.stringify(dbh.totalDbhOpd));
-  });
+    const dbhOpdCompletedArray = await reportingService.findInstitutionBudget({
+      reportingId,
+      isCompleted: true,
+    });
+    const opdIdArray = dbhOpdCompletedArray.map((dbhOpd) => dbhOpd.opdId);
 
-  res.render("admin/reporting-details", {
-    pageTitle: currentReporting.title,
-    currentReporting,
-    dbhRealizationOpd,
-    userRole: "admin",
-  });
+    const dbhRealizationOpd = await dbhRealizationService.groupDbhByOpd({
+      reportingId,
+      opds: opdIdArray,
+    });
+
+    dbhRealizationOpd.forEach((dbh) => {
+      console.log("GET DBH BY OPD : " + JSON.stringify(dbh.totalDbhOpd));
+    });
+
+    res.render("admin/reporting-details", {
+      pageTitle: currentReporting.title,
+      currentReporting,
+      dbhRealizationOpd,
+      userRole: "admin",
+    });
+  } catch (error) {
+    return next(error);
+  }
 };
 
 exports.renderCreateReporting = async (req, res, next) => {

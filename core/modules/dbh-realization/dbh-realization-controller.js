@@ -211,33 +211,58 @@ exports.deleteBudgetRecord = async (req, res, next) => {
 exports.postSendDbhOpdReporting = async (req, res, next) => {
   const opdId = req.user._id;
   const reportingId = req.body.reportingId;
-  let selectedReportingUpdated;
+
+  console.log("current reporting id = " + reportingId);
 
   try {
-    const dbhOpdCompleted = await reportingService.updateInstitutionBudget([
+    const currentInstitutionDbh =
+      await reportingService.getLastOneInstitutionBudget({
+        opdId,
+        reportingId,
+      });
+
+    const currentReporting = await reportingService.findOneReporting({
+      _id: reportingId,
+    });
+
+    if (
+      !currentInstitutionDbh.isCompleted &&
+      currentReporting.totalDbhOpdAdded < currentReporting.totalOpd
+    ) {
+      await reportingService.updateReporting(
+        { _id: reportingId },
+        { totalDbhOpdAdded: currentReporting.totalDbhOpdAdded + 1 }
+      );
+    }
+
+    const reportingAfterUpdate = await reportingService.findOneReporting({
+      _id: reportingId,
+    });
+
+    console.log("REPORTING UPDATED = " + reportingAfterUpdate);
+
+    if (reportingAfterUpdate.totalDbhOpdAdded >= reportingAfterUpdate.totalOpd) {
+      const reportingUpdated = await reportingService.updateReporting(
+        { _id: reportingId },
+        { isDone: true }
+      );
+
+      console.log("REPORTING UPDATED 2 = " + reportingUpdated);
+    }
+
+    await reportingService.updateInstitutionBudget([
       {
         opdId,
+        reportingId,
         isCompleted: true,
       },
     ]);
 
-    selectedReportingUpdated = await reportingService.updateReporting(
-      { _id: reportingId },
-      { totalDbhOpdAdded: selectedReporting.totalDbhOpdAdded++ }
+    res.redirect(
+      `/?triwulan=${currentReporting.period.trim()}&tahun=${
+        currentReporting.year
+      }&edit=false`
     );
-
-    const selectedReporting = await reportingService.findOneReporting({
-      _id: reportingId,
-    });
-
-    if (selectedReporting.totalDbhOpdAdded >= selectedReporting.totalOpd) {
-      selectedReportingUpdated = await reportingService.updateReporting(
-        { _id: reportingId },
-        { isDone: true }
-      );
-    }
-
-    return res.status(200).json([dbhOpdCompleted, selectedReportingUpdated]);
   } catch (error) {
     return next(error);
   }
