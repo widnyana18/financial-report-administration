@@ -6,16 +6,6 @@ const isEdit = urlParams.get("edit");
 $(".hide-input").hide();
 $(".form-input").addClass("container w-50");
 
-$(".dropdown ul li a.report-item").click(function () {
-  const reportTxt = $(this).text();
-  const reportVal = $(this).attr("id");
-
-  $(".dropdown ul li a.report-item").removeClass("active");
-  $(this).addClass("active");
-  $("#report-btn").text(reportTxt);
-  $("input#reporting-id").val(reportVal);
-});
-
 const parameterChanged = (elem) => {
   const selectedParamVal = $(elem).val();
   const parentParamVal = $(elem)
@@ -88,20 +78,18 @@ $(".parameter-select").on("change", function () {
 });
 
 $("button#clear-btn").click(function () {
-  clearAllInputForm();
+  $("form#dbh-realization-form")[0].reset();    
+  
+  $("#parent-parameter").empty();
 });
 
-const clearAllInputForm = () => {
-  $(".dropdown ul li a#parameter-item").removeClass("active");
-  $("#parameter-btn").text("Pilih Parameter");
-  $("#parent-parameter").empty();
-  // $("form#dbh-realization-form")[0].reset();
-
-  $("#dbh-realization-form").find("input").val("");
-
-  // Option 1: Remove validation attributes
-  $("#dbh-realization-form").find("input").removeAttr("required");
-};
+// const clearAllInputForm = () => {
+//   $("form#dbh-realization-form")[0].reset();  
+//   $("#dbh-realization-form").find("input, select").val(""); 
+//   $("#dbh-realization-form").find("input, select").removeAttr("required");
+  
+//   $("#parent-parameter").empty();
+// };
 
 $("td a#edit-btn").click(function () {
   const dbhId = $(this).parent().parent().prev();

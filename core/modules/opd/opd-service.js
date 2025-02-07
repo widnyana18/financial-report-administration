@@ -1,8 +1,8 @@
 const Opd = require("./models/opd");
 
-exports.getOpdById = async (id) => {
+exports.getOneOpd = async (filter) => {
   try {
-    return await Opd.findOne({_id: id});
+    return await Opd.findOne(filter);
   } catch (error) {
     throw new Error(error);
   }

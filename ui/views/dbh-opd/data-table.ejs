@@ -1,0 +1,111 @@
+<div class="table-responsive">
+  <table
+    class="table align-middle table-bordered text-center table-hover"
+    style="width: 3000px"
+  >
+    <colgroup>
+      <col span="1" style="width: 3%" />
+      <col span="1" style="width: 10%" />
+      <col span="11" style="width: 3%" />      
+      <col span="2" style="width: 1%" />      
+    </colgroup>
+    <thead class="table-dark align-middle">
+      <tr>
+        <th rowspan="3" scope="col">No Rek</th>
+        <th rowspan="3" scope="col">Program/Kegiatan</th>
+        <th rowspan="3" scope="col">Jumlah Pagu Anggaran</th>
+        <th colspan="10" scope="col">Dana Bagi Hasil</th>        
+        <th colspan="2" rowspan="2" scope="col">#</th>        
+      </tr>
+      <tr>
+        <th colspan="2" scope="col">
+          Pendapatan Bagi Hasil Pajak Kendaraan Bermotor (PKB)
+        </th>
+        <th colspan="2" scope="col">
+          Pendapatan Bagi Hasil Bea Balik Nama Kendaraan Bermotor (BBNKB)
+        </th>
+        <th colspan="2" scope="col">
+          Pendapatan Bagi Hasil Pajak Bahan Bakar Kendaraan Bermotor (PBBKB)
+        </th>
+        <th colspan="2" scope="col">
+          Pendapatan Bagi Hasil Pajak Air Permukaan (PAP)
+        </th>
+        <th colspan="2" scope="col">Pendapatan Bagi Hasil Pajak Rokok</th>
+      </tr>
+      <tr>
+        <th scope="col">Anggaran</th>
+        <th scope="col">Realisasi</th>
+        <th scope="col">Anggaran</th>
+        <th scope="col">Realisasi</th>
+        <th scope="col">Anggaran</th>
+        <th scope="col">Realisasi</th>
+        <th scope="col">Anggaran</th>
+        <th scope="col">Realisasi</th>
+        <th scope="col">Anggaran</th>
+        <th scope="col">Realisasi</th>        
+        <th scope="col">Edit</th>
+        <th scope="col">Delete</th>        
+      </tr>
+    </thead>
+    <tbody class="table-group-divider align-middle"> 
+      <input type="hidden" name="dbhRealization[selectedDbhId]" id="selected-dbh-id" value="<%= selectedDbhRealization?._id %>">                                    
+      <% const dbhRealizationData = dbhRealizationOpd.find(item => item.reportingId == currentReporting?._id.toString())?.data ?? []; %>                            
+      <% const totalDataInstitution = dbhRealizationData.find(item => item.parameter == "Lembaga"); %>                            
+      <% for(let data of dbhRealizationData) { %> 
+        <% if(data.parameter !== "Lembaga") { %>
+          <tr id="<%= data._id %>" class="<%= dbhData.parameter === 'Program' 
+            ? 'table-success' 
+            : dbhData.parameter === 'Kegiatan' 
+              ? 'table-warning' 
+              : '';
+           %>">
+            <th scope="row"><%= data.noRek %></th>
+            <% if(data.parameter === "Program") { %>
+              <td class="text-uppercase fw-bold"><%= data.name %></td>              
+            <% }  else { %>
+              <td class="px-3 text-start <%= dbhData.parameter === 'Kegiatan' 
+              ? 'fw-medium' 
+              : '';
+           %>"><%= data.name %></td>              
+            <% } %>
+            <td><%= data.pagu %></td>
+            <td><%= data.dbh.pkb[0] %></td>
+            <td><%= data.dbh.pkb[1] %></td>
+            <td><%= data.dbh.bbnkb[0] %></td>
+            <td><%= data.dbh.bbnkb[1] %></td>
+            <td><%= data.dbh.pbbkb[0] %></td>
+            <td><%= data.dbh.pbbkb[1] %></td>
+            <td><%= data.dbh.pap[0] %></td>
+            <td><%= data.dbh.pap[1] %></td>
+            <td><%= data.dbh.pajakRokok[0] %></td>
+            <td><%= data.dbh.pajakRokok[1] %></td>             
+            <td>
+              <a id="edit-btn" href="/<%= data.name.replace(/\s/g, '-') %>?triwulan=<%=currentReporting.period.trim()%>&tahun=<%=
+                currentReporting.year
+              %>&edit=true"><i class="bi bi-pencil"></i></a>
+            </td>
+            <td><a id="delete-btn" href="/?triwulan=<%=currentReporting.period.trim()%>&tahun=<%=
+              currentReporting.year
+            %>&edit=false"><i class="bi bi-trash3"></i></a></td>            
+          </tr>                
+        <% } %>
+      <% } %>
+      <tr id="sub-total">
+        <td></td>
+        <th scope="row">TOTAL</th>
+        <td><%= totalDataInstitution.pagu %></td>
+        <td><%= totalDataInstitution.dbh.pkb[0] %></td>
+        <td><%= totalDataInstitution.dbh.pkb[1] %></td>
+        <td><%= totalDataInstitution.dbh.bbnkb[0] %></td>
+        <td><%= totalDataInstitution.dbh.bbnkb[1] %></td>
+        <td><%= totalDataInstitution.dbh.pbbkb[0] %></td>
+        <td><%= totalDataInstitution.dbh.pbbkb[1] %></td>
+        <td><%= totalDataInstitution.dbh.pap[0] %></td>
+        <td><%= totalDataInstitution.dbh.pap[1] %></td>
+        <td><%= totalDataInstitution.dbh.pajakRokok[0] %></td>
+        <td><%= totalDataInstitution.dbh.pajakRokok[1] %></td>         
+        <td colspan="2"></td>        
+      </tr>                     
+    </tbody>
+  </table>
+</div>

@@ -18,7 +18,7 @@
                     <button id="year-dropdown-btn" class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"></button>
                     <ul class="dropdown-menu">
                         <% for(year of years) { %>
-                            <li><a id="<%= year %>" class="dropdown-item year-dropdown-item"><%= year %></a></li> 
+                            <li><a id="<%= year %>" class="dropdown-item year-item" href="/admin/?tahun=<%= year %>"><%= year %></a></li> 
                         <% } %>                             
                     </ul>
                 </div>                                                                 

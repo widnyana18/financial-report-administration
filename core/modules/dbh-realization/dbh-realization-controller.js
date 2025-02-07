@@ -119,7 +119,7 @@ exports.postAddBudget = async (req, res, next) => {
 
     console.log("CURRENT REPORTING = " + currentReporting);
 
-    const dbhAdded = await dbhRealizationService.addDbhRealization(dbhObjData);
+    const dbhAdded = await dbhRealizationService.addOneDbh(dbhObjData);
 
     console.log(
       "FORM DATA = " + JSON.stringify(formData) + " DBH ADDED = " + dbhAdded
@@ -241,7 +241,9 @@ exports.postSendDbhOpdReporting = async (req, res, next) => {
 
     console.log("REPORTING UPDATED = " + reportingAfterUpdate);
 
-    if (reportingAfterUpdate.totalDbhOpdAdded >= reportingAfterUpdate.totalOpd) {
+    if (
+      reportingAfterUpdate.totalDbhOpdAdded >= reportingAfterUpdate.totalOpd
+    ) {
       const reportingUpdated = await reportingService.updateReporting(
         { _id: reportingId },
         { isDone: true }
@@ -250,13 +252,13 @@ exports.postSendDbhOpdReporting = async (req, res, next) => {
       console.log("REPORTING UPDATED 2 = " + reportingUpdated);
     }
 
-    await reportingService.updateInstitutionBudget([
+    await reportingService.updateInstitutionBudget(
       {
         opdId,
         reportingId,
-        isCompleted: true,
       },
-    ]);
+      { isCompleted: true }
+    );
 
     res.redirect(
       `/?triwulan=${currentReporting.period.trim()}&tahun=${

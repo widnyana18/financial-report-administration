@@ -1,38 +1,5 @@
 const DbhRealization = require("./models/dbh-realization");
-const reportingService = require("../reporting/reporting-service");
 const { Types } = require("mongoose");
-
-exports.groupDbhByOpd = async (filter) => {
-  // Aggregation pipeline to group and sort data by opdId
-  const objReportId = new Types.ObjectId(filter.reportingId);
-
-  return await DbhRealization.aggregate([
-    {
-      // Step 1: Optional - Filter by id if needed (you can remove this if not needed)
-      $match: { reportingId: objReportId, opdId: { $in: filter.opds } },
-    },
-    {
-      // Step 2: Sort the documents by opdId and other fields if needed (e.g., createdAt)
-      $sort: { opdId: 1, createdAt: 1 }, // Sort by opdId and createdAt field within each group
-    },
-    {
-      // Step 3: Group the documents by opdId
-      $group: {
-        _id: "$opdId", // Group by opdId
-        data: { $push: "$$ROOT" }, // Push all documents in that group to a 'data' array
-        totalDbhOpd: {
-          $addToSet: {
-            $cond: {
-              if: { $eq: ["$parameter", "Lembaga"] },
-              then: "$$ROOT",
-              else: null,
-            },
-          },
-        },
-      },
-    },
-  ]);
-};
 
 exports.findBudget = async (filter) => {
   try {
@@ -50,10 +17,18 @@ exports.getLastOneDbh = async (filter) => {
   }
 };
 
-exports.addDbhRealization = async (data) => {
+exports.addOneDbh = async (data) => {
   try {
     const dbhRealizationMod = new DbhRealization(data);
     return await dbhRealizationMod.save();
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+exports.addManyDbh = async (dataArr) => {
+  try {
+    return await DbhRealization.insertMany(dataArr);    
   } catch (error) {
     throw new Error(error);
   }

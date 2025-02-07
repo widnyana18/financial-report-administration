@@ -5,6 +5,7 @@ const { createBudgetId } = require("../../common/utils/id_gen");
 const opdService = require("../opd/opd-service");
 const reportingService = require("./reporting-service");
 const dbhRealizationService = require("../dbh-realization/dbh-realization-service");
+const opd = require("../opd/models/opd");
 
 exports.renderIndex = async (req, res, next) => {
   const years = [];
@@ -41,6 +42,7 @@ exports.renderIndex = async (req, res, next) => {
 
 exports.renderReportingDetails = async (req, res, next) => {
   const reportingId = req.params.reportId;
+
   try {
     await reportingService.calculateTotalDbhReporting(reportingId);
 
@@ -54,14 +56,12 @@ exports.renderReportingDetails = async (req, res, next) => {
     });
     const opdIdArray = dbhOpdCompletedArray.map((dbhOpd) => dbhOpd.opdId);
 
-    const dbhRealizationOpd = await dbhRealizationService.groupDbhByOpd({
+    const dbhRealizationOpd = await reportingService.groupDbhByOpd({
       reportingId,
       opds: opdIdArray,
     });
 
-    dbhRealizationOpd.forEach((dbh) => {
-      console.log("GET DBH BY OPD : " + JSON.stringify(dbh.totalDbhOpd));
-    });
+    console.log("dbhRealizationOPd = " + JSON.stringify(dbhRealizationOpd));
 
     res.render("admin/reporting-details", {
       pageTitle: currentReporting.title,
@@ -164,29 +164,34 @@ exports.createReporting = async (req, res, next) => {
       await reportingService.insertInstitutionBudget(institutionBudgetData);
 
     if (institutionBudgetAdded) {
-      const latestInstitutionInReport = await reportingService.findOneReporting(
-        {
-          parameter: "Lembaga",
-        }
+      const latestInstitutionDbh = await dbhRealizationService.getLastOneDbh({
+        parameter: "Lembaga",
+      });
+      let lastNoRek = latestInstitutionDbh?.noRek ?? 1;
+
+      const dbhOpdData = await Promise.all(
+        institutionBudgetData.map(async (item, index) => {
+          const selectedOpd = await opdService.getOneOpd({
+            _id: item.opdId,
+          });
+          const dbhOpdId = await createBudgetId({
+            parameter: "Lembaga",
+            opdId: item.opdId,
+            reportingId: item._id,
+          });
+
+          return {
+            _id: dbhOpdId,
+            reportingId: item.reportingId,
+            opdId: new Types.ObjectId(item.opdId),
+            noRek: lastNoRek + 1,
+            parameter: "Lembaga",
+            name: selectedOpd.institutionName,
+          };
+        })
       );
-      const lastNoRek = latestInstitutionInReport?.noRek ?? 1;
 
-      for (let i = 0; i < institutionBudgetData.length; i++) {
-        const dbhOpdObjData = {
-          reportingId: institutionBudgetData[i].reportingId,
-          opdId: new Types.ObjectId(institutionBudgetData[i].opdId),
-          noRek: lastNoRek + 1,
-          parameter: "Lembaga",
-          name: institutionBudgetData[i].institutionName,
-        };
-
-        const dbhOpdId = await createBudgetId(dbhOpdObjData);
-
-        await dbhRealizationService.addDbhRealization({
-          _id: dbhOpdId,
-          ...dbhOpdObjData,
-        });
-      }
+      await dbhRealizationService.addManyDbh(dbhOpdData);
     }
 
     res.redirect("/admin?tahun=" + reportingData.year);
@@ -213,57 +218,79 @@ exports.updateReporting = async (req, res, next) => {
   console.log("institutionBudgetData = ", institutionBudgetData);
 
   try {
-    const latestInstitutionInReport = await reportingService.findOneReporting({
-      parameter: "Lembaga",
-    });
-
-    const lastNoRek = latestInstitutionInReport?.noRek ?? 1;
-
-    for (let i = 0; i < institutionBudgetData.length; i++) {
-      const dbhOpdObjData = {
-        reportingId: institutionBudgetData[i].reportingId,
-        opdId: new Types.ObjectId(institutionBudgetData[i].opdId),
-        noRek: lastNoRek + 1,
-        parameter: "Lembaga",
-        name: institutionBudgetData[i].institutionName,
-      };
-
-      if (!dbhOpdObjData.opdId || !dbhOpdObjData.name) {
-        const curretInstitutionBudget =
-          await reportingService.getLastOneInstitutionBudget({
-            _id: institutionBudgetData[i]._id,
-          });
-
-        await dbhRealizationService.deleteBudget({
-          opdId: curretInstitutionBudget.opdId,
-          reportingId: dbhOpdObjData.reportingId,
-          parameter: "Lembaga",
-        });
-      } else if (!institutionBudgetData[i]._id) {
-        const dbhOpdId = await createBudgetId(dbhOpdObjData);
-
-        await dbhRealizationService.addDbhRealization({
-          _id: dbhOpdId,
-          ...dbhOpdObjData,
-        });
-      } else {
-        await dbhRealizationService.updateBudget(
-          {
-            opdId: curretInstitutionBudget[i].opdId,
-            reportingId: dbhOpdObjData.reportingId,
-            parameter: "Lembaga",
-          },
-          dbhOpdObjData
-        );
-      }
-    }
-
-    await reportingService.updateInstitutionBudget(institutionBudgetData);
-
     await reportingService.updateReporting(
       { _id: reportingId },
       { ...reportingData, totalDbhRecieved }
     );
+
+    const latestInstitutionInReport = await dbhRealizationService.getLastOneDbh(
+      {
+        parameter: "Lembaga",
+      }
+    );
+
+    let lastNoRek = latestInstitutionInReport?.noRek ?? 1;
+
+    console.log(
+      "INSTITUTION BUDGET DATA = " + JSON.stringify(institutionBudgetData)
+    );
+
+    for (const data of institutionBudgetData) {
+      const selectedOpd = await opdService.getOneOpd({
+        _id: data.opdId,
+      });
+      const currentInstitutionBudget =
+        await reportingService.getLastOneInstitutionBudget({
+          _id: data._id,
+        });
+
+      console.log(
+        "currentInstitutionBudget = " + JSON.stringify(currentInstitutionBudget)
+      );
+
+      if (!data.opdId) {
+        await dbhRealizationService.deleteBudget({
+          opdId: currentInstitutionBudget.opdId,
+          reportingId: data.reportingId,
+        });
+
+        await reportingService.deleteOneInstitutionBudget({ _id: data._id });
+      } else if (!data._id) {
+        const dbhOpdId = await createBudgetId({
+          parameter: "Lembaga",
+          opdId: data.opdId,
+          reportingId: data.reportingId,
+        });
+
+        await reportingService.insertInstitutionBudget(data);
+
+        await dbhRealizationService.addOneDbh({
+          _id: dbhOpdId,
+          reportingId: data.reportingId,
+          opdId: new Types.ObjectId(data.opdId),
+          noRek: lastNoRek + 1,
+          parameter: "Lembaga",
+          name: selectedOpd.institutionName,
+        });
+      } else {
+        await dbhRealizationService.updateBudget(
+          {
+            opdId: currentInstitutionBudget.opdId,
+            reportingId: data.reportingId,
+            parameter: "Lembaga",
+          },
+          {
+            opdId: data.opdId,
+            name: selectedOpd.institutionName,
+          }
+        );
+
+        await reportingService.updateInstitutionBudget(
+          { _id: data._id, reportingId: data.reportingId },
+          data
+        );
+      }
+    }
 
     res.redirect("/admin?tahun=" + reportingData.year);
   } catch (error) {
@@ -275,15 +302,15 @@ exports.deleteReporting = async (req, res, next) => {
   const reportingId = req.params.reportId;
 
   try {
-    const deletedReporting = await reportingService.deleteReporting(
-      reportingId
-    );
-    const deleteManyInstitutionBudget =
-      await reportingService.deleteInstitutionBudget(reportingId);
+    await reportingService.deleteReporting(reportingId);
 
-    return res
-      .status(200)
-      .json({ deletedReporting, deleteManyInstitutionBudget });
+    await reportingService.deleteManyInstitutionBudget({ reportingId });
+
+    await dbhRealizationService.deleteBudget({ reportingId });
+
+    const lastReporting = await reportingService.getLastReporting();
+
+    res.redirect("/admin?tahun=" + lastReporting.year);
   } catch (error) {
     return next(error);
   }
