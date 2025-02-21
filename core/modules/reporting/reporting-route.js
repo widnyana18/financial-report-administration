@@ -13,26 +13,26 @@ appRouter.get(
   isAuth,
   reportingController.renderCreateReporting
 );
-appRouter.get("/:reportId", isAuth, reportingController.renderReportingDetails);
+appRouter.get("/:title", isAuth, reportingController.renderReportingDetails);
 appRouter.get(
-  "/edit/:reportingId",
+  "/edit/:title",
   isAuth,
   reportingController.renderUpdateReporting
 );
 
 appRouter.get(
-  "/:reportId/download-excel",
+  "/:title/download-excel",
   isAuth,
   reportingController.exportToExcel
 );
 
 // route API
 apiRouter.get("/", reportingController.getAllReporting);
-apiRouter.get("/:reportId", reportingController.getReporting);
+apiRouter.get("/:title", reportingController.getReporting);
 apiRouter.post("/add", isAuth, reportingController.createReporting);
-apiRouter.post("/edit/:reportId", isAuth, reportingController.updateReporting);
+apiRouter.post("/edit/:title", isAuth, reportingController.updateReporting);
 apiRouter.delete(
-  "/delete/:reportId",
+  "/delete/:title",
   isAuth,
   reportingController.deleteReporting
 );

@@ -8,13 +8,16 @@ exports.renderAdminLogin = (req, res, next) => {
   res.render("auth/login", {
     pageTitle: "Admin Login",
     path: "/admin-login",
+    message: req.flash(),
   });
+  console.log(req.flash("error"));
 };
 
 exports.renderLogin = (req, res, next) => {
   res.render("auth/login", {
-    pageTitle: "Login",
     path: "/login",
+    pageTitle: "Login",
+    message: req.flash(),
   });
 };
 
@@ -25,6 +28,7 @@ exports.renderSignup = async (req, res, next) => {
       domain: "auth",
       path: "/auth/signup",
       selectedOpd: null,
+      message: req.flash(),
     });
   } catch (error) {
     return next(error);
@@ -35,6 +39,7 @@ exports.renderChangePassword = (req, res, next) => {
   res.render("auth/ganti-password", {
     pageTitle: "Ganti Password",
     path: "/ganti-password",
+    message: req.flash(),
   });
 };
 
@@ -44,35 +49,33 @@ exports.adminLogin = async (req, res, next) => {
   const userEnv = process.env;
 
   try {
-    let currentUser = await authService.login({ username: username });
+    const pswMatch = await bcrypt.compare(password, userEnv.PASSWORD);
+    
+    if (username == userEnv.USER && pswMatch) {
+      const currentUser = {
+        username,
+        password: userEnv.PASSWORD,
+        opdName: userEnv.NAME,
+        phone: userEnv.PHONE,
+        institutionName: userEnv.INSTITUTION,
+      };
 
-    if (username == userEnv.USER && password == userEnv.PASSWORD) {
-      if (!currentUser) {
-        const hashedPsw = await bcrypt.hash(password, 12);
-
-        currentUser = await authService.signup({
-          username,
-          password: hashedPsw,
-          opdName: userEnv.NAME,
-          phone: userEnv.PHONE,
-          institutionName: userEnv.INSTITUTION,
-        });
-      }
-
-      delete currentUser.password;
       req.session.isLoggedIn = true;
       req.session.userRole = "ADMIN";
       req.session.user = currentUser;
 
       const lastReporting = await reportingService.getLastReporting();
 
+      req.flash("success", "Berhasil login");
       if (!lastReporting) {
         res.redirect("/admin");
       } else {
         res.redirect("/admin?tahun=" + lastReporting.year);
       }
+
       return req.session.save();
     } else {
+      req.flash("error", "Username atau password salah !!");
       res.redirect("/admin/login");
     }
   } catch (error) {
@@ -87,14 +90,15 @@ exports.login = async (req, res, next) => {
   try {
     const user = await authService.login({ username: username });
 
-    if (!user) {
-      // return res.status(400).json({ message: "User not found" });
-      res.redirect("/login");
-    }
+    console.log(" USER = " + JSON.stringify(user));
+    if (user) {
+      const doMatch = await bcrypt.compare(password, user?.password);
 
-    const doMatch = await bcrypt.compare(password, user.password);
+      if (!doMatch) {
+        req.flash("error", "Password salah !!");
+        res.redirect("/login");
+      }
 
-    if (doMatch) {
       req.session.isLoggedIn = true;
       req.session.userRole = "OPD";
       req.session.user = user;
@@ -108,6 +112,12 @@ exports.login = async (req, res, next) => {
           ?.reportingId,
       });
 
+      console.log(getAllDataInstitutionByOpd + " | " + lastReportingOpd);
+
+      req.flash("success", "Berhasil login");
+
+      console.log(" session = " + JSON.stringify(req.session));
+
       if (!lastReportingOpd) {
         res.redirect("/");
       } else {
@@ -120,7 +130,7 @@ exports.login = async (req, res, next) => {
 
       return req.session.save();
     } else {
-      // return res.status(400).json({ message: "Wrong Password" });
+      req.flash("error", "Username tidak ditemukan");
       res.redirect("/login");
     }
   } catch (error) {
@@ -131,14 +141,22 @@ exports.login = async (req, res, next) => {
 exports.signup = async (req, res, next) => {
   try {
     const hashedPassword = await bcrypt.hash(req.body.password, 12);
-    const result = await authService.signup({
+    const haveAccount = await opdService.getOneOpd({
+      username: req.body.username,
+    });
+
+    if (haveAccount) {
+      req.flash("error", "Akun ini sudah terdaftar");
+      res.redirect("/signup");
+    }
+
+    await authService.signup({
       ...req.body,
       password: hashedPassword,
     });
 
-    if (result) {
-      res.redirect("/login");
-    }
+    req.flash("success", "Berhasil membuat akun");
+    res.redirect("/login");
   } catch (error) {
     error.httpStatusCode = 500;
     return next(error);
@@ -146,21 +164,27 @@ exports.signup = async (req, res, next) => {
 };
 
 exports.changePassword = async (req, res, next) => {
-  const phone = req.body.phone;
-  const password = req.body.password;
+  const body = req.body;
 
   try {
-    const hashedPassword = await bcrypt.hash(req.body.password, 12);
+    if (body.password !== body.confirmPassword) {
+      req.flash("error", "password tidak sama");
+      res.redirect("/ganti-password");
+    }
 
+    const hashedPassword = await bcrypt.hash(body.confirmPassword, 12);
     const result = await opdService.updateOpd(
-      { phone: phone },
+      { phone: body.phone },
       { password: hashedPassword }
     );
 
-    if (result) {
-      res.redirect("/login");
+    if (!result) {
+      req.flash("error", "Nomor telepon tidak ditemukan");
+      res.redirect("/ganti-password");
     }
-    // return res.status(200).json(result);
+
+    req.flash("success", "Berhasil mengganti password");
+    res.redirect("/login");
   } catch (error) {
     return next(error);
   }
@@ -179,4 +203,5 @@ exports.logout = async (req, res, next) => {
       return res.send("Error logging out");
     }
   });
+  console.log(" session = " + JSON.stringify(req.session));
 };

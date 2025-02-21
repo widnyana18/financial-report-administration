@@ -3,7 +3,7 @@ const { Types } = require("mongoose");
 
 exports.findBudget = async (filter) => {
   try {
-    return await DbhRealization.find(filter);
+    return await DbhRealization.find(filter).sort({ _id: 1 });
   } catch (error) {
     throw new Error(error);
   }

@@ -1,0 +1,38 @@
+<!-- Modal -->
+<div
+  class="modal fade"
+  id="delete-account-modal"
+  tabindex="-1"
+  aria-labelledby="delete-account-modal-label"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="delete-account-modal-label">
+          Konfirmasi Hapus Akun OPD
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        Apakah Anda yakin ingin menghapus akun anda?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Batal
+        </button>
+        <button type="button" class="btn btn-danger" id="delete-account-button">Hapus</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tombol Trigger Modal -->
+<button type="button" class="col btn btn-danger" data-bs-toggle="modal" data-bs-target="#delete-account-modal">
+  HAPUS AKUN
+</button>

@@ -8,7 +8,9 @@ exports.createBudgetId = async (data) => {
     parameter: data.parameter,
     opdId: data.opdId,
     reportingId: data.reportingId,
-  })
+  });
+
+  console.log("LATEST DBH : " + latestDbh);
 
   if (latestDbh) {
     dbhId = generatedId(latestDbh._id);
@@ -17,9 +19,9 @@ exports.createBudgetId = async (data) => {
       case "Lembaga":
         const latestInstitution = await dbhRealizationService.getLastOneDbh({
           parameter: "Lembaga",
-        })
+        });
 
-        console.log('LATEST INSTITUTION : ' + latestInstitution);
+        console.log("LATEST INSTITUTION : " + latestInstitution);
         dbhId = latestInstitution ? generatedId(latestInstitution._id) : "LM01";
         break;
       case "Program":

@@ -47,15 +47,13 @@
         <th scope="col">Delete</th>        
       </tr>
     </thead>
-    <tbody class="table-group-divider align-middle"> 
-      <input type="hidden" name="dbhRealization[selectedDbhId]" id="selected-dbh-id" value="<%= selectedDbhRealization?._id %>">                                    
-      <% const dbhRealizationData = dbhRealizationOpd.find(item => item.reportingId == currentReporting?._id.toString())?.data ?? []; %>                            
-      <% const totalDataInstitution = dbhRealizationData.find(item => item.parameter == "Lembaga"); %>                            
-      <% for(let data of dbhRealizationData) { %> 
-        <% if(data.parameter !== "Lembaga") { %>
-          <tr id="<%= data._id %>" class="<%= dbhData.parameter === 'Program' 
+    <tbody class="table-group-divider align-middle">        
+      <% const totalDataInstitution = currentDataDbhOpd.find(item => item.parameter == "Lembaga"); %>                            
+      <% for(let data of currentDataDbhOpd) { %> 
+        <% if(data.parameter !== "Lembaga") { %>          
+          <tr id="<%= data.name?.replace(/\s/g, '-') %>" class="<%= data.parameter === 'Program' 
             ? 'table-success' 
-            : dbhData.parameter === 'Kegiatan' 
+            : data.parameter === 'Kegiatan' 
               ? 'table-warning' 
               : '';
            %>">
@@ -63,47 +61,50 @@
             <% if(data.parameter === "Program") { %>
               <td class="text-uppercase fw-bold"><%= data.name %></td>              
             <% }  else { %>
-              <td class="px-3 text-start <%= dbhData.parameter === 'Kegiatan' 
+              <td class="px-3 text-start <%= data.parameter === 'Kegiatan' 
               ? 'fw-medium' 
               : '';
            %>"><%= data.name %></td>              
             <% } %>
             <td><%= data.pagu %></td>
-            <td><%= data.dbh.pkb[0] %></td>
-            <td><%= data.dbh.pkb[1] %></td>
-            <td><%= data.dbh.bbnkb[0] %></td>
-            <td><%= data.dbh.bbnkb[1] %></td>
-            <td><%= data.dbh.pbbkb[0] %></td>
-            <td><%= data.dbh.pbbkb[1] %></td>
-            <td><%= data.dbh.pap[0] %></td>
-            <td><%= data.dbh.pap[1] %></td>
-            <td><%= data.dbh.pajakRokok[0] %></td>
-            <td><%= data.dbh.pajakRokok[1] %></td>             
+            <td><%= data.dbh?.pkb[0] %></td>
+            <td><%= data.dbh?.pkb[1] %></td>
+            <td><%= data.dbh?.bbnkb[0] %></td>
+            <td><%= data.dbh?.bbnkb[1] %></td>
+            <td><%= data.dbh?.pbbkb[0] %></td>
+            <td><%= data.dbh?.pbbkb[1] %></td>
+            <td><%= data.dbh?.pap[0] %></td>
+            <td><%= data.dbh?.pap[1] %></td>
+            <td><%= data.dbh?.pajakRokok[0] %></td>
+            <td><%= data.dbh?.pajakRokok[1] %></td>             
             <td>
-              <a id="edit-btn" href="/<%= data.name.replace(/\s/g, '-') %>?triwulan=<%=currentReporting.period.trim()%>&tahun=<%=
+              <a id="edit-btn" href="/<%= data.name?.replace(/\s/g, '-') %>?triwulan=<%=currentReporting.period.trim()%>&tahun=<%=
                 currentReporting.year
               %>&edit=true"><i class="bi bi-pencil"></i></a>
-            </td>
-            <td><a id="delete-btn" href="/?triwulan=<%=currentReporting.period.trim()%>&tahun=<%=
-              currentReporting.year
-            %>&edit=false"><i class="bi bi-trash3"></i></a></td>            
+            </td> 
+            <%- include('../partials/delete-dbh-modal.ejs') %> 
+            <td>
+              <a data-bs-toggle="modal" data-bs-target="#delete-dbh-modal" class="delete-btn" data-name="<%= data.name?.replace(/\s/g, '-') %>"
+                ><i class="bi bi-trash3"></i
+              ></a>
+            </td>          
           </tr>                
         <% } %>
       <% } %>
       <tr id="sub-total">
         <td></td>
         <th scope="row">TOTAL</th>
-        <td><%= totalDataInstitution.pagu %></td>
-        <td><%= totalDataInstitution.dbh.pkb[0] %></td>
-        <td><%= totalDataInstitution.dbh.pkb[1] %></td>
-        <td><%= totalDataInstitution.dbh.bbnkb[0] %></td>
-        <td><%= totalDataInstitution.dbh.bbnkb[1] %></td>
-        <td><%= totalDataInstitution.dbh.pbbkb[0] %></td>
-        <td><%= totalDataInstitution.dbh.pbbkb[1] %></td>
-        <td><%= totalDataInstitution.dbh.pap[0] %></td>
-        <td><%= totalDataInstitution.dbh.pap[1] %></td>
-        <td><%= totalDataInstitution.dbh.pajakRokok[0] %></td>
-        <td><%= totalDataInstitution.dbh.pajakRokok[1] %></td>         
+        <td><%= totalDataInstitution?.pagu %></td>
+        <td><%= totalDataInstitution?.dbh.pkb[0] %></td>
+        <td><%= totalDataInstitution?.dbh.pkb[1] %></td>
+        <td><%= totalDataInstitution?.dbh.bbnkb[0] %></td>
+        <td><%= totalDataInstitution?.dbh.bbnkb[1] %></td>
+        <td><%= totalDataInstitution?.dbh.pbbkb[0] %></td>
+        <td><%= totalDataInstitution?.dbh.pbbkb[1] %></td>
+        <td><%= totalDataInstitution?.dbh.pap[0] %></td>
+        <td><%= totalDataInstitution?.dbh.pap[1] %></td>
+        <td><%= totalDataInstitution?.dbh.pajakRokok[0] %></td>
+        <td><%= totalDataInstitution?.dbh.pajakRokok[1] %></td>         
         <td colspan="2"></td>        
       </tr>                     
     </tbody>

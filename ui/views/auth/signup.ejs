@@ -6,39 +6,41 @@
             <div class="row align-items-center justify-content-center">
                 <div class="col-sm-4 mx-auto">            
                     <p class="h2 mb-5 text-center"><%= pageTitle %></p>                    
-                    <form action="/api<%= path %>" method="POST" class="needs-validation"  novalidate>
+                    <form action="/api<%= path %>" id="signup-form" method="POST" class="needs-validation"  novalidate>
                         <div class="mb-3">
                             <label for="username" class="form-label">Username</label>
-                            <input type="text" class="form-control" name="username" id="username" value="<%= selectedOpd?.username %>">
+                            <input type="text" class="form-control" name="username" id="username" value="<%= selectedOpd?.username %>" required>
                         </div>
                         <div class="mb-3">
                             <label for="password" class="form-label">Password</label>
-                            <input type="password" class="form-control" name="password" id="password">
+                            <input type="password" class="form-control" name="password" id="password" required>
                         </div>
                         <div class="mb-3">
                             <label for="opd-name" class="form-label">Nama OPD</label>
-                            <input type="text" class="form-control" name="opdName" id="opd-name" value="<%= selectedOpd?.opdName %>">
+                            <input type="text" class="form-control" name="opdName" id="opd-name" value="<%= selectedOpd?.opdName %>" required>
                         </div>
                         <div class="mb-3">
                             <label for="phone-number" class="form-label">Nomor HP</label>
-                            <input type="text" class="form-control" name="phone" id="phone-number" value="<%= selectedOpd?.phone %>">
+                            <input type="text" class="form-control" name="phone" id="phone-number" value="<%= selectedOpd?.phone %>" required>
                         </div>                     
                         <div class="mb-3">
                             <label for="institutionName" class="form-label">Nama Lembaga</label>
-                            <input type="text" class="form-control" name="institutionName" id="institution" value="<%= selectedOpd?.institutionName %>">
+                            <input type="text" class="form-control" name="institutionName" id="institution" value="<%= selectedOpd?.institutionName %>" required>
                         </div>                                             
                         <div class="mt-5 w-100 text-center">
+                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                             <% if(domain == "auth") { %>
-                                <button type="submit" class="w-100 btn btn-primary mb-3">DAFTAR AKUN</button>
+                                <button type="submit"  class="w-100 btn btn-primary mb-3">DAFTAR AKUN</button>
                                 <p><a href="/login" class="link-underline-primary">Balik Login</a></p>
                             <% } else { %>
-                                <button type="submit" class="w-100 btn btn-primary mb-3">UPDATE PROFILE</button>                                    
+                                <button type="submit"   class="w-100 btn btn-primary mb-3">UPDATE PROFILE</button>                                    
                             <% } %>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
-    </main>    
-
+        <%- include('../partials/toast-msg.ejs') %>
+    </main>          
+    
 <%- include('../partials/end.ejs') %>

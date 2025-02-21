@@ -8,9 +8,10 @@ $("#add-institution-btn").click(function () {
   let institutionDropdownItems = "";
   const institutions = $("#institutions-data").val();
   const institutionsArr = JSON.parse(institutions);
+  console.log('istitutionsArr = ' + institutions);
 
   for (opd of institutionsArr) {
-    institutionDropdownItems += `<option class="institution-item" value='${opd._id}' id="${opd._id}">${opd.institutionName}</option>`;
+    institutionDropdownItems += `<option class="institution-item" value='${opd._id}' id="${opd.institutionName}">${opd.institutionName}</option>`;
   }
 
   const institutionBudgetField = `<div class="d-inline-flex my-2 align-items-center" id="institution-${idxArr}">                          
@@ -76,3 +77,4 @@ $("#clear-btn").click(function () {
   $("input#total-opd").val(totalOpd);
   $("#total-opd-txt").text(totalOpd.toString());
 });
+

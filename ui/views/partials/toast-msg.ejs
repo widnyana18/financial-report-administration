@@ -1,0 +1,44 @@
+<input type="hidden" id="toast-msg" value="<%= JSON.stringify(message) %>" />
+<% if(message.error){ %>
+<!-- this is error toast message -->
+<div class="toast-container top-0 end-0 p-3">
+  <div
+    id="toast-error"
+    class="toast align-items-center text-bg-danger border-0"
+    role="alert"
+    aria-live="assertive"
+    aria-atomic="true"
+  >
+    <div class="d-flex">
+      <div class="toast-body"><%= message.error %></div>
+      <button
+        type="button"
+        class="btn-close btn-close-white me-2 m-auto"
+        data-bs-dismiss="toast"
+        aria-label="Close"
+      ></button>
+    </div>
+  </div>
+</div>
+<% } else { %>
+<!-- this is success toast message -->
+<div class="toast-container top-0 end-0 p-3">
+  <div
+    id="toast-success"
+    class="toast align-items-center text-bg-success border-0"
+    role="alert"
+    aria-live="assertive"
+    aria-atomic="true"
+  >
+    <div class="d-flex">
+      <div class="toast-body"><%= message.success %></div>
+      <button
+        type="button"
+        class="btn-close btn-close-white me-2 m-auto"
+        data-bs-dismiss="toast"
+        aria-label="Close"
+      ></button>
+    </div>
+  </div>
+</div>
+<% } %>

@@ -13,8 +13,8 @@ appRouter.get("/:dbhName", isAuth, dbhRealizationController.renderDataDbhOpd);
 // route API
 apiRouter.get("/", dbhRealizationController.findDbhRealizationOpd);
 apiRouter.post("/add", isAuth, dbhRealizationController.postAddBudget);
-apiRouter.post("/edit/:dbhId", isAuth, dbhRealizationController.updateBudgetRecord);
-apiRouter.delete("/delete/:dbhId", isAuth, dbhRealizationController.deleteBudgetRecord);
+apiRouter.post("/edit/:dbhName", isAuth, dbhRealizationController.updateBudgetRecord);
+apiRouter.delete("/delete/:dbhName", isAuth, dbhRealizationController.deleteBudgetRecord);
 apiRouter.post("/send-report", isAuth, dbhRealizationController.postSendDbhOpdReporting);
 
 module.exports = { appRouter, apiRouter };

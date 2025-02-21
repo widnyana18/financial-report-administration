@@ -1,59 +1,95 @@
 const reportingService = require("../reporting/reporting-service");
 const dbhRealizationService = require("./dbh-realization-service");
 const { createBudgetId } = require("../../common/utils/id_gen");
+const { encrypt, decrypt } = require("../../common/utils/crypto-helper");
 
 exports.renderDataDbhOpd = async (req, res, next) => {
   let dbhName = req.params?.dbhName;
   const query = req.query;
-  let dbhRealizationOpd = [];
+  let currentReporting = null;
+  let opdReporting = [];
+  let currentDataDbhOpd = [];
 
   try {
     const opdInstitutionData = await reportingService.findInstitutionBudget({
-      opdId: req.user._id,
+      opdId: req.user?._id,
     });
-    const currentReporting = await reportingService.findOneReporting({
-      period: query.triwulan,
-      year: query.tahun,
+    // console.log("opdInstitutionData = " + JSON.stringify(opdInstitutionData));
+
+    const currentReportingData = await reportingService.findOneReporting({
+      period: query?.triwulan,
+      year: query?.tahun,
     });
+
+    if (currentReportingData) {
+      currentReporting = {
+        _id: encrypt(currentReportingData._id.toString()),
+        period: currentReportingData.period,
+        year: currentReportingData.year,
+        title: currentReportingData.title,
+      };
+    }
+
+    console.log("currentReportingData = " + JSON.stringify(currentReporting));
+
     const opdReportingData = await reportingService.findManyReporting({
       _id: { $in: opdInstitutionData.map((item) => item.reportingId) },
     });
+    // console.log("opdReportingData = " + JSON.stringify(opdReportingData));
 
-    if (opdReportingData.length > 0) {
-      dbhRealizationOpd = await Promise.all(
-        opdReportingData.map(async (item) => {
-          const dataDbhOpd = await dbhRealizationService.findBudget({
-            opdId: req.user._id,
-            reportingId: item._id,
-          });
-
-          return {
-            reportingId: item._id.toString(),
-            data: dataDbhOpd,
-          };
-        })
-      ).then((result) => result);
+    if (opdReportingData) {
+      opdReporting = opdReportingData.map((item) => {
+        const { _id, period, year, title } = item;
+        return {
+          _id: encrypt(_id.toString()),
+          period,
+          year,
+          title,
+        };
+      });
     }
 
-    // console.log("DBH REALIAZATION OPD", dbhRealizationOpd);
+    // console.log("opdReporting = " + JSON.stringify(opdReporting));
+
+    const dataDbhOpd = await dbhRealizationService.findBudget({
+      opdId: req.user?._id,
+      reportingId: currentReportingData?._id,
+    });
+
+    if (dataDbhOpd) {
+      currentDataDbhOpd = dataDbhOpd.map((item) => {
+        const newItem = item.toObject();
+        const { opdId, reportingId, ...others } = newItem;
+        others._id = encrypt(others._id.toString());
+
+        return others;
+      });
+    }
+
+    // console.log(
+    //   "currentDataDbhOpd = " + JSON.stringify(dataDbhOpd, null, 2)
+    // );
 
     if (query.edit && dbhName) {
-      const dbhNameOri = dbhName.replace(/-/g, " ");
       const selectedDbh = await dbhRealizationService.getLastOneDbh({
-        name: { $regex: dbhNameOri, $options: "i" },
+        name: dbhName.replace(/-/g, " "),
       });
+
+      const { opdId, reportingId, ...others } = selectedDbh;
+      others._id = encrypt(others._id.toString());
 
       console.log("SELECTED DBH ID = " + selectedDbh);
 
       res.render("dbh-opd/dbh-realization", {
         pageTitle: "Update Data DBH OPD",
         userRole: "opd",
-        apiUrl: `edit/${selectedDbh._id}`,
+        apiUrl: `edit/${selectedDbh.name}`,
         opd: req.user,
-        opdReportingData,
-        dbhRealizationOpd,
+        opdReporting,
+        currentDataDbhOpd,
         currentReporting,
-        selectedDbhRealization: selectedDbh,
+        selectedDbhRealization: others,
+        message: req.flash(),
       });
     } else {
       res.render("dbh-opd/dbh-realization", {
@@ -61,10 +97,11 @@ exports.renderDataDbhOpd = async (req, res, next) => {
         userRole: "opd",
         apiUrl: "add",
         opd: req.user,
-        opdReportingData,
-        dbhRealizationOpd,
+        opdReporting,
+        currentDataDbhOpd,
         currentReporting,
         selectedDbhRealization: null,
+        message: req.flash(),
       });
     }
   } catch (error) {
@@ -102,8 +139,10 @@ exports.findDbhRealizationOpd = async (req, res, next) => {
 
 exports.postAddBudget = async (req, res, next) => {
   const formData = req.body.dbhRealization;
+  formData.parentParamId = decrypt(formData.parentParamId);
+  formData.reportingId = decrypt(formData.reportingId);
 
-  console.log("CURRENT REPORTING = " + Object.keys(formData));
+  console.log("FORM DATA = " + JSON.stringify(formData));
 
   try {
     const dbhId = await createBudgetId({ opdId: req.user._id, ...formData });
@@ -126,7 +165,6 @@ exports.postAddBudget = async (req, res, next) => {
     );
 
     if (dbhAdded && dbhObjData.parameter == "Sub Kegiatan") {
-      delete dbhObjData.selectedDbhId;
       const calculate = await dbhRealizationService.calculateTotalDbhOpd(
         dbhObjData
       );
@@ -134,27 +172,35 @@ exports.postAddBudget = async (req, res, next) => {
       console.log("CALCULATE : " + calculate);
     }
 
+    req.flash("success", "Berhasil menambahkan data DBH");
+
     res.redirect(
       `/?triwulan=${currentReporting.period.trim()}&tahun=${
         currentReporting.year
       }&edit=false`
     );
   } catch (error) {
-    return next(error);
+    req.flash("error", "Gagal menambah dbh, Error: " + error);
   }
 };
 
 exports.updateBudgetRecord = async (req, res, next) => {
+  const dbhName = req.params.dbhName.replace(/-/g, " ");
   const formData = req.body.dbhRealization;
+  formData.reportingId = decrypt(formData.reportingId);
 
   try {
     const currentReporting = await reportingService.findOneReporting({
       _id: formData.reportingId,
     });
 
+    const currentDbh = await dbhRealizationService.getLastOneDbh({
+      name: dbhName,
+    });
+
     const dbhUpdated = await dbhRealizationService.updateBudget(
       {
-        _id: formData.selectedDbhId,
+        _id: currentDbh._id,
         opdId: req.user._id,
         reportingId: formData.reportingId,
       },
@@ -167,7 +213,7 @@ exports.updateBudgetRecord = async (req, res, next) => {
 
     if (dbhUpdated && dbhUpdated.parameter == "Sub Kegiatan") {
       const calculateResult = await dbhRealizationService.calculateTotalDbhOpd({
-        _id: formData.selectedDbhId,
+        _id: currentDbh._id,
         opdId: req.user._id,
         ...formData,
       });
@@ -175,42 +221,48 @@ exports.updateBudgetRecord = async (req, res, next) => {
       console.log("CALCULATE = " + calculateResult);
     }
 
+    req.flash("success", "Berhasil update data DBH");
+
     res.redirect(
       `/?triwulan=${currentReporting.period.trim()}&tahun=${
         currentReporting.year
       }&edit=false`
     );
   } catch (error) {
-    return next(error);
+    req.flash("error", "Gagal mengubah dbh, Error: " + error);
   }
 };
 
 exports.deleteBudgetRecord = async (req, res, next) => {
-  const formData = req.body;
+  const dbhName = req.params.dbhName.replace(/-/g, " ");
 
   try {
+    const currentDbh = await dbhRealizationService.getLastOneDbh({
+      name: dbhName,
+    });
     const deletedBudget = await dbhRealizationService.deleteBudget({
-      _id: { $regex: new RegExp(`^${formData.dbhId}(\\..*)?$`) },
+      _id: { $regex: new RegExp(`^${currentDbh._id}(\\..*)?$`) },
     });
 
     if (deletedBudget) {
       const calculateResult = await dbhRealizationService.calculateTotalDbhOpd({
-        _id: formData.dbhId,
+        _id: currentDbh._id,
         opdId: req.user._id,
-        reportingId: formData.reportingId,
+        reportingId: currentDbh.reportingId,
       });
       console.log("CALCULATE = " + calculateResult);
     }
 
-    // return res.status(200).json(deletedBudget);
+    req.flash("success", "Berhasil hapus data DBH");
+    return res.status(200).json({ message: "Berhasil hapus dbh" });
   } catch (error) {
-    return next(error);
+    req.flash("error", "Gagal hapus dbh, Error: " + error);
   }
 };
 
 exports.postSendDbhOpdReporting = async (req, res, next) => {
   const opdId = req.user._id;
-  const reportingId = req.body.reportingId;
+  const reportingId = decrypt(req.body.reportingId);
 
   console.log("current reporting id = " + reportingId);
 
@@ -260,12 +312,8 @@ exports.postSendDbhOpdReporting = async (req, res, next) => {
       { isCompleted: true }
     );
 
-    res.redirect(
-      `/?triwulan=${currentReporting.period.trim()}&tahun=${
-        currentReporting.year
-      }&edit=false`
-    );
+    return res.status(200).json({ message: "Berhasil kirim laporan" });
   } catch (error) {
-    return next(error);
+    req.flash("error", "Gagal kirim laporan, Error: " + error);
   }
 };

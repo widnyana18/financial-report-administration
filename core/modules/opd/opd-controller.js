@@ -2,23 +2,24 @@ const bcrypt = require("bcryptjs");
 
 const opdService = require("./opd-service");
 const reportingService = require("../reporting/reporting-service");
+const dbhRealizationService = require("../dbh-realization/dbh-realization-service");
 
 exports.renderUpdateOpd = async (req, res, next) => {
   const opdId = req.user._id;
+  const institutionName = req.user.institutionName.replace(/\s/g, "-");
 
   try {
-    const selectedOpd = await opdService.getOpdById(opdId);
+    const selectedOpd = await opdService.getOneOpd({ _id: opdId });
 
     if (!selectedOpd) {
       res.redirect("/login");
     } else {
-      delete selectedOpd.password;
-
       res.render("auth/signup", {
         pageTitle: "Update OPD",
         domain: "opd",
-        path: `/opd/edit/${opdId}`,
+        path: `/opd/edit/${institutionName}`,
         selectedOpd,
+        message: req.flash(),
       });
     }
   } catch (error) {
@@ -32,9 +33,9 @@ exports.findManyOpd = async (req, res, next) => {
 };
 
 exports.getOpd = async (req, res, next) => {
-  const opdId = req.params.id;
+  const opdId = req.user._id;
   try {
-    const opd = await opdService.getOpdById(opdId);
+    const opd = await opdService.getOneOpd({ _id: opdId });
     return res.status(200).json(opd);
   } catch (error) {
     return next(error);
@@ -42,31 +43,33 @@ exports.getOpd = async (req, res, next) => {
 };
 
 exports.updateOpd = async (req, res, next) => {
-  const opdId = req.params.id;
+  const opd = req.user;
   const data = req.body;
 
   try {
-    const opd = await opdService.getOpdById(opdId);  
-    const hashedPassword = await bcrypt.hash(data.password, 12);
+    const pswIsMatch = await bcrypt.compare(data.password, opd.password);
 
-    if (!opd) {
-      res.status(404).json({ message: "Opd not found" });
+    if (data.username == opd.username && pswIsMatch) {
+      req.flash("error", "Data sudah pernah digunakan");
+      res.redirect(`/${opd.institutionName.replace(/\s/g, "-")}/edit-profile`);
     }
 
+    const hashedPassword = await bcrypt.hash(data.password, 12);
     const successUpdateData = await opdService.updateOpd(
-      { _id: opdId },
+      { _id: opd },
       { ...data, password: hashedPassword }
     );
 
     if (successUpdateData) {
       const lastDataDbhByOpd = await reportingService.findInstitutionBudget({
-        opdId: opdId,
+        opdId: opd,
       });
 
       const lastReporting = await reportingService.findOneReporting({
         _id: lastDataDbhByOpd[lastDataDbhByOpd.length - 1]?.reportingId,
       });
 
+      req.flash("success", "Berhasil rubah profile");
       res.redirect(
         `/?triwulan=${lastReporting.period.trim()}&tahun=${
           lastReporting.year
@@ -79,11 +82,47 @@ exports.updateOpd = async (req, res, next) => {
 };
 
 exports.deleteOpd = async (req, res, next) => {
-  const opdId = req.params.id;
+  const opdId = req.user._id;
 
   try {
-    const deletedOpd = await opdService.deleteOpd(opdId);
-    return res.status(200).json(deletedOpd);
+    const selectedInstitutionBudget =
+      await reportingService.findInstitutionBudget({
+        opdId,
+      });
+
+    for (data of selectedInstitutionBudget) {
+      const currentReport = await reportingService.findOneReporting({
+        _id: reportId,
+      });
+      await reportingService.updateReporting(
+        { _id: currentReport?._id },
+        {
+          totalDbhOpdAdded: data.isCompleted
+            ? currentReport.totalDbhOpdAdded - 1
+            : currentReport.totalDbhOpdAdded,
+          totalOpd: currentReport.totalOpd - 1,
+        }
+      );
+    }
+
+    await reportingService.deleteManyInstitutionBudget({
+      opdId,
+    });
+
+    await dbhRealizationService.deleteBudget({
+      opdId,
+    });
+
+    await opdService.deleteOpd(opdId);
+
+    // req.flash("success", "Berhasil hapus akun");
+
+    req.session.destroy((err) => {
+      if (err) {
+        return next(err); // <-- This might send another response in error handling middleware
+      }
+      res.status(200).json({ message: "Berhasil hapus akun" });
+    });
   } catch (error) {
     return next(error);
   }

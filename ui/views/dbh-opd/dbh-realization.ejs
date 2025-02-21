@@ -1,8 +1,7 @@
 <%- include('../partials/head.ejs') %>
 </head>
-<body> 
-    <% let dbhRealizationData = dbhRealizationOpd.find(item => item.reportingId == currentReporting?._id.toString())?.data ?? []; %>       
-    <input type="hidden" id="dbh-realization-data" value="<%= JSON.stringify(dbhRealizationData) %>">   
+<body>     
+    <input type="hidden" id="dbh-realization-data" value="<%= JSON.stringify(currentDataDbhOpd) %>">   
     <input type="hidden" id="selected-dbh-id" value="<%= selectedDbhRealization?._id %>">   
     <main class="mx-4 my-5">
         <div class="container-fluid my-5">
@@ -14,17 +13,18 @@
                     </div>
                     <div class="col-5 p-2 w-5">
                         <p class="h6 my-1">OPD <span style="padding: 0 6px 0 52px;">:</span> <%= opd.opdName %></p>
+                        <input type="hidden" value="<%= opd.institutionName %>" id="institution-name">
                         <p class="h6 my-1">Lembaga <span style="padding: 0 6px 0 17px;">:</span> <%= opd.institutionName %></p>
                         <div class="d-flex my-1 align-items-center">                            
                             <label for="reporting-id" class="form-label h6">Laporan <span style="padding: 0 12px 0 22px;">:</span> </label>                                                        
                             <div class="dropdown">
-                                <input type="hidden" name="dbhRealization[reportingId]" id="reporting-id" value="<%= currentReporting?._id.toString() %>">
+                                <input type="hidden" name="dbhRealization[reportingId]" id="reporting-id" value="<%= currentReporting?._id.toString() %>" required>
                                 <button id="report-btn" class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"><%= currentReporting ? currentReporting?.period + " | " + currentReporting?.year : 'Pilih Laporan' %></button>
                                 <ul class="dropdown-menu">                                    
                                     <li><a href="/" class="dropdown-item">Pilih Laporan</a></li>
-                                    <% for(let report of opdReportingData) { %>
-                                        <li><a href="/?triwulan=<%=report.period.trim()%>&tahun=<%=
-                                            report.year%>&edit=false" id="<%= report._id %>" class="dropdown-item report-item <%= currentReporting?._id.toString() == report._id.toString() ? 'active' : '' %>"><%= (report?.period + " | " + report?.year.toString()).trim() %></a></li>
+                                    <% for(let report of opdReporting) { %>
+                                        <li><a href="/?triwulan=<%= report.period.trim() %>&tahun=<%= 
+                                            report.year %>&edit=false" id="<%= report.title %>" class="dropdown-item report-item <%= currentReporting?._id == report._id ? 'active' : '' %>"><%= (report?.period + " | " + report?.year.toString()).trim() %></a></li>
                                     <% } %>                
                                 </ul> 
                             </div>                            
@@ -32,11 +32,11 @@
                     </div>
                 </div>
                 <nav class="nav nav-pills row mx-3 mb-5">
-                    <a class="col me-4 text-sm-center nav-link bg-warning text-white fw-medium" aria-current="page" href="/<%= opd._id %>/edit-profile">EDIT PROFILE</a>                    
+                    <a class="col me-4 text-sm-center nav-link bg-warning text-white fw-medium" aria-current="page" href="/<%= opd.institutionName.replace(/\s/g, '-') %>/edit-profile">RUBAH PROFILE</a>                    
                     <a class="col me-4 text-sm-center nav-link bg-secondary text-white fw-medium" aria-current="page" href="/logout">LOGOUT</a>                                                            
-                    <a class="col text-sm-center nav-link bg-danger text-white fw-medium" href="#">DELETE ACCOUNT</a>
+                    <%- include('../partials/delete-account-modal.ejs') %>
                 </nav>
-                <% if(currentReporting && opdReportingData && dbhRealizationOpd) { %>
+                <% if(currentReporting && opdReporting && currentDataDbhOpd) { %>
                     <div class="form-input container w-50 align-items-center border p-3">
                         <p class="h5 mb-5 text-center">Formulir Input Data Realisasi DBH</p>                    
                         <div class="row d-flex row-cols-3">
@@ -137,17 +137,16 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="d-flex ms-2 justify-content-end">                                            
+                        <div class="d-flex ms-2 justify-content-end">      
+                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">                                      
                             <button type="button" id="clear-btn" class="btn btn-danger mb-3 mx-2" style="width: 15%;">CLEAR</button>                                                                                                    
-                            <button type="submit" id="submit-form-btn" form="dbh-realization-form" class="btn btn-primary mb-3 mx-2" style="width: 15%;"><%= apiUrl != 'add' ? 'RUBAH DATA' : 'TAMBAH' %></button>
+                            <button type="submit" id="submit-form-btn"  form="dbh-realization-form" class="btn btn-primary mb-3 mx-2" style="width: 15%;"><%= apiUrl != 'add' ? 'RUBAH DATA' : 'TAMBAH' %></button>
                         </div>                    
                     </div>
-                    <% if(dbhRealizationData.length > 1) { %>
+                    <% if(currentDataDbhOpd.length > 1) { %>
                         <div class="row justify-content-end align-items-center mt-5">                             
                             <%- include('data-table.ejs') %>
-                            <div class="mt-3 col-2">
-                                <button type="button" id="send-report-btn" class="btn btn-primary py-2 px-4 align-self-end"><a class="text-white">KIRIM LAPORAN</a></button>                                
-                            </div>
+                            <%- include('../partials/send-report-modal.ejs') %>                            
                         </div>
                     <% } else { %> 
                         <div class="h-100 w-100 justify-content-center align-items-center text-center">
@@ -161,8 +160,8 @@
                     </div>
                 <% } %>                        
             </form>            
-        </div>                               
-    </main>
-
+        </div>        
+        <%- include('../partials/toast-msg.ejs') %>                       
+    </main>        
     <script src="/js/opd/dbh-opd.js"></script>
 <%- include('../partials/end.ejs') %>

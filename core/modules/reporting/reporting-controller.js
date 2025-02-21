@@ -1,11 +1,12 @@
 const excelJS = require("exceljs");
 const { Types } = require("mongoose");
+const flash = require("express-flash");
 
+const { encrypt, decrypt } = require("../../common/utils/crypto-helper");
 const { createBudgetId } = require("../../common/utils/id_gen");
 const opdService = require("../opd/opd-service");
 const reportingService = require("./reporting-service");
 const dbhRealizationService = require("../dbh-realization/dbh-realization-service");
-const opd = require("../opd/models/opd");
 
 exports.renderIndex = async (req, res, next) => {
   const years = [];
@@ -34,6 +35,7 @@ exports.renderIndex = async (req, res, next) => {
       years: years,
       reportingList: reportingByYear,
       totalDbhRecievedByYear,
+      message: req.flash(),
     });
   } catch (error) {
     return next(error);
@@ -41,24 +43,40 @@ exports.renderIndex = async (req, res, next) => {
 };
 
 exports.renderReportingDetails = async (req, res, next) => {
-  const reportingId = req.params.reportId;
+  const title = req.params.title.replace(/-/g, " ");
+  let currentReporting;
 
   try {
-    await reportingService.calculateTotalDbhReporting(reportingId);
-
-    const currentReporting = await reportingService.findOneReporting({
-      _id: reportingId,
+    currentReporting = await reportingService.findOneReporting({
+      title,
     });
 
+    console.log("currentReporting = " + JSON.stringify(currentReporting));
+    const updatedReport = await reportingService.calculateTotalDbhReporting(
+      currentReporting?._id
+    );
+
+    if (updatedReport) {
+      currentReporting = await reportingService.findOneReporting({
+        _id: currentReporting?._id,
+      });
+    }
+
     const dbhOpdCompletedArray = await reportingService.findInstitutionBudget({
-      reportingId,
+      reportingId: currentReporting?._id,
       isCompleted: true,
     });
     const opdIdArray = dbhOpdCompletedArray.map((dbhOpd) => dbhOpd.opdId);
 
-    const dbhRealizationOpd = await reportingService.groupDbhByOpd({
-      reportingId,
+    const dbhRealization = await reportingService.groupDbhByOpd({
+      reportingId: currentReporting?._id,
       opds: opdIdArray,
+    });
+
+    const dbhRealizationOpd = dbhRealization.map((item) => {
+      const encryptedId = encrypt(item._id.toString());
+      console.log(encryptedId);
+      return { _id: encryptedId, ...item };
     });
 
     console.log("dbhRealizationOPd = " + JSON.stringify(dbhRealizationOpd));
@@ -68,6 +86,7 @@ exports.renderReportingDetails = async (req, res, next) => {
       currentReporting,
       dbhRealizationOpd,
       userRole: "admin",
+      message: req.flash(),
     });
   } catch (error) {
     return next(error);
@@ -75,8 +94,16 @@ exports.renderReportingDetails = async (req, res, next) => {
 };
 
 exports.renderCreateReporting = async (req, res, next) => {
-  const institutions = await opdService.findManyOpd({
+  const institutionsArr = await opdService.findManyOpd({
     opdName: { $ne: "ADMIN" },
+  });
+
+  const institutions = institutionsArr.map((item) => {
+    return {
+      _id: encrypt(item._id.toString()),
+      _id: item._id.toString(),
+      institutionName: item.institutionName,
+    };
   });
 
   res.render("admin/create-reporting", {
@@ -84,35 +111,56 @@ exports.renderCreateReporting = async (req, res, next) => {
     apiRoute: "/api/laporan/add",
     selectedReporting: null,
     institutions,
+    message: req.flash(),
   });
 };
 
 exports.renderUpdateReporting = async (req, res, next) => {
-  const reportingId = req.params.reportingId;
+  const title = req.params.title;
 
   try {
-    const institutions = await opdService.findManyOpd({
+    const institutionsArr = await opdService.findManyOpd({
       opdName: { $ne: "ADMIN" },
     });
-    const selectedReporting = await reportingService.findOneReporting({
-      _id: reportingId,
+    const institutions = institutionsArr.map((item) => {
+      return {
+        _id: encrypt(item._id.toString()),
+        _id: item._id.toString(),
+        institutionName: item.institutionName,
+      };
     });
-    const selectedInstitutionBudget =
+
+    const selectedReporting = await reportingService.findOneReporting({
+      title: title.replace(/-/g, " "),
+    });
+
+    const selectedInstitutionBudgetArr =
       await reportingService.findInstitutionBudget({
-        reportingId: reportingId,
+        reportingId: selectedReporting?._id,
       });
 
+    const selectedInstitutionBudget = selectedInstitutionBudgetArr.map(
+      (item) => {
+        return {
+          _id: encrypt(item._id.toString()),
+          opdId: item.opdId.toString(),
+          dbhBudget: item.dbhBudget,
+        };
+      }
+    );
+
     if (!selectedReporting) {
-      res.redirect(`/admin/${reportingId}`);
+      res.redirect(`/admin/${title}`);
     } else {
       res.render("admin/create-reporting", {
         pageTitle: "Update Data Anggaran",
-        apiRoute: "/api/laporan/edit/" + reportingId,
+        apiRoute: "/api/laporan/edit/" + title,
         institutions,
         selectedReporting: {
           reporting: selectedReporting,
           institutionBudget: selectedInstitutionBudget,
         },
+        message: req.flash(),
       });
     }
   } catch (error) {
@@ -128,10 +176,10 @@ exports.getAllReporting = async (req, res, next) => {
 
 exports.getReporting = async (req, res, next) => {
   // const opd = req.session.user;
-  const reportingId = req.params.reportId;
+  const title = req.params.title.replace(/-/g, " ");
 
   const reporting = await reportingService.findOneReporting({
-    _id: reportingId,
+    title,
   });
   return res.status(200).json(reporting);
 };
@@ -153,12 +201,15 @@ exports.createReporting = async (req, res, next) => {
     });
 
     console.log("REPORTING ADDED : " + reportingAdded);
+    console.log("institutionBudgetData = ", institutionBudget);
 
     const institutionBudgetData = institutionBudget.map((item, index) => {
-      return { reportingId: reportingAdded._id, ...item };
+      item.opdId = decrypt(item.opdId);
+      return {
+        reportingId: reportingAdded._id,
+        ...item,
+      };
     });
-
-    console.log("institutionBudgetData = ", institutionBudgetData);
 
     const institutionBudgetAdded =
       await reportingService.insertInstitutionBudget(institutionBudgetData);
@@ -194,14 +245,16 @@ exports.createReporting = async (req, res, next) => {
       await dbhRealizationService.addManyDbh(dbhOpdData);
     }
 
+    req.flash("success", "Berhasil membuat laporan");
     res.redirect("/admin?tahun=" + reportingData.year);
   } catch (error) {
+    req.flash("error", "Gagal membuat laporan");
     return next(error);
   }
 };
 
 exports.updateReporting = async (req, res, next) => {
-  const reportingId = req.params.reportId;
+  const title = req.params.title.replace(/-/g, " ");
   const institutionBudget = req.body.institutionBudget;
   const reportingData = req.body.reporting;
   const totalDbhRecieved = Object.values(reportingData.dbhRecieved).reduce(
@@ -209,17 +262,25 @@ exports.updateReporting = async (req, res, next) => {
     0
   );
 
-  console.log("REPORTING DATA = ", reportingData);
-
-  const institutionBudgetData = institutionBudget.map((item, index) => {
-    return { reportingId, ...item };
-  });
-
-  console.log("institutionBudgetData = ", institutionBudgetData);
-
   try {
+    const currentReport = await reportingService.findOneReporting({ title });
+
+    console.log("REPORTING DATA = ", reportingData);
+    console.log("institutionBudgetData = ", institutionBudget);
+
+    const institutionBudgetData = institutionBudget.map((item, index) => {
+      if (item._id) {
+        item._id = decrypt(item._id);
+      }
+      if (item.opdId) {
+        item.opdId = decrypt(item.opdId);
+      }
+
+      return { reportingId: currentReport?._id, ...item };
+    });
+
     await reportingService.updateReporting(
-      { _id: reportingId },
+      { _id: currentReport?._id },
       { ...reportingData, totalDbhRecieved }
     );
 
@@ -292,24 +353,33 @@ exports.updateReporting = async (req, res, next) => {
       }
     }
 
+    req.flash("success", "Berhasil update laporan");
     res.redirect("/admin?tahun=" + reportingData.year);
   } catch (error) {
+    req.flash("error", "Gagl update laporan");
     return next(error);
   }
 };
 
 exports.deleteReporting = async (req, res, next) => {
-  const reportingId = req.params.reportId;
+  const title = req.params.title.replace(/-/g, " ");
 
   try {
-    await reportingService.deleteReporting(reportingId);
+    const currentReport = await reportingService.findOneReporting(title);
 
-    await reportingService.deleteManyInstitutionBudget({ reportingId });
+    await reportingService.deleteReporting(currentReport?._id);
 
-    await dbhRealizationService.deleteBudget({ reportingId });
+    await reportingService.deleteManyInstitutionBudget({
+      reportingId: currentReport?._id,
+    });
+
+    await dbhRealizationService.deleteBudget({
+      reportingId: currentReport?._id,
+    });
 
     const lastReporting = await reportingService.getLastReporting();
 
+    req.flash("success", "Berhasil hapus laporan");
     res.redirect("/admin?tahun=" + lastReporting.year);
   } catch (error) {
     return next(error);
@@ -317,22 +387,22 @@ exports.deleteReporting = async (req, res, next) => {
 };
 
 exports.exportToExcel = async (req, res, next) => {
-  const reportingId = req.params.reportId;
+  const title = req.params.title.replace(/-/g, " ");
 
   const workbook = new excelJS.Workbook();
-  const reportingData = await Reporting.findOne({ _id: reportingId });
+  const currentReport = await reportingService.findOneReporting({ title });
   const dbhReportingData = await dbhRealizationService.findBudget({
-    reportingId: reportingId,
+    reportingId: currentReport._id,
   });
   const worksheet = workbook.addWorksheet(
-    `Rincian DBH Provinsi ${reportingData.year}`,
+    `Rincian DBH Provinsi ${currentReport.year}`,
     {
       pageSetup: { fitToPage: true, fitToHeight: 5, fitToWidth: 7 },
     }
   );
   const getReportingByYear = await Reporting.find({
-    year: reportingData.year,
-    createdAt: reportingData.createdAt,
+    year: currentReport.year,
+    createdAt: currentReport.createdAt,
   });
 
   // Apply styling (bold, font size, alignment, border, etc.)
@@ -392,10 +462,10 @@ exports.exportToExcel = async (req, res, next) => {
     "LAPORAN REALISASI PENGGUNAAN DANA BAGI HASIL PAJAK PROVINSI BALI";
   worksheet.getCell(
     "A2"
-  ).value = `PADA APBD KABUPATEN KARANGASEM TAHUN ANGGARAN ${reportingData.year}`;
+  ).value = `PADA APBD KABUPATEN KARANGASEM TAHUN ANGGARAN ${currentReport.year}`;
   worksheet.getCell(
     "A3"
-  ).value = `REALISASI SAMPAI BULAN JUNI (${reportingData.period.toUpperCase()})`;
+  ).value = `REALISASI SAMPAI BULAN JUNI (${currentReport.period.toUpperCase()})`;
 
   // Apply the style to the title cells
   worksheet.getCell("A1").style = titleStyle;
@@ -570,7 +640,7 @@ exports.exportToExcel = async (req, res, next) => {
     prevOpdId = data.opdId;
   });
 
-  const totalDbhItems = reportingData.totalInstitutionDbh;
+  const totalDbhItems = currentReport.totalInstitutionDbh;
   const totalDbh = [
     "",
     "TOTAL",
@@ -591,7 +661,7 @@ exports.exportToExcel = async (req, res, next) => {
   const totalDbhBudget = [
     "",
     "DANA DBH PROPINSI",
-    reportingData.totalDbhBudget,
+    currentReport.totalDbhBudget,
     "",
     "",
     "",
@@ -607,7 +677,7 @@ exports.exportToExcel = async (req, res, next) => {
   const totalDbhRealization = [
     "",
     "REALISASI S/D BULAN JUNI (TRIWULAN II)",
-    reportingData.totalDbhRealization,
+    currentReport.totalDbhRealization,
     "",
     "",
     "",
@@ -644,10 +714,10 @@ exports.exportToExcel = async (req, res, next) => {
 
   const lastRowNumber = worksheet.lastRow.number;
   worksheet.insertRow(lastRowNumber + 2, [
-    `Pagu Yang sudah di transfer (Diterima) dari Provinsi untuk DBH Provinsi TA ${reportingData.year}`,
+    `Pagu Yang sudah di transfer (Diterima) dari Provinsi untuk DBH Provinsi TA ${currentReport.year}`,
   ]).font = { bold: true };
 
-  const totalDbhRecieved = reportingData.totalDbhRecieved;
+  const totalDbhRecieved = currentReport.totalDbhRecieved;
 
   const rowsData = getReportingByYear.map((report, idx) => [
     [`${idx + 1}. Penerimaan DBH ${report.period}`],
@@ -682,7 +752,7 @@ exports.exportToExcel = async (req, res, next) => {
   worksheet.addRow(["JUMLAH", "", totalDbhRecieved]).font = { bold: true };
 
   try {
-    const fileName = `${new Date().toISOString()}-laporan-dbh-${reportingData.period.trim()}.xlsx`;
+    const fileName = `${new Date().toISOString()}-laporan-dbh-${currentReport.period.trim()}.xlsx`;
     // Write to the response directly as a download
     res.setHeader(
       "Content-Type",

@@ -13,7 +13,7 @@
                 <p class="h6 my-2">Status Laporan <span class="px-4 <%= currentReporting.isDone ? 'text-success' : 'text-danger' %>">&nbsp; : <%= currentReporting.isDone ? 'Sudah Selesai' : 'Pending' %></span></p>
                 <div class="d-flex my-4">     
                     <button type="button" class="btn btn-danger me-3">DOWNLOAD PDF</button>                        
-                    <button type="submit" class="btn btn-success"><a href="/admin/<%= currentReporting._id %>/download-excel">DOWNLOAD EXCEL</a></button>                                                            
+                    <button type="submit" class="btn btn-success"><a href="/admin/<%= currentReporting.title.replace(/\s/g, '-') %>/download-excel">DOWNLOAD EXCEL</a></button>                                                            
                 </div>                    
             </div>
         </div>         
@@ -67,13 +67,13 @@
                         <% for(let dbhOpd of dbhRealizationOpd) { %> 
                             <% for(let dbhData of dbhOpd.data) { %>                       
                                 <% if(dbhData.parameter == "Lembaga") { %>
-                                    <tr id="<%= dbhData._id %>" class="table-primary">
+                                    <tr id="<%= dbhData.name %>" class="table-primary">
                                         <th scope="row"><%= dbhData.noRek %></th>                                    
                                         <td class="text-uppercase fs-5 fw-semibold"><%= dbhData.name %></td>                                                                                          
                                         <td colspan="11"></td>                           
                                     </tr>                
                                 <% } else { %>
-                                    <tr id="<%= dbhData._id %>" class="<%= dbhData.parameter === 'Program' 
+                                    <tr id="<%= dbhData.name %>" class="<%= dbhData.parameter === 'Program' 
                                         ? 'table-success' 
                                         : dbhData.parameter === 'Kegiatan' 
                                           ? 'table-warning' 
@@ -153,5 +153,6 @@
                 <h1 class="display-4">Data Belum Ditambahkan</h1>
             </div>
         <% } %>
+        <%- include('../partials/toast-msg.ejs') %> 
     </main>               
 <%- include('../partials/end.ejs') %>

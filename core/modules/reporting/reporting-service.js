@@ -15,18 +15,29 @@ exports.groupDbhByOpd = async (filter) => {
     },
     {
       // Step 2: Sort the documents by opdId and other fields if needed (e.g., createdAt)
-      $sort: { opdId: 1, createdAt: 1 }, // Sort by opdId and createdAt field within each group
+      $sort: { _id: 1 }, // Sort by opdId and createdAt field within each group
     },
     {
       // Step 3: Group the documents by opdId
       $group: {
         _id: "$opdId", // Group by opdId
-        data: { $push: "$$ROOT" }, // Push all documents in that group to a 'data' array
+        data: {
+          $push: {
+            norek: "$norek",
+            name: "$name",
+            parameter: "$parameter",
+            pagu: "$pagu",
+            dbh: "$dbh",
+          },
+        },
         totalDbhOpd: {
           $first: {
             $cond: {
               if: { $eq: ["$parameter", "Lembaga"] },
-              then: "$$ROOT",
+              then: {
+                pagu: "$pagu",
+                dbh: "$dbh",
+              },
               else: "$$REMOVE",
             },
           },
