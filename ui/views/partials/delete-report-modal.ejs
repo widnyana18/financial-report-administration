@@ -1,0 +1,45 @@
+<!-- Modal -->
+<div
+  class="modal fade"
+  id="delete-report-modal"
+  tabindex="-1"
+  aria-labelledby="delete-report-modal-label"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="delete-report-modal-label">
+          Konfirmasi Hapus Laporan
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        Apakah Anda yakin ingin menghapus Laporan ini ?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Batal
+        </button>
+        <button type="button" class="btn btn-danger" id="delete-report-button">
+          Hapus
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tombol Trigger Modal -->
+<button
+  type="button"
+  class="flex-fill btn btn-danger me-3"
+  data-bs-toggle="modal"
+  data-bs-target="#delete-report-modal"
+>
+  HAPUS LAPORAN
+</button>

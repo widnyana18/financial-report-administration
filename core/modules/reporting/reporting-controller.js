@@ -1,6 +1,5 @@
 const excelJS = require("exceljs");
 const { Types } = require("mongoose");
-const flash = require("express-flash");
 
 const { encrypt, decrypt } = require("../../common/utils/crypto-helper");
 const { createBudgetId } = require("../../common/utils/id_gen");
@@ -15,6 +14,10 @@ exports.renderIndex = async (req, res, next) => {
     const allReporting = await reportingService.findManyReporting();
     const reportingByYear = await reportingService.findManyReporting({
       year: Number(req.query.tahun ?? 0),
+    });
+    const reportingList = reportingByYear.map((item) => {
+      const report = item.toObject();
+      return { ...report, _id: encrypt(report._id.toString()) };
     });
 
     allReporting.forEach((item, index) => {
@@ -33,7 +36,7 @@ exports.renderIndex = async (req, res, next) => {
     res.render("admin/admin-reporting", {
       pageTitle: "Portal Admin",
       years: years,
-      reportingList: reportingByYear,
+      reportingList,
       totalDbhRecievedByYear,
       message: req.flash(),
     });
@@ -43,40 +46,39 @@ exports.renderIndex = async (req, res, next) => {
 };
 
 exports.renderReportingDetails = async (req, res, next) => {
-  const title = req.params.title.replace(/-/g, " ");
-  let currentReporting;
+  const reportingId = decrypt(req.params.reportingId);
 
   try {
-    currentReporting = await reportingService.findOneReporting({
-      title,
+    let currentReporting = await reportingService.findOneReporting({
+      _id: reportingId,
     });
+    currentReporting = {
+      ...currentReporting.toObject(),
+      _id: req.params.reportingId,
+    };
 
     console.log("currentReporting = " + JSON.stringify(currentReporting));
-    const updatedReport = await reportingService.calculateTotalDbhReporting(
-      currentReporting?._id
-    );
 
-    if (updatedReport) {
-      currentReporting = await reportingService.findOneReporting({
-        _id: currentReporting?._id,
-      });
-    }
+    await reportingService.calculateTotalDbhReporting(reportingId);
 
     const dbhOpdCompletedArray = await reportingService.findInstitutionBudget({
-      reportingId: currentReporting?._id,
+      reportingId: reportingId,
       isCompleted: true,
     });
     const opdIdArray = dbhOpdCompletedArray.map((dbhOpd) => dbhOpd.opdId);
 
     const dbhRealization = await reportingService.groupDbhByOpd({
-      reportingId: currentReporting?._id,
+      reportingId: reportingId,
       opds: opdIdArray,
     });
 
     const dbhRealizationOpd = dbhRealization.map((item) => {
-      const encryptedId = encrypt(item._id.toString());
-      console.log(encryptedId);
-      return { _id: encryptedId, ...item };
+      const dbhData = item.data;
+      const data = dbhData.map((dbh) => {
+        const { _id, opdId, reportingId, ...others } = dbh;
+        return others;
+      });
+      return { ...item, data };
     });
 
     console.log("dbhRealizationOPd = " + JSON.stringify(dbhRealizationOpd));
@@ -85,7 +87,6 @@ exports.renderReportingDetails = async (req, res, next) => {
       pageTitle: currentReporting.title,
       currentReporting,
       dbhRealizationOpd,
-      userRole: "admin",
       message: req.flash(),
     });
   } catch (error) {
@@ -94,14 +95,11 @@ exports.renderReportingDetails = async (req, res, next) => {
 };
 
 exports.renderCreateReporting = async (req, res, next) => {
-  const institutionsArr = await opdService.findManyOpd({
-    opdName: { $ne: "ADMIN" },
-  });
+  const institutionsArr = await opdService.findManyOpd();
 
   const institutions = institutionsArr.map((item) => {
     return {
       _id: encrypt(item._id.toString()),
-      _id: item._id.toString(),
       institutionName: item.institutionName,
     };
   });
@@ -116,7 +114,7 @@ exports.renderCreateReporting = async (req, res, next) => {
 };
 
 exports.renderUpdateReporting = async (req, res, next) => {
-  const title = req.params.title;
+  const reportingId = decrypt(req.params.reportingId);
 
   try {
     const institutionsArr = await opdService.findManyOpd({
@@ -125,44 +123,39 @@ exports.renderUpdateReporting = async (req, res, next) => {
     const institutions = institutionsArr.map((item) => {
       return {
         _id: encrypt(item._id.toString()),
-        _id: item._id.toString(),
         institutionName: item.institutionName,
       };
     });
 
-    const selectedReporting = await reportingService.findOneReporting({
-      title: title.replace(/-/g, " "),
+    let selectedReporting = await reportingService.findOneReporting({
+      _id: reportingId,
     });
+    selectedReporting._id = req.params.reportingId;
 
     const selectedInstitutionBudgetArr =
       await reportingService.findInstitutionBudget({
-        reportingId: selectedReporting?._id,
+        reportingId,
       });
 
     const selectedInstitutionBudget = selectedInstitutionBudgetArr.map(
       (item) => {
         return {
           _id: encrypt(item._id.toString()),
-          opdId: item.opdId.toString(),
           dbhBudget: item.dbhBudget,
         };
       }
     );
 
-    if (!selectedReporting) {
-      res.redirect(`/admin/${title}`);
-    } else {
-      res.render("admin/create-reporting", {
-        pageTitle: "Update Data Anggaran",
-        apiRoute: "/api/laporan/edit/" + title,
-        institutions,
-        selectedReporting: {
-          reporting: selectedReporting,
-          institutionBudget: selectedInstitutionBudget,
-        },
-        message: req.flash(),
-      });
-    }
+    res.render("admin/create-reporting", {
+      pageTitle: "Update Data Anggaran",
+      apiRoute: "/api/laporan/edit/" + req.params.reportingId,
+      institutions,
+      selectedReporting: {
+        reporting: selectedReporting,
+        institutionBudget: selectedInstitutionBudget,
+      },
+      message: req.flash(),
+    });
   } catch (error) {
     return next(error);
   }
@@ -176,7 +169,7 @@ exports.getAllReporting = async (req, res, next) => {
 
 exports.getReporting = async (req, res, next) => {
   // const opd = req.session.user;
-  const title = req.params.title.replace(/-/g, " ");
+  const reportingId = decrypt(req.params.reportingId);
 
   const reporting = await reportingService.findOneReporting({
     title,
@@ -254,7 +247,7 @@ exports.createReporting = async (req, res, next) => {
 };
 
 exports.updateReporting = async (req, res, next) => {
-  const title = req.params.title.replace(/-/g, " ");
+  const reportingId = decrypt(req.params.reportingId);
   const institutionBudget = req.body.institutionBudget;
   const reportingData = req.body.reporting;
   const totalDbhRecieved = Object.values(reportingData.dbhRecieved).reduce(
@@ -263,11 +256,6 @@ exports.updateReporting = async (req, res, next) => {
   );
 
   try {
-    const currentReport = await reportingService.findOneReporting({ title });
-
-    console.log("REPORTING DATA = ", reportingData);
-    console.log("institutionBudgetData = ", institutionBudget);
-
     const institutionBudgetData = institutionBudget.map((item, index) => {
       if (item._id) {
         item._id = decrypt(item._id);
@@ -276,11 +264,11 @@ exports.updateReporting = async (req, res, next) => {
         item.opdId = decrypt(item.opdId);
       }
 
-      return { reportingId: currentReport?._id, ...item };
+      return { reportingId, ...item };
     });
 
     await reportingService.updateReporting(
-      { _id: currentReport?._id },
+      { _id: reportingId },
       { ...reportingData, totalDbhRecieved }
     );
 
@@ -362,37 +350,35 @@ exports.updateReporting = async (req, res, next) => {
 };
 
 exports.deleteReporting = async (req, res, next) => {
-  const title = req.params.title.replace(/-/g, " ");
+  const reportingId = decrypt(req.params.reportingId);
 
   try {
-    const currentReport = await reportingService.findOneReporting(title);
-
-    await reportingService.deleteReporting(currentReport?._id);
+    await reportingService.deleteReporting(reportingId);
 
     await reportingService.deleteManyInstitutionBudget({
-      reportingId: currentReport?._id,
+      reportingId,
     });
 
     await dbhRealizationService.deleteBudget({
-      reportingId: currentReport?._id,
+      reportingId,
     });
 
-    const lastReporting = await reportingService.getLastReporting();
-
     req.flash("success", "Berhasil hapus laporan");
-    res.redirect("/admin?tahun=" + lastReporting.year);
+    return res.status(200).send("Berhasil hapus laporan");
   } catch (error) {
     return next(error);
   }
 };
 
 exports.exportToExcel = async (req, res, next) => {
-  const title = req.params.title.replace(/-/g, " ");
+  const reportingId = decrypt(req.params.reportingId);
 
   const workbook = new excelJS.Workbook();
-  const currentReport = await reportingService.findOneReporting({ title });
+  const currentReport = await reportingService.findOneReporting({
+    _id: reportingId,
+  });
   const dbhReportingData = await dbhRealizationService.findBudget({
-    reportingId: currentReport._id,
+    reportingId,
   });
   const worksheet = workbook.addWorksheet(
     `Rincian DBH Provinsi ${currentReport.year}`,

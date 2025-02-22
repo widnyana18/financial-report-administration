@@ -84,7 +84,7 @@
             </td> 
             <%- include('../partials/delete-dbh-modal.ejs') %> 
             <td>
-              <a data-bs-toggle="modal" data-bs-target="#delete-dbh-modal" class="delete-btn" data-name="<%= data.name?.replace(/\s/g, '-') %>"
+              <a data-bs-toggle="modal" data-bs-target="#delete-dbh-modal" id="open-modal-btn" data-dbhId="<%= data._id %>"
                 ><i class="bi bi-trash3"></i
               ></a>
             </td>          

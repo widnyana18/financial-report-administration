@@ -7,26 +7,15 @@ module.exports = (req, res, next) => {
     } else {
       return res.redirect("/login");
     }
-  } else {    
+  } else { 
+    const query = req.query;   
     if (
-      (req.originalUrl.includes("/admin") && req.session.userRole != "ADMIN") ||
-      (req.session.userRole != "OPD" && !req.user?._id)
+      (req.originalUrl.includes("/admin") && req.session.userRole != "ADMIN")
+       ||
+      (query.triwulan && query.tahun && req.session.userRole != "OPD" && !req.user?._id)
     ) {
       return res.redirect("/logout");
     }
   }
   next();
 };
-
-// else {
-//   if (req.originalUrl.includes("/admin")) {
-//     if (req.session.userRole != "ADMIN") {
-//       return res.redirect("/logout");
-//     }
-//   } else {
-//     if (req.session.userRole != "OPD") {
-//       return res.redirect("/logout");
-//     }
-//   }
-//   next();
-// }

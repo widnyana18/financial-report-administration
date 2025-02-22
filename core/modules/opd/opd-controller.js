@@ -3,10 +3,10 @@ const bcrypt = require("bcryptjs");
 const opdService = require("./opd-service");
 const reportingService = require("../reporting/reporting-service");
 const dbhRealizationService = require("../dbh-realization/dbh-realization-service");
+const { encrypt } = require("../../common/utils/crypto-helper");
 
 exports.renderUpdateOpd = async (req, res, next) => {
   const opdId = req.user._id;
-  const institutionName = req.user.institutionName.replace(/\s/g, "-");
 
   try {
     const selectedOpd = await opdService.getOneOpd({ _id: opdId });
@@ -17,7 +17,7 @@ exports.renderUpdateOpd = async (req, res, next) => {
       res.render("auth/signup", {
         pageTitle: "Update OPD",
         domain: "opd",
-        path: `/opd/edit/${institutionName}`,
+        path: `/opd/edit/${encrypt(opdId)}`,
         selectedOpd,
         message: req.flash(),
       });
@@ -51,18 +51,18 @@ exports.updateOpd = async (req, res, next) => {
 
     if (data.username == opd.username && pswIsMatch) {
       req.flash("error", "Data sudah pernah digunakan");
-      res.redirect(`/${opd.institutionName.replace(/\s/g, "-")}/edit-profile`);
+      res.redirect(`/${opd._id}/edit-profile`);
     }
 
     const hashedPassword = await bcrypt.hash(data.password, 12);
     const successUpdateData = await opdService.updateOpd(
-      { _id: opd },
+      { _id: opd._id },
       { ...data, password: hashedPassword }
     );
 
     if (successUpdateData) {
       const lastDataDbhByOpd = await reportingService.findInstitutionBudget({
-        opdId: opd,
+        opdId: opd._id,
       });
 
       const lastReporting = await reportingService.findOneReporting({

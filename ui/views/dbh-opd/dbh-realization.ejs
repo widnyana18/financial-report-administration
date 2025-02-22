@@ -13,7 +13,7 @@
                     </div>
                     <div class="col-5 p-2 w-5">
                         <p class="h6 my-1">OPD <span style="padding: 0 6px 0 52px;">:</span> <%= opd.opdName %></p>
-                        <input type="hidden" value="<%= opd.institutionName %>" id="institution-name">
+                        <input type="hidden" value="<%= opd._id %>" id="opdId">
                         <p class="h6 my-1">Lembaga <span style="padding: 0 6px 0 17px;">:</span> <%= opd.institutionName %></p>
                         <div class="d-flex my-1 align-items-center">                            
                             <label for="reporting-id" class="form-label h6">Laporan <span style="padding: 0 12px 0 22px;">:</span> </label>                                                        
@@ -32,7 +32,7 @@
                     </div>
                 </div>
                 <nav class="nav nav-pills row mx-3 mb-5">
-                    <a class="col me-4 text-sm-center nav-link bg-warning text-white fw-medium" aria-current="page" href="/<%= opd.institutionName.replace(/\s/g, '-') %>/edit-profile">RUBAH PROFILE</a>                    
+                    <a class="col me-4 text-sm-center nav-link bg-warning text-white fw-medium" aria-current="page" href="/<%= opd._id %>/edit-profile">RUBAH PROFILE</a>                    
                     <a class="col me-4 text-sm-center nav-link bg-secondary text-white fw-medium" aria-current="page" href="/logout">LOGOUT</a>                                                            
                     <%- include('../partials/delete-account-modal.ejs') %>
                 </nav>

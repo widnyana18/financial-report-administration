@@ -4,21 +4,24 @@
     <main class="container-fluid my-5 mx-3">        
         <div class="row justify-content-between">                
             <div class="col-5 d-flex flex-row p-2 w-50">
-                <img src="images/logo.png" class="rounded d-block w-75 h-75" alt="logo">
-                <h1 class="display-6 mt-3 mx-4 mb-5 fw-semibold align-self-center">SISTEM APLIKASI PERTANGGUNGJAWABAN-DBH PROVINSI (SIAP-DP)</h1>  
+                <img src="images/logo.png" class="rounded d-block w-45 h-45" alt="logo">
+                <h1 class="display-6 mt-3 mx-4 mb-5 fw-semibold align-self-center"><%= currentReporting.title %></h1>  
             </div>
-            <div class="col-5 p-2 w-5">
+            <div class="col-5 align-self-center p-2 w-5">
+                <input type="hidden" id="data-report" data-reportId="<%= currentReporting._id %>" data-year="<%= currentReporting.year %>">                
                 <p class="h6 my-2">Laporan <span class="px-5">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : <%= currentReporting.period  + ' | ' +  currentReporting.year%></span></p>                
                 <p class="h6 my-2">Jumlah Lembaga <span class="px-3"> : <%= currentReporting.totalDbhOpdAdded + ' / ' + currentReporting.totalOpd %></span></p>
-                <p class="h6 my-2">Status Laporan <span class="px-4 <%= currentReporting.isDone ? 'text-success' : 'text-danger' %>">&nbsp; : <%= currentReporting.isDone ? 'Sudah Selesai' : 'Pending' %></span></p>
-                <div class="d-flex my-4">     
-                    <button type="button" class="btn btn-danger me-3">DOWNLOAD PDF</button>                        
-                    <button type="submit" class="btn btn-success"><a href="/admin/<%= currentReporting.title.replace(/\s/g, '-') %>/download-excel">DOWNLOAD EXCEL</a></button>                                                            
-                </div>                    
+                <p class="h6 my-2">Status Laporan <span class="px-4 <%= currentReporting.isDone ? 'text-success' : 'text-danger' %>">&nbsp; : <%= currentReporting.isDone ? 'Sudah Selesai' : 'Pending' %></span></p>                                    
             </div>
-        </div>         
+        </div>  
+        <div class="d-flex my-4 mx-4">                 
+            <button type="button" class="flex-fill btn btn-warning me-3"><a class="link-underline-warning text-light" href="/admin/edit/<%= currentReporting._id %>">EDIT LAPORAN</a></button>                        
+            <%- include('../partials/delete-report-modal.ejs') %>
+            <button type="button" class="flex-fill btn btn-primary me-3">DOWNLOAD PDF</button>                        
+            <button type="submit" class="flex-fill btn btn-success"><a class="link-underline-success text-light" href="/admin/<%= currentReporting._id %>/download-excel">DOWNLOAD EXCEL</a></button>
+        </div>       
         <% if(dbhRealizationOpd.length > 0) { %>                                  
-            <div class="table-responsive">
+            <div class="table-responsive my-3">
                 <table
                   class="table align-middle table-bordered text-center table-hover"
                   style="width: 3000px"
@@ -149,10 +152,12 @@
                 </table>
             </div>              
         <% } else { %> 
-            <div class="h-100 w-100 justify-content-center align-items-center text-center">
-                <h1 class="display-4">Data Belum Ditambahkan</h1>
+            <div class="justify-content-center align-items-center">
+                <h1 class="display-4 text-center">Data Belum Ditambahkan</h1>
             </div>
         <% } %>
         <%- include('../partials/toast-msg.ejs') %> 
     </main>               
+
+    <script src="/js/admin/admin-reporting.js"></script>
 <%- include('../partials/end.ejs') %>

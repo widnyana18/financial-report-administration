@@ -17,7 +17,7 @@ const parameterChanged = (elem) => {
 
   showParentParameter(parentParamVal, selectedParamVal);
 
-  console.log("parent : " +  + parentParamVal + ' val' + selectedParamVal);
+  console.log("parent : " + +parentParamVal + " val" + selectedParamVal);
 
   if (selectedParamVal == "Sub Kegiatan") {
     $(".hide-input").show();
@@ -97,7 +97,7 @@ $("#send-report-btn").on("click", function () {
     contentType: "application/json",
     success: function (response) {
       console.log("Success:", response);
-      $('#send-report-modal').modal('hide'); 
+      $("#send-report-modal").modal("hide");
       window.location.reload();
     },
     error: function (xhr, status, error) {
@@ -108,37 +108,33 @@ $("#send-report-btn").on("click", function () {
   $(this).prop("disabled", true);
 });
 
-$('.delete-btn').click(function(){
-  const dbhName = $(this).data('name');    
-  console.log('DBH NAME = ' + dbhName);
-  
-  $("button#delete-dbh-button").click(function () {    
-    $.ajax({
-      url: "/api/dbh/delete/" + dbhName,
-      type: "DELETE",
-      contentType: "application/json",
-      success: function (response) {
-        console.log("Success:", response);
-        $('#delete-dbh-modal').modal('hide'); 
-        window.location.reload();
-      },
-      error: function (xhr, status, error) {
-        console.error("Error:", error);
-      },
-    });
-  });
-});
+$("button#delete-dbh-button").click(function () {
+  const dbhId = $("#open-modal-btn").data("dbhId");  
 
-
-$("button#delete-account-button").click(function () {
-  const institutionName = $('#institution-name').val();
   $.ajax({
-    url: "/api/opd/delete/" + institutionName,
+    url: "/api/dbh/delete/" + dbhId,
     type: "DELETE",
     contentType: "application/json",
     success: function (response) {
       console.log("Success:", response);
-      $('#delete-dbh-modal').modal('hide'); 
+      $("#delete-dbh-modal").modal("hide");
+      window.location.reload();
+    },
+    error: function (xhr, status, error) {
+      console.error("Error:", error);
+    },
+  });
+});
+
+$("button#delete-account-button").click(function () {
+  const opdId = $("#opdId").val();
+  $.ajax({
+    url: "/api/opd/delete/" + opdId,
+    type: "DELETE",
+    contentType: "application/json",
+    success: function (response) {
+      console.log("Success:", response);
+      $("#delete-dbh-modal").modal("hide");
       window.location.href = "/login";
     },
     error: function (xhr, status, error) {

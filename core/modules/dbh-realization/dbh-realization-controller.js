@@ -4,7 +4,7 @@ const { createBudgetId } = require("../../common/utils/id_gen");
 const { encrypt, decrypt } = require("../../common/utils/crypto-helper");
 
 exports.renderDataDbhOpd = async (req, res, next) => {
-  let dbhName = req.params?.dbhName;
+  let dbhId = decrypt(req.params?.dbhId);
   const query = req.query;
   let currentReporting = null;
   let opdReporting = [];
@@ -70,9 +70,9 @@ exports.renderDataDbhOpd = async (req, res, next) => {
     //   "currentDataDbhOpd = " + JSON.stringify(dataDbhOpd, null, 2)
     // );
 
-    if (query.edit && dbhName) {
+    if (query.edit && dbhId) {
       const selectedDbh = await dbhRealizationService.getLastOneDbh({
-        name: dbhName.replace(/-/g, " "),
+        _id: dbhId,
       });
 
       const { opdId, reportingId, ...others } = selectedDbh;
@@ -185,22 +185,18 @@ exports.postAddBudget = async (req, res, next) => {
 };
 
 exports.updateBudgetRecord = async (req, res, next) => {
-  const dbhName = req.params.dbhName.replace(/-/g, " ");
+  const dbhId = decrypt(req.params.dbhId);
   const formData = req.body.dbhRealization;
   formData.reportingId = decrypt(formData.reportingId);
 
   try {
     const currentReporting = await reportingService.findOneReporting({
       _id: formData.reportingId,
-    });
-
-    const currentDbh = await dbhRealizationService.getLastOneDbh({
-      name: dbhName,
-    });
+    });    
 
     const dbhUpdated = await dbhRealizationService.updateBudget(
       {
-        _id: currentDbh._id,
+        _id: dbhId,
         opdId: req.user._id,
         reportingId: formData.reportingId,
       },
@@ -213,7 +209,7 @@ exports.updateBudgetRecord = async (req, res, next) => {
 
     if (dbhUpdated && dbhUpdated.parameter == "Sub Kegiatan") {
       const calculateResult = await dbhRealizationService.calculateTotalDbhOpd({
-        _id: currentDbh._id,
+        _id: dbhId,
         opdId: req.user._id,
         ...formData,
       });
@@ -234,11 +230,11 @@ exports.updateBudgetRecord = async (req, res, next) => {
 };
 
 exports.deleteBudgetRecord = async (req, res, next) => {
-  const dbhName = req.params.dbhName.replace(/-/g, " ");
+  const dbhId = decrypt(req.params.dbhId);
 
   try {
     const currentDbh = await dbhRealizationService.getLastOneDbh({
-      name: dbhName,
+      _id: dbhId,
     });
     const deletedBudget = await dbhRealizationService.deleteBudget({
       _id: { $regex: new RegExp(`^${currentDbh._id}(\\..*)?$`) },
@@ -246,7 +242,7 @@ exports.deleteBudgetRecord = async (req, res, next) => {
 
     if (deletedBudget) {
       const calculateResult = await dbhRealizationService.calculateTotalDbhOpd({
-        _id: currentDbh._id,
+        _id: dbhId,
         opdId: req.user._id,
         reportingId: currentDbh.reportingId,
       });
