@@ -4,7 +4,7 @@ const { createBudgetId } = require("../../common/utils/id_gen");
 const { encrypt, decrypt } = require("../../common/utils/crypto-helper");
 
 exports.renderDataDbhOpd = async (req, res, next) => {
-  let dbhId = decrypt(req.params?.dbhId);
+  let dbhId = req.params.dbhId ? decrypt(req.params.dbhId) : null;
   const query = req.query;
   let currentReporting = null;
   let opdReporting = [];
@@ -192,7 +192,7 @@ exports.updateBudgetRecord = async (req, res, next) => {
   try {
     const currentReporting = await reportingService.findOneReporting({
       _id: formData.reportingId,
-    });    
+    });
 
     const dbhUpdated = await dbhRealizationService.updateBudget(
       {

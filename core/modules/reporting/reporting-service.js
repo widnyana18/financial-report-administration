@@ -113,7 +113,7 @@ exports.getLastReporting = async () => {
 
 exports.findManyReporting = async (filter) => {
   try {
-    return await Reporting.find(filter);
+    return await Reporting.find(filter).sort({ period: 1, year: 1 });
   } catch (error) {
     throw new Error(error);
   }

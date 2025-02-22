@@ -372,24 +372,32 @@ exports.deleteReporting = async (req, res, next) => {
 
 exports.exportToExcel = async (req, res, next) => {
   const reportingId = decrypt(req.params.reportingId);
-
-  const workbook = new excelJS.Workbook();
   const currentReport = await reportingService.findOneReporting({
     _id: reportingId,
   });
-  const dbhReportingData = await dbhRealizationService.findBudget({
-    reportingId,
+  
+  const reportingByYear = await reportingService.findManyReporting({
+    year: currentReport.year,
+    createdAt: { $lte: currentReport.createdAt },
+  }); 
+  const dbhOpdCompletedArray = await reportingService.findInstitutionBudget({
+    reportingId: reportingId,
+    isCompleted: true,
   });
+  const opdIdArray = dbhOpdCompletedArray.map((dbhOpd) => dbhOpd.opdId);
+  const dbhReportingData = await reportingService.groupDbhByOpd({
+    reportingId,
+    opds: opdIdArray,
+  });
+
+  const workbook = new excelJS.Workbook();
+
   const worksheet = workbook.addWorksheet(
     `Rincian DBH Provinsi ${currentReport.year}`,
     {
       pageSetup: { fitToPage: true, fitToHeight: 5, fitToWidth: 7 },
     }
   );
-  const getReportingByYear = await Reporting.find({
-    year: currentReport.year,
-    createdAt: currentReport.createdAt,
-  });
 
   // Apply styling (bold, font size, alignment, border, etc.)
   const titleStyle = {
@@ -508,78 +516,58 @@ exports.exportToExcel = async (req, res, next) => {
   worksheet.getRow(6).height = 40;
 
   // Content Rows
-  let prevOpdId = null;
-  dbhReportingData.forEach((data) => {
-    const dbhItems = data.dbh;
-
-    const estimateRowHeight = (text, columnWidth) => {
-      const approxCharPerLine = columnWidth * 1.2; // Adjust this factor based on font size
-      const lineCount = Math.ceil(text.length / approxCharPerLine);
-      return lineCount * 15; // Assuming 15 points per line of text
-    };
-
-    const estimatedHeight = estimateRowHeight(
-      data.name,
-      worksheet.columns[1].width
-    );
-
-    if (data.parameter === "Lembaga") {
-      if (data.opdId !== prevOpdId) {
-        const rowAdded = worksheet.addRow([
-          "",
-          "Sub Total",
-          data.pagu,
-          dbhItems.pkb[0],
-          dbhItems.pkb[1],
-          dbhItems.bbnkb[0],
-          dbhItems.bbnkb[1],
-          dbhItems.pbbkb[0],
-          dbhItems.pbbkb[1],
-          dbhItems.pap[0],
-          dbhItems.pap[1],
-          dbhItems.pajakRokok[0],
-          dbhItems.pajakRokok[1],
-          data.description ?? "",
-        ]);
-
-        rowAdded.eachCell((cell) => (cell.style = headerStyle));
-      }
-
-      const rowAdded = worksheet.addRow([
-        data.noRek,
-        data.name.toUpperCase(),
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-      ]);
-
-      rowAdded.eachCell(
-        (cell) =>
-          (cell.style = {
-            ...headerStyle,
-            fill: {
-              type: "pattern",
-              pattern: "solid",
-              fgColor: { argb: "FF168AAD" },
-            },
-          })
+  dbhReportingData.forEach((dbhOpd) => {
+    dbhOpd.data.forEach((dataDbh) => {
+      const dbhItems = dataDbh.dbh;
+      const estimateRowHeight = (text, columnWidth) => {
+        const approxCharPerLine = columnWidth * 1.2; // Adjust this factor based on font size
+        const lineCount = Math.ceil(text.length / approxCharPerLine);
+        return lineCount * 15; // Assuming 15 points per line of text
+      };
+      const estimatedHeight = estimateRowHeight(
+        dataDbh.name,
+        worksheet.columns[1].width
       );
 
-      rowAdded.height = estimatedHeight;
-    } else {
-      const rowAdded = worksheet.addRow([
-        data.noRek,
-        data.name,
-        data.pagu,
+      if (dataDbh.parameter === "Lembaga") {
+        // lembaga
+        const institutionRow = worksheet.addRow([
+          dataDbh.noRek,
+          dataDbh.name.toUpperCase(),
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+        ]);
+
+        institutionRow.eachCell(
+          (cell) =>
+            (cell.style = {
+              ...headerStyle,
+              fill: {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: { argb: "FF168AAD" },
+              },
+            })
+        );
+
+        institutionRow.height = estimatedHeight;
+      }
+
+      // rincian dbh opd
+      let contentRow = worksheet.addRow([
+        dataDbh.noRek,
+        dataDbh.name,
+        dataDbh.pagu,
         dbhItems.pkb[0],
         dbhItems.pkb[1],
         dbhItems.bbnkb[0],
@@ -590,13 +578,13 @@ exports.exportToExcel = async (req, res, next) => {
         dbhItems.pap[1],
         dbhItems.pajakRokok[0],
         dbhItems.pajakRokok[1],
-        data.description ?? "",
+        dataDbh.description ?? "",
       ]);
 
-      if (data.parameter === "Program") {
-        data.name = data.name.toUpperCase();
+      if (dataDbh.parameter === "Program") {
+        dataDbh.name = dataDbh.name.toUpperCase();
 
-        rowAdded.eachCell(
+        contentRow.eachCell(
           (cell) =>
             (cell.style = {
               ...headerStyle,
@@ -609,21 +597,40 @@ exports.exportToExcel = async (req, res, next) => {
         );
       }
 
-      rowAdded.eachCell((cell) => {
+      contentRow.eachCell((cell) => {
         cell.style = contentStyle;
       });
 
-      rowAdded.getCell(2).alignment = {
+      contentRow.getCell(2).alignment = {
         vertical: "middle",
         horizontal: "left",
         wrapText: true,
         indent: 1,
       };
 
-      rowAdded.height = estimatedHeight;
-    }
+      contentRow.height = estimatedHeight;
+    });
 
-    prevOpdId = data.opdId;
+    const totalDbhOpd = dbhOpd.totalDbhOpd;
+    // sub total
+    const subTotalRow = worksheet.addRow([
+      "",
+      "Sub Total",
+      totalDbhOpd.pagu,
+      totalDbhOpd.dbh.pkb[0],
+      totalDbhOpd.dbh.pkb[1],
+      totalDbhOpd.dbh.bbnkb[0],
+      totalDbhOpd.dbh.bbnkb[1],
+      totalDbhOpd.dbh.pbbkb[0],
+      totalDbhOpd.dbh.pbbkb[1],
+      totalDbhOpd.dbh.pap[0],
+      totalDbhOpd.dbh.pap[1],
+      totalDbhOpd.dbh.pajakRokok[0],
+      totalDbhOpd.dbh.pajakRokok[1],
+      totalDbhOpd.description ?? "",
+    ]);
+
+    subTotalRow.eachCell((cell) => (cell.style = headerStyle));
   });
 
   const totalDbhItems = currentReport.totalInstitutionDbh;
@@ -703,9 +710,12 @@ exports.exportToExcel = async (req, res, next) => {
     `Pagu Yang sudah di transfer (Diterima) dari Provinsi untuk DBH Provinsi TA ${currentReport.year}`,
   ]).font = { bold: true };
 
-  const totalDbhRecieved = currentReport.totalDbhRecieved;
+  const totalDbhRecievedByYear = reportingByYear.reduce(
+    (total, item) => parseInt(total) + parseInt(item.totalDbhRecieved),
+    0
+  );
 
-  const rowsData = getReportingByYear.map((report, idx) => [
+  const dbhRecievedList = reportingByYear.map((report, idx) => [
     [`${idx + 1}. Penerimaan DBH ${report.period}`],
     [
       "  - Bagi Hasil Pajak Kendaraan Bermotor (PKB)",
@@ -726,16 +736,16 @@ exports.exportToExcel = async (req, res, next) => {
     ["  - Bagi Hasil Pajak Rokok", null, report.dbhRecieved.pajakRokok],
   ]);
 
-  console.log("ROWS DATA : " + rowsData);
+  console.log("ROWS DATA : " + dbhRecievedList);
 
-  rowsData[0].forEach((row, idx) => {
+  dbhRecievedList[0].forEach((row, idx) => {
     const rowAdded = worksheet.addRow(row);
     if (idx == 0) {
       rowAdded.font = { bold: true };
     }
   });
 
-  worksheet.addRow(["JUMLAH", "", totalDbhRecieved]).font = { bold: true };
+  worksheet.addRow(["JUMLAH", "", totalDbhRecievedByYear]).font = { bold: true };
 
   try {
     const fileName = `${new Date().toISOString()}-laporan-dbh-${currentReport.period.trim()}.xlsx`;
