@@ -19,7 +19,7 @@ const opdService = require("./core/modules/opd/opd-service");
 const app = express();
 
 // set dotenv
-dotenv.config({ path: ".env.dev" });
+dotenv.config({ path: ".env.prod" });
 
 const port = process.env.PORT || 8080;
 const dbUri = process.env.DATABASE_URI;
