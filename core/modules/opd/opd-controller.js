@@ -6,7 +6,7 @@ const dbhRealizationService = require("../dbh-realization/dbh-realization-servic
 const { encrypt } = require("../../common/utils/crypto-helper");
 
 exports.renderUpdateOpd = async (req, res, next) => {
-  const opdId = req.user._id;
+  const opdId = req.user._id.toString();
 
   try {
     const selectedOpd = await opdService.getOneOpd({ _id: opdId });

@@ -6,7 +6,7 @@ const isEdit = urlParams.get("edit");
 console.log(dbhRealizationDataJson);
 
 $(".hide-input").hide();
-$(".form-input").addClass("container w-50");
+$(".form-input").addClass("container col-12 col-lg-7");
 
 const parameterChanged = (elem) => {
   const selectedParamVal = $(elem).val();
@@ -21,10 +21,10 @@ const parameterChanged = (elem) => {
 
   if (selectedParamVal == "Sub Kegiatan") {
     $(".hide-input").show();
-    $(".form-input").removeClass("container w-50");
+    $(".form-input").removeClass("container col-12 col-lg-7");
   } else {
     $(".hide-input").hide();
-    $(".form-input").addClass("container w-50");
+    $(".form-input").addClass("container col-12 col-lg-7");
   }
 };
 

@@ -1,43 +1,43 @@
 <%- include('../partials/head.ejs') %>
 </head>
 <body>
-    <main>
-        <div class="container my-5">
-            <div class="row align-items-center justify-content-center">
-                <div class="col-sm-4 mx-auto">            
-                    <p class="h2 mb-5 text-center"><%= pageTitle %></p>                    
-                    <form action="/api<%= path %>" id="signup-form" method="POST" class="needs-validation"  novalidate>
-                        <div class="mb-3">
-                            <label for="username" class="form-label">Username</label>
-                            <input type="text" class="form-control" name="username" id="username" value="<%= selectedOpd?.username %>" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Password</label>
-                            <input type="password" class="form-control" name="password" id="password" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="opd-name" class="form-label">Nama OPD</label>
-                            <input type="text" class="form-control" name="opdName" id="opd-name" value="<%= selectedOpd?.opdName %>" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="phone-number" class="form-label">Nomor HP</label>
-                            <input type="text" class="form-control" name="phone" id="phone-number" value="<%= selectedOpd?.phone %>" required>
-                        </div>                     
-                        <div class="mb-3">
-                            <label for="institutionName" class="form-label">Nama Lembaga</label>
-                            <input type="text" class="form-control" name="institutionName" id="institution" value="<%= selectedOpd?.institutionName %>" required>
-                        </div>                                             
-                        <div class="mt-5 w-100 text-center">
-                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                            <% if(domain == "auth") { %>
-                                <button type="submit"  class="w-100 btn btn-primary mb-3">DAFTAR AKUN</button>
-                                <p><a href="/login" class="link-underline-primary">Balik Login</a></p>
-                            <% } else { %>
-                                <button type="submit"   class="w-100 btn btn-primary mb-3">UPDATE PROFILE</button>                                    
-                            <% } %>
-                        </div>
-                    </form>
-                </div>
+    <main class="container-fluid">
+        <div class="my-5 mx-2 row justify-content-center">
+            <div class="col-lg-4 col-sm-12 align-self-center">        
+                <img src="images/logo.png" class="rounded mx-auto d-block" alt="logo">
+                <h1 class="display-6 mt-3 mb-5 text-center fw-semibold">SISTEM APLIKASI PERTANGGUNG JAWABAN-DBH PROVINSI (SIAP-DP)</h1>
+                <p class="h2 mb-3 text-center">Daftar Akun Baru</p>
+                <form action="/api<%= path %>" id="signup-form" method="POST" class="needs-validation"  novalidate>
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" name="username" id="username" value="<%= selectedOpd?.username %>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" name="password" id="password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="opd-name" class="form-label">Nama OPD</label>
+                        <input type="text" class="form-control" name="opdName" id="opd-name" value="<%= selectedOpd?.opdName %>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="phone-number" class="form-label">Nomor HP</label>
+                        <input type="text" class="form-control" name="phone" id="phone-number" value="<%= selectedOpd?.phone %>" required>
+                    </div>                     
+                    <div class="mb-3">
+                        <label for="institutionName" class="form-label">Nama Lembaga</label>
+                        <input type="text" class="form-control" name="institutionName" id="institution" value="<%= selectedOpd?.institutionName %>" required>
+                    </div>                                             
+                    <div class="mt-5 w-100 text-center">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <% if(domain == "auth") { %>
+                            <button type="submit"  class="w-100 btn btn-primary mb-3">DAFTAR AKUN</button>
+                            <p><a href="/login" class="link-underline-primary">Balik Login</a></p>
+                        <% } else { %>
+                            <button type="submit"   class="w-100 btn btn-primary mb-3">UPDATE PROFILE</button>                                    
+                        <% } %>
+                    </div>
+                </form>                
             </div>
         </div>
         <%- include('../partials/toast-msg.ejs') %>

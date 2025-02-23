@@ -10,6 +10,8 @@ exports.renderDataDbhOpd = async (req, res, next) => {
   let opdReporting = [];
   let currentDataDbhOpd = [];
 
+  const userData = { ...req.user, _id: encrypt(req.user._id.toString()) };
+
   try {
     const opdInstitutionData = await reportingService.findInstitutionBudget({
       opdId: req.user?._id,
@@ -84,7 +86,7 @@ exports.renderDataDbhOpd = async (req, res, next) => {
         pageTitle: "Update Data DBH OPD",
         userRole: "opd",
         apiUrl: `edit/${selectedDbh.name}`,
-        opd: req.user,
+        opd: userData,
         opdReporting,
         currentDataDbhOpd,
         currentReporting,
@@ -96,7 +98,7 @@ exports.renderDataDbhOpd = async (req, res, next) => {
         pageTitle: "Data Dbh Opd",
         userRole: "opd",
         apiUrl: "add",
-        opd: req.user,
+        opd: userData,
         opdReporting,
         currentDataDbhOpd,
         currentReporting,

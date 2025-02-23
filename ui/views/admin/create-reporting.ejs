@@ -33,13 +33,13 @@
                     <% if(selectedReporting?.institutionBudget.length > 0) { %>
                         <% for(let item of selectedReporting?.institutionBudget) { %>
                             <input type="hidden" name="institutionBudget[<%= id %>][_id]" id="doc-id-<%= id %>" value="<%= item._id %>" required>
-                            <div class="d-inline-flex my-2 align-items-center old-data-institution" id="institution-<%= id %>">  
+                            <div class="d-inline-flex flex-wrap my-2 align-items-center old-data-institution" id="institution-<%= id %>">  
                                 <div class="me-2 w-50">                                      
                                     <label for="opd-id-<%= id %>" class="form-label">Nama Lembaga <span class="text-danger"> *</span></label>
                                     <select name="institutionBudget[<%= id %>][opdId]" id="opd-id-<%= id %>" class="form-select institution-select" aria-label="Institution Select" required>
                                         <option class="institution-item" value="">Pilih Lembaga</option>                              
                                         <% for(let opd of institutions) { %>
-                                            <option class="institution-item" value='<%= opd._id %>' id="<%= opd.institutionName.replace(/\s/g, '-') %>" <%= opd._id.toString() == item.opdId.toString() ? 'selected' : '' %>><%= opd.institutionName %></option> 
+                                            <option class="institution-item" value='<%= opd._id %>' id="<%= opd.institutionName.replace(/\s/g, '-') %>" <%= opd._id == item.opdId ? 'selected' : '' %>><%= opd.institutionName %></option> 
                                         <% } %>
                                     </select>                               
                                 </div>                                                                                                                          
@@ -104,10 +104,10 @@
                     </div> 
                 </div>
             </div>            
-            <div class="d-flex ms-2 mt-3  justify-content-end">                                                    
+            <div class="d-flex justify-content-sm-center justify-content-lg-end">                                                    
                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                <button type="button" id="clear-btn" class="btn btn-secondary mb-3 mx-2" style="width: 18%;">CLEAR</button>                            
-                <button type="submit" id="submit-form-btn" class="btn btn-primary mb-3 mx-2" style="width: 18%;">SIMPAN DATA</button>                            
+                <button type="button" id="clear-btn" class="btn btn-secondary mx-2 flex-grow-1 flex-lg-grow-0" style="width: 18%;">CLEAR</button>                            
+                <button type="submit" id="submit-form-btn" class="btn btn-primary mx-2 flex-grow-1 flex-lg-grow-0" style="width: 18%;">SIMPAN DATA</button>                            
             </div>
         </form>                               
         <%- include('../partials/toast-msg.ejs') %>

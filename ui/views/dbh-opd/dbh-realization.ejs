@@ -1,18 +1,18 @@
 <%- include('../partials/head.ejs') %>
 </head>
-<body>     
+<body class="container-fluid">     
     <input type="hidden" id="dbh-realization-data" value="<%= JSON.stringify(currentDataDbhOpd) %>">   
     <input type="hidden" id="selected-dbh-id" value="<%= selectedDbhRealization?._id %>">   
-    <main class="mx-4 my-5">
-        <div class="container-fluid my-5">
+    <main class="row justify-content-center overflow-x-hidden">
+        <div class="mx-4 my-5 col-lg-9 col-11 my-5">
             <form action="api/dbh/<%= apiUrl %>" method="POST" id="dbh-realization-form" class="needs-validation" novalidate>
-                <div class="row justify-content-between">                
-                    <div class="col-5 d-flex flex-row p-2 w-50">
-                        <img src="images/logo.png" class="rounded d-block w-75 h-75" alt="logo">
-                        <h1 class="display-6 mt-3 mx-4 mb-5 fw-semibold align-self-center">SISTEM APLIKASI PERTANGGUNGJAWABAN-DBH PROVINSI (SIAP-DP)</h1>  
+                <div class="row d-sm-flex justify-content-between mb-4 align-items-center">                
+                    <div class="col-lg-8 col-sm-12 d-lg-flex d-sm-flex flex-lg-row flex-sm-column p-2 mb-3 mb-lg-0">
+                        <img src="images/logo.png" class="rounded mx-auto d-block" alt="logo">
+                        <h1 class="display-6 mx-4 fw-semibold mt-4 mt-lg-0 text-center text-lg-start align-self-center">SISTEM APLIKASI PERTANGGUNG JAWABAN-DBH PROVINSI (SIAP-DP)</h1>  
                     </div>
-                    <div class="col-5 p-2 w-5">
-                        <p class="h6 my-1">OPD <span style="padding: 0 6px 0 52px;">:</span> <%= opd.opdName %></p>
+                    <div class="col-lg-4 col-sm-12 p-2 align-self-center m-0">
+                        <p class="h6 my-1">OPD <span style="padding: 0 6px 0 52px;">:</span><%= opd.opdName %></p>
                         <input type="hidden" value="<%= opd._id %>" id="opdId">
                         <p class="h6 my-1">Lembaga <span style="padding: 0 6px 0 17px;">:</span> <%= opd.institutionName %></p>
                         <div class="d-flex my-1 align-items-center">                            
@@ -32,15 +32,15 @@
                     </div>
                 </div>
                 <nav class="nav nav-pills row mx-3 mb-5">
-                    <a class="col me-4 text-sm-center nav-link bg-warning text-white fw-medium" aria-current="page" href="/<%= opd._id %>/edit-profile">RUBAH PROFILE</a>                    
-                    <a class="col me-4 text-sm-center nav-link bg-secondary text-white fw-medium" aria-current="page" href="/logout">LOGOUT</a>                                                            
+                    <a class="col-lg col-sm-12 me-4 mb-3 mb-lg-0 text-center nav-link bg-warning text-white fw-medium" aria-current="page" href="/<%= opd._id %>/edit-profile">RUBAH PROFILE</a>                    
+                    <a class="col-lg col-sm-12 me-4 mb-3 mb-lg-0 text-center nav-link bg-secondary text-white fw-medium" aria-current="page" href="/logout">LOGOUT</a>                                                            
                     <%- include('../partials/delete-account-modal.ejs') %>
                 </nav>
                 <% if(currentReporting && opdReporting && currentDataDbhOpd) { %>
-                    <div class="form-input container w-50 align-items-center border p-3">
+                    <div class="form-input container col-12 col-lg-7 align-items-center border p-3">
                         <p class="h5 mb-5 text-center">Formulir Input Data Realisasi DBH</p>                    
-                        <div class="row d-flex row-cols-3">
-                            <div class="col-4 flex-grow-1 me-2">
+                        <div class="row d-flex flex-row">
+                            <div class="col-lg-2 flex-fill col-sm-12 me-2">
                                 <div class="mb-3">                                
                                     <label for="parameter" class="form-label">Parameter <span class="text-danger">*</span></label>
                                     <select name="dbhRealization[parameter]" id="parameter" class="form-select parameter-select" aria-label="Parameter Select" required <%= apiUrl != 'add' ? 'disabled' : '' %>>
@@ -64,10 +64,10 @@
                                     <input value="<%= selectedDbhRealization?.pagu ?? 0 %>" type="number" class="form-control" name="dbhRealization[pagu]" id="pagu" required>
                                 </div>
                             </div>
-                            <div class="col-4 flex-grow-1 mx-2 hide-input">
+                            <div class="col-lg-4 flex-fill col-sm-12 mx-2 hide-input">
                                 <p class="h6 text-primary mb-3">Dana Bagi Hasil</p>
-                                <div class="d-flex mb-3">
-                                    <div class="me-4">
+                                <div class="d-flex flex-lg-row flex-column mb-3">
+                                    <div class="me-lg-4">
                                         <p class="h6 mb-2">PKB</p>
                                         <div class="d-flex">
                                             <div class="mb-3 me-3">
@@ -94,8 +94,8 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="d-flex mb-3">
-                                    <div class="me-4">
+                                <div class="d-flex mb-3 flex-lg-row flex-column">
+                                    <div class="me-lg-4">
                                         <p class="h6 mb-2">PBBKB</p>
                                         <div class="d-flex">
                                             <div class="mb-3 me-3">
@@ -137,14 +137,14 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="d-flex ms-2 justify-content-end">      
+                        <div class="d-flex flex-lg-row flex-column justify-content-end">      
                             <input type="hidden" name="_csrf" value="<%= csrfToken %>">                                      
-                            <button type="button" id="clear-btn" class="btn btn-danger mb-3 mx-2" style="width: 15%;">CLEAR</button>                                                                                                    
-                            <button type="submit" id="submit-form-btn"  form="dbh-realization-form" class="btn btn-primary mb-3 mx-2" style="width: 15%;"><%= apiUrl != 'add' ? 'RUBAH DATA' : 'TAMBAH' %></button>
+                            <button type="button" id="clear-btn" class="btn btn-danger d-sm-block px-lg-5 mb-3 mx-2">CLEAR</button>                                                                                                    
+                            <button type="submit" id="submit-form-btn"  form="dbh-realization-form" class="btn btn-primary d-sm-block px-lg-5 mb-3 mx-2"><%= apiUrl != 'add' ? 'RUBAH DATA' : 'TAMBAH' %></button>
                         </div>                    
                     </div>
                     <% if(currentDataDbhOpd.length > 1) { %>
-                        <div class="row justify-content-end align-items-center mt-5">                             
+                        <div class="row justify-content-end mt-5">                             
                             <%- include('data-table.ejs') %>
                             <%- include('../partials/send-report-modal.ejs') %>                            
                         </div>
