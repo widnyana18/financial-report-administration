@@ -9,11 +9,11 @@
   },
   "author": "I Komang Widnyana",
   "license": "MIT",
-  "scripts": {
+  "scripts": {    
     "test": "NODE_ENV=test jest --testTimeout=10000",
-    "start": "node ./dist/index.js",
-    "start-server": "node ./core/index.js",
-    "start:dev": "nodemon ./core/index.js"
+    "start": "node index.js",
+    "start-server": "node index.js",
+    "start:dev": "nodemon index.js"
   },
   "devDependencies": {
     "nodemon": "^3.1.3"

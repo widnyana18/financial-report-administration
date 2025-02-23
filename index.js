@@ -148,7 +148,7 @@ mongoose
   .connect(dbUri)
   .then((result) => {
     app.listen(port, () => {
-      console.info(`Server running 🤖🚀 at http://localhost:${port}/`);
+      console.info(`Server running 🤖🚀 at ${process.env.BASE_URL}`);
     });
   })
   .catch((err) => {
